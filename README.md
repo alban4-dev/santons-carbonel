@@ -21,7 +21,7 @@ l'année (rubrique « Nouveautés » des deux boutiques) portent un badge
 
 | Onglet | Contenu | Nombre |
 |---|---|---|
-| Santons Carbonel | N°2 pied vert à l'unité, dont 13 anciens modèles hors boutique | 264 |
+| Santons Carbonel | N°2 pied vert à l'unité, plus les 5 sans socle (Jésus, Jésus seul, Berceau, Canard nageant, Cigogne), dont 13 anciens modèles hors boutique | 269 |
 | Escoffier | Collection 7 cm : maisons et bâtisses, façades, crèches et étables, puits, fontaines et ponts, roulottes et charrettes (76) ; accessoires : murs, escaliers, rivières, quais, pointus, champs… (53) ; arbres et buissons rangés par Escoffier dans les accessoires (24) | 153 |
 | Décors Carbonel | Bâtiments et accessoires N°2 | 82 |
 
@@ -139,7 +139,10 @@ remplacée par une réponse fixe.
   entier (1 321 références) par `scraper/scrape.py`.
 - **Pied vert** : socle peint en vert, lu sur chaque photo par
   `scraper/socle.py`. Les Provinces de France, la Bonne Mère, les Confrères ou
-  le Jésus dans sa paille ont un autre socle et ne sont pas retenus.
+  les Marins ont un socle d'une autre couleur et ne sont pas retenus. Les
+  santons Tradition **sans socle** (Jésus, Jésus seul et Berceau de Jésus dans
+  leur paille, Canard nageant, Cigogne) sont ajoutés à la main
+  (`SANS_SOCLE` dans `scraper/selection.py`).
 - **Anciens modèles** : 13 santons N°2 pied vert du catalogue papier 2024
   absents de la boutique, photos découpées dans le PDF par
   `scraper/anciens.py`.

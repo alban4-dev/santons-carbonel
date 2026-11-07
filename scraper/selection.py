@@ -23,6 +23,15 @@ ESCOFFIER_GROUPES = ["Maisons et bâtisses", "Façades", "Crèches et étables",
 # rubriques du site qui font entrer un décor dans l'appli (les arbres seulement
 # s'ils sont aussi rangés dans « Accessoires »)
 ESCOFFIER_RETENUS = set(ESCOFFIER_GROUPES) - {"Arbres et végétation"}
+# Santons Tradition N°2 sans socle du tout (la lecture du « pied » ne peut pas
+# les retenir) : la Nativité dans sa paille, et des animaux posés sans terrasse.
+SANS_SOCLE = {
+    543: "Jésus N°2",
+    568: "Jésus seul N°2",
+    569: "Berceau de Jésus N°2",
+    354: "Canard nageant N°2",
+    1484: "Cigogne N°2",
+}
 ESCOFFIER_TAILLE = re.compile(r"Collection (2|5|9) ?cm|^Santon", re.I)
 
 
@@ -38,7 +47,7 @@ def section(it):
     if set(it["cat"]) & DECOR_CATS:
         n2 = it["size"] == 2 or "N°2" in it["name"]
         return "decor" if n2 else None
-    if it["size"] == 2 and it.get("pied") == "vert":
+    if it["size"] == 2 and (it.get("pied") == "vert" or it["id"] in SANS_SOCLE):
         return "santons"
     return None
 
