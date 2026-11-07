@@ -8,8 +8,8 @@
 --   membres         qui fait partie de la famille (admin ou membre)
 --   listes          une crèche au nom de quelqu'un (« Crèche de Léa »)
 --   liste_gerants   qui peut cocher dans cette liste (parents, parrain…)
---   liste_visiteurs personnes extérieures qui voient cette liste seulement
---   liste_invitations code du lien « visiteur » d'une liste (gérants seulement)
+--   liste_visiteurs (ancien) comptes visiteurs : remplacé par la page publique
+--   liste_invitations code du lien de visite d'une liste (gérants seulement)
 --   liste_items     ce qui est coché : 'own' (je l'ai) ou 'wish' (envie)
 --   profils         le prénom affiché de chaque compte
 --
@@ -17,7 +17,8 @@
 --   - un membre voit toutes les listes de sa famille et tous les membres ;
 --   - seuls les gérants d'une liste la modifient ; un admin de la famille
 --     peut aussi en gérer les réglages (gérants, visiteurs, suppression) ;
---   - un visiteur ne voit que les listes où il a été invité, en lecture.
+--   - le lien de visite d'une crèche ouvre une page publique en lecture seule,
+--     sans compte (fonction voir_liste) ; changer le lien coupe l'ancien.
 
 -- ---------------------------------------------------------------- tables
 
@@ -216,6 +217,26 @@ begin
   return c;
 end $$;
 
+-- Renvoie la crèche dont le code de visite est donné : son nom, ses gérants
+-- encore membres de la famille (prénoms) et ses coches. Rien d'autre (ni la famille, ni les autres crèches,
+-- ni les membres). Code inconnu ou changé : renvoie null.
+create or replace function public.voir_liste(p_code text) returns json
+language sql stable security definer set search_path = public as $$
+  select json_build_object(
+    'id', l.id,
+    'nom', l.nom,
+    'gerants', coalesce((select json_agg(json_build_object('id', g.user_id, 'nom', coalesce(p.nom, '')))
+                         from liste_gerants g
+                         join membres m on m.user_id = g.user_id and m.famille_id = l.famille_id
+                         left join profils p on p.id = g.user_id
+                         where g.liste_id = l.id), '[]'::json),
+    'items', coalesce((select json_agg(json_build_object('santon_id', i.santon_id, 'statut', i.statut,
+                                                         'updated_at', i.updated_at))
+                       from liste_items i where i.liste_id = l.id), '[]'::json))
+  from liste_invitations v join listes l on l.id = v.liste_id
+  where v.code = p_code and char_length(p_code) >= 16;
+$$;
+
 -- horodatage et auteur de chaque coche (pour le fil d'activité)
 create or replace function public.items_auteur() returns trigger
 language plpgsql set search_path = public as $$
@@ -328,6 +349,8 @@ grant execute on function public.creer_famille(text), public.rejoindre_famille(t
   public.est_membre(uuid), public.est_admin(uuid), public.est_membre_de_liste(uuid),
   public.peut_voir_liste(uuid), public.peut_modifier_liste(uuid), public.peut_gerer_liste(uuid),
   public.voit_profil(uuid) to authenticated;
+-- page publique d'une crèche (lien de visite) : seule fonction ouverte sans compte
+grant execute on function public.voir_liste(text) to anon, authenticated;
 
 -- ------------------------------------------------- temps réel (Supabase)
 -- Les changements de coches et de listes arrivent en direct chez les autres.

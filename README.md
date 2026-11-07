@@ -10,8 +10,9 @@ comme un petit réseau social familial :
 - **tous les membres de la famille voient toutes les crèches**, avec le fil
   d'activité (« Maman a coché Berger appuyé · Crèche de Léa ») ;
 - un **lien d'invitation** fait entrer quelqu'un dans la famille ;
-- chaque crèche a son **lien de visite** : la personne voit cette crèche
-  seulement, en lecture seule (un oncle, une marraine…), et on peut la retirer.
+- chaque crèche a son **lien public** : une page en lecture seule, **sans
+  compte**, qui ne montre que cette crèche (pour un oncle, une marraine…).
+  « Changer » le lien coupe l'ancien.
 
 Dans chaque crèche : ✓ je l'ai, ♡ envie, trois onglets, photo de la crèche
 pour pointer, liste d'envies à copier pour les cadeaux. Les nouveautés de
@@ -46,6 +47,14 @@ l'année (rubrique « Nouveautés » des deux boutiques) portent un badge
 
 Un projet gratuit se met en pause après une semaine sans visite. On le relance
 d'un clic depuis le tableau de bord Supabase, les données sont conservées.
+
+### Mises à jour de la base
+
+Une base déjà installée reçoit les nouveautés par les fichiers de
+[`supabase/migrations/`](supabase/migrations), à exécuter une fois chacun dans
+le SQL Editor (`schema.sql` les contient déjà pour une nouvelle installation) :
+
+- `2026-11-08_page_publique.sql` : page publique d'une crèche, sans compte.
 
 ### 2. Le site : GitHub Pages
 
@@ -87,8 +96,8 @@ ne serve qu'à vous.
 2. **Inviter dans la famille** copie le lien à envoyer (WhatsApp, SMS…). Chacun
    crée son compte en l'ouvrant et devient membre.
 3. **+ Nouvelle crèche** : « Crèche de Léa ». Dans la crèche, **Réglages** :
-   cocher l'autre parent comme gérant, copier le **lien de visite** pour un
-   proche qui doit seulement regarder.
+   cocher l'autre parent comme gérant, copier le **lien public** pour un
+   proche qui doit seulement regarder (il n'a pas de compte à créer).
 
 ## Qui peut faire quoi
 
@@ -96,11 +105,13 @@ ne serve qu'à vous.
 |---|---|---|---|---|
 | Membre | toutes celles de la famille | celles dont il est gérant | celles dont il est gérant | lien de la famille |
 | Admin de la famille (le créateur) | toutes | celles dont il est gérant | toutes, et retirer un membre | lien de la famille |
-| Visiteur | seulement celles dont il a reçu le lien | non | non | non |
+| Personne avec le lien public d'une crèche (sans compte) | cette crèche seulement | non | non | non |
 
 Ces règles sont vérifiées par la base de données elle-même (Row Level Security
-dans `schema.sql`), pas seulement par l'affichage. Un visiteur ne voit pas le
-code d'adhésion de la famille. Un membre qui quitte la famille perd aussitôt
+dans `schema.sql`), pas seulement par l'affichage. Sans compte, la seule chose
+accessible est la fonction `voir_liste`, qui renvoie une crèche (nom, prénoms
+des gérants, coches) à qui fournit son code de visite, et rien d'autre : ni la
+famille, ni son code d'adhésion, ni les autres crèches. Un membre qui quitte la famille perd aussitôt
 ses droits.
 
 ## Tests
@@ -108,12 +119,13 @@ ses droits.
 `supabase/tests/lancer.sh` rejoue tout sans compte Supabase, sur un
 PostgreSQL 16 local :
 
-- `droits.sql` : 33 vérifications des règles d'accès (inconnu, membre, gérant,
-  visiteur, ancien membre, anonyme) ;
+- `droits.sql` : 39 vérifications des règles d'accès (inconnu, membre, gérant,
+  visiteur, ancien membre, anonyme, page publique) ;
 - `parcours.js` : dans un vrai navigateur, Papa crée la famille et la crèche
   de Léa, coche, utilise la photo ; Maman arrive par le lien d'invitation, est
-  en lecture seule, puis devient gérante ; Mamie arrive par le lien de visite
-  et ne voit que la crèche de Léa.
+  en lecture seule, puis devient gérante ; Mamie ouvre le lien public sans
+  compte et ne voit que la crèche de Léa ; après « Changer », l'ancien lien
+  ne marche plus.
 
 `faux_supabase.py` imite les routes de Supabase utilisées par l'appli et
 exécute chaque requête avec l'identité de l'utilisateur, donc avec les vraies

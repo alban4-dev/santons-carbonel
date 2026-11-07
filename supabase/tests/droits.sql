@@ -103,3 +103,18 @@ set role anon;
 select 'T70 anon bloqué';
 select count(*) from listes;
 reset role;
+
+-- PAGE PUBLIQUE : le lien de visite marche sans compte, et rien d'autre
+select code as vcode2 from liste_invitations where liste_id = :'lea' \gset
+set role anon;
+select 'T71 sans compte : la crèche par son lien', (voir_liste(:'vcode2')->>'nom') = 'Crèche de Léa';
+select 'T72 sans compte : ses coches', json_array_length(voir_liste(:'vcode2')->'items') = 2;
+select 'T73 sans compte : prénoms des gérants', json_array_length(voir_liste(:'vcode2')->'gerants') = 1;
+select 'T74 ancien lien (changé) refusé', voir_liste(:'vcode') is null;
+select 'T75 code inventé refusé', voir_liste('0123456789abcdef0123456789abcdef') is null;
+select 'T76 code trop court refusé', voir_liste('') is null;
+reset role;
+set role anon;
+select 'T77 sans compte : toujours pas de tables';
+select count(*) from liste_items;
+reset role;

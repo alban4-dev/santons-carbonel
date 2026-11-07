@@ -63,14 +63,20 @@ async function signup(p, nom, mail) {
   await maman.locator('.card .ic.o').nth(10).click(); await maman.waitForTimeout(500);
   log('maman a coché ->', sqlv("select p.nom from liste_items i join profils p on p.id=i.modifie_par order by updated_at desc limit 1"));
   await maman.screenshot({ path: S + 'e-maman.png' });
-  // ---- Mamie visiteuse
+  // ---- Mamie : page publique, sans compte
   const mamie = await page(b, 'mamie', 390, 844);
-  await mamie.goto(visit); await mamie.waitForSelector('#scr-auth:not([hidden])');
-  await signup(mamie, 'Mamie', 'mamie@x.fr');
-  log('mamie vue:', await mamie.isVisible('#view-list'), (await mamie.textContent('#l-badge')), '| boutons ✓ actifs:', await mamie.locator('.card .ic.o:not([disabled])').count());
-  await mamie.click('#back'); await mamie.waitForTimeout(300);
-  log('mamie accueil:', (await mamie.textContent('#view-home')).replace(/\s+/g, ' ').slice(0, 200));
+  await mamie.goto(visit); await mamie.waitForSelector('#scr-app:not([hidden])', { timeout: 10000 }); await mamie.waitForTimeout(500);
+  log('mamie sans compte : écran connexion ?', await mamie.isVisible('#scr-auth'), '| crèche :', await mamie.textContent('#l-name'),
+      '|', await mamie.textContent('#l-who'), '|', await mamie.textContent('#l-badge'));
+  log('mamie : ✓ actifs', await mamie.locator('.card .ic.o:not([disabled])').count(), '| cochés visibles', await mamie.locator('.card.own').count(),
+      '| réglages', await mamie.isVisible('#l-settings'), '| photo', await mamie.isVisible('#photo-btn'), '| espace famille', await mamie.isVisible('#famille-link'));
   await mamie.screenshot({ path: S + 'e-mamie.png' });
+  // lien changé : l'ancien ne marche plus
+  await papa.click('#l-settings'); await papa.waitForTimeout(300); await papa.click('#new-visit'); await papa.waitForTimeout(500);
+  await papa.click('#dlg-settings [data-close]');
+  const vieux = await page(b, 'vieux-lien', 390, 844);
+  await vieux.goto(visit); await vieux.waitForTimeout(1500);
+  log('ancien lien :', (await vieux.textContent('#scr-config')).replace(/\s+/g, ' ').trim());
   // ---- Papa : accueil avec activité
   await papa.click('#back'); await papa.reload(); await papa.waitForTimeout(800);
   await papa.screenshot({ path: S + 'e-home.png', fullPage: true });

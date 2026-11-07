@@ -240,6 +240,7 @@ dialog::backdrop { background: rgba(20, 14, 26, .55); }
           <h1 id="title">Santons Carbonel</h1>
         </div>
         <button class="me" id="me-btn" type="button" aria-haspopup="dialog"><span class="avatar" id="me-av">?</span><span class="nm" id="me-name">…</span></button>
+        <a class="btn sm" id="famille-link" href="./" hidden>Espace famille</a>
       </div>
       <div class="tabs" role="tablist" id="tabs" hidden>
         <button class="tab" role="tab" type="button" data-tab="santons" id="tab-santons"><span class="marque">Carbonel</span><span class="type">Santons</span><span class="n"></span></button>
@@ -432,9 +433,11 @@ function toast(msg) { const t = $("toast"); t.textContent = msg; t.hidden = fals
 function screen(id) { for (const s of ["scr-config", "scr-auth", "scr-reset", "scr-app"]) $(s).hidden = s !== id; }
 
 /* ================= Invitations (#rejoindre=… / #voir=…) ================= */
+const PUBLIC_CODE = ((decodeURIComponent(location.hash || "")).match(/^#voir=([0-9a-f]{16,64})$/i) || [])[1] || null;
+let PUBLIC = false;
 function readInvite() {
   const h = decodeURIComponent(location.hash || "");
-  const m = h.match(/^#(rejoindre|voir)=([0-9a-f]{16,64})$/i);
+  const m = h.match(/^#(rejoindre)=([0-9a-f]{16,64})$/i);
   if (m) {
     try { sessionStorage.setItem("santons-invite", JSON.stringify({ type: m[1], code: m[2] })); } catch (e) { /* ignore */ }
     try { history.replaceState(null, "", location.pathname + location.search); } catch (e) { /* ignore */ }
@@ -471,9 +474,7 @@ function setAuthMode(m) {
 function showAuth() {
   const inv = readInvite();
   $("auth-invite").hidden = !inv;
-  if (inv) $("auth-invite").textContent = inv.type === "rejoindre"
-    ? "Vous êtes invité(e) à rejoindre la famille. Connectez-vous ou créez votre compte pour accepter."
-    : "On vous a partagé une crèche. Connectez-vous ou créez votre compte pour la voir.";
+  if (inv) $("auth-invite").textContent = "Vous êtes invité(e) à rejoindre la famille. Connectez-vous ou créez votre compte pour accepter.";
   if (inv) setAuthMode("up");
   screen("scr-auth");
 }
@@ -591,15 +592,16 @@ function go(view, listId) {
   $("pin").hidden = true;
   render(); window.scrollTo({ top: 0 });
 }
-window.addEventListener("popstate", () => { if (me) { routeFromHash(); render(); } });
+window.addEventListener("popstate", () => { if (me && !PUBLIC) { routeFromHash(); render(); } });
 
 /* ================= Rendu commun ================= */
 function render() {
+  $("me-btn").hidden = PUBLIC; $("famille-link").hidden = !PUBLIC;
   $("me-av").textContent = initial(nameOf(me.id)); $("me-av").style.setProperty("--c", hashColor(me.id));
   $("me-name").textContent = nameOf(me.id);
   const inList = ui.view === "list" && curList();
   $("view-home").hidden = !!inList; $("view-list").hidden = !inList;
-  $("back").hidden = !inList; $("tabs").hidden = !inList;
+  $("back").hidden = !inList || PUBLIC; $("tabs").hidden = !inList;
   $("title").textContent = inList ? curList().nom : "Santons Carbonel";
   document.title = inList ? curList().nom + " · Santons Carbonel" : "Santons Carbonel en famille";
   if (inList) renderList(); else renderHome();
@@ -654,7 +656,7 @@ function renderHome() {
       <div class="cols">
         <div class="panel"><h3>Membres <span class="muted" style="font-family:var(--f-body);font-size:.9rem">${mems.length}</span></h3>
           <div class="people">${mems.map(m => `<div class="person">${avatarHTML(m.user_id)}<span class="pn">${esc(nameOf(m.user_id))}${m.user_id === me.id ? " (vous)" : ""}</span>${m.role === "admin" ? '<span class="badge">admin</span>' : ""}${isAdmin(f.id) && m.user_id !== me.id ? `<button class="btn sm danger" type="button" data-kick="${f.id}|${m.user_id}">Retirer</button>` : ""}</div>`).join("")}</div>
-          <p class="help">Le lien « Inviter dans la famille » fait de la personne un membre : elle voit toutes les crèches et peut créer les siennes. Pour quelqu'un qui doit seulement regarder une crèche, utilisez « Réglages » dans cette crèche.</p>
+          <p class="help">Le lien « Inviter dans la famille » fait de la personne un membre : elle voit toutes les crèches et peut créer les siennes. Pour quelqu'un qui doit seulement regarder une crèche, envoyez son lien public (dans la crèche, « Réglages ») : pas besoin de compte.</p>
         </div>
         <div class="panel"><h3>Activité</h3>${feedHTML(lists.map(l => l.id))}</div>
       </div>
@@ -836,11 +838,11 @@ function openSettings() {
     <div class="checks">${mems.map(m => `<label><input type="checkbox" data-gerant="${m.user_id}"${g.includes(m.user_id) ? " checked" : ""}> ${avatarHTML(m.user_id, "sm")} ${esc(nameOf(m.user_id))}</label>`).join("")}</div>
     <p class="help">Tous les membres de la famille voient cette crèche ; seuls ceux cochés ici la modifient.</p>
     <hr class="sep">
-    <span class="label">Visiteurs (lecture seule, cette crèche seulement)</span>
-    <div class="people">${v.length ? v.map(u => `<div class="person">${avatarHTML(u)}<span class="pn">${esc(nameOf(u))}</span><button class="btn sm danger" type="button" data-unvisit="${u}">Retirer</button></div>`).join("") : '<p class="help">Aucun visiteur pour l\'instant.</p>'}</div>
-    <div class="field"><label class="label" for="visit-link">Lien de visite à envoyer</label>
+    <span class="label">Page publique de cette crèche</span>
+    <div class="field"><label class="label" for="visit-link">Lien à envoyer (lecture seule, sans compte)</label>
       <div class="linkbox"><input id="visit-link" readonly value="${esc(visitLink(l.id))}"><button class="btn sm primary" type="button" id="copy-visit">Copier</button><button class="btn sm" type="button" id="new-visit">Changer</button></div></div>
-    <p class="help">La personne qui ouvre ce lien et se connecte voit cette crèche, sans pouvoir la modifier ni voir les autres. « Changer » crée un nouveau lien et désactive l'ancien.</p>
+    <p class="help">Toute personne qui a ce lien voit cette crèche et ses envies, sans créer de compte et sans pouvoir la modifier. Elle ne voit ni les autres crèches ni la famille. « Changer » crée un nouveau lien et coupe l'ancien.</p>
+    ${v.length ? `<span class="label">Anciens visiteurs avec compte</span><div class="people">${v.map(u => `<div class="person">${avatarHTML(u)}<span class="pn">${esc(nameOf(u))}</span><button class="btn sm danger" type="button" data-unvisit="${u}">Retirer</button></div>`).join("")}</div>` : ""}
     <hr class="sep">
     <div class="row">${confirmDelete ? `<button class="btn danger" type="button" id="del-yes">Supprimer définitivement « ${esc(l.nom)} »</button><button class="btn" type="button" id="del-no">Annuler</button>` : '<button class="btn danger" type="button" id="del-list">Supprimer cette crèche</button>'}</div>`;
   if (!dlgSettings.open) dlgSettings.showModal();
@@ -873,7 +875,7 @@ dlgSettings.addEventListener("click", async e => {
   if (t.id === "new-visit") {
     const { data, error } = await sb.rpc("nouveau_code_visite", { p_liste: l.id });
     if (error) return toast(frErr(error));
-    st.invListe.set(l.id, data); openSettings(); toast("Nouveau lien créé ; l'ancien ne marche plus.");
+    st.invListe.set(l.id, data); openSettings(); toast("Nouveau lien créé : l'ancien ne marche plus.");
     return;
   }
   if (t.dataset.unvisit) {
@@ -1062,10 +1064,32 @@ let qTimer = null;
 $("q").addEventListener("input", e => { clearTimeout(qTimer); qTimer = setTimeout(() => { ui.q = e.target.value; renderGrid(); }, 120); });
 for (const d of document.querySelectorAll("dialog")) d.addEventListener("click", e => { if (e.target === d) d.close(); });
 
+/* ================= Page publique d'une crèche (#voir=…) ================= */
+async function publicView() {
+  PUBLIC = true;
+  const { data, error } = await sb.rpc("voir_liste", { p_code: PUBLIC_CODE });
+  if (error || !data) {
+    $("scr-config").querySelector("p").innerHTML = error
+      ? "La crèche n'a pas pu être chargée. Vérifiez la connexion internet et rechargez la page."
+      : "Ce lien de crèche n'est plus valable : demandez le nouveau lien à la personne qui vous l'a envoyé.";
+    screen("scr-config"); return;
+  }
+  me = { id: "__public__" };
+  st.listes = new Map([[data.id, { id: data.id, famille_id: null, nom: data.nom,
+    items: new Map((data.items || []).map(r => [r.santon_id, Object.assign({ liste_id: data.id }, r)])) }]]);
+  st.gerants = (data.gerants || []).map(g => ({ liste_id: data.id, user_id: g.id }));
+  st.profils = new Map((data.gerants || []).map(g => [g.id, { id: g.id, nom: g.nom }]));
+  st.membres = []; st.visiteurs = [];
+  ui.view = "list"; ui.listId = data.id;
+  screen("scr-app"); render();
+}
+document.addEventListener("visibilitychange", () => { if (PUBLIC && !document.hidden) publicView(); });
+
 /* ================= Lancement ================= */
 readInvite();
 if (!CFG.supabaseUrl || !CFG.supabaseKey || !window.supabase) { screen("scr-config"); return; }
 sb = window.supabase.createClient(CFG.supabaseUrl, CFG.supabaseKey);
+if (PUBLIC_CODE) { publicView(); return; }
 sb.auth.onAuthStateChange((event, session) => {
   if (event === "PASSWORD_RECOVERY") { screen("scr-reset"); return; }
   if (event === "SIGNED_OUT") { me = null; showAuth(); return; }

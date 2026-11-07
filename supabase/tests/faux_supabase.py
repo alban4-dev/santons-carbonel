@@ -25,7 +25,7 @@ SITE = Path(__file__).resolve().parents[2] / "site"
 DSN, PORT = sys.argv[1], int(sys.argv[2])
 TABLES = {"profils", "familles", "famille_invitations", "membres", "listes", "liste_gerants",
           "liste_visiteurs", "liste_invitations", "liste_items"}
-RPCS = {"creer_famille", "rejoindre_famille", "creer_liste", "devenir_visiteur",
+RPCS = {"creer_famille", "rejoindre_famille", "creer_liste", "devenir_visiteur", "voir_liste",
         "nouveau_code_famille", "nouveau_code_visite"}
 USERS = {}  # email -> {id, password, nom}
 db = psycopg2.connect(DSN)
