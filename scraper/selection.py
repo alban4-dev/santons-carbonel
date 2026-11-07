@@ -3,8 +3,10 @@
 - section "santons"   : les santons Carbonel N°2 au pied vert (personnages,
   animaux), boutique + anciens modèles du catalogue papier ;
 - section "decor"     : les bâtiments et accessoires Carbonel N°2 (Tradition) ;
-- section "escoffier" : les bâtiments Escoffier de la collection 7 cm (maisons,
-  crèches et étables, façades, puits, fontaines, ponts, roulottes).
+- section "escoffier" : les bâtiments et accessoires Escoffier de la collection
+  7 cm (maisons, façades, crèches et étables, puits, fontaines, ponts,
+  roulottes, et la rubrique « Accessoires » : murs, escaliers, rivières,
+  quais, arbres…).
 Pas de coffrets ni de lots, pas de pièces sans photo, pas d'autres tailles.
 """
 import re
@@ -14,8 +16,13 @@ PACK = re.compile(r"\b(coffret|lot)\b|\+", re.I)
 DECOR_CATS = {2, 3}           # Carbonel : maisons et étables ; accessoires, arbres, fleurs
 SANTON_ORDER = [1, 8, 9, 6, 4, 12, 7]  # bibliques, provençaux, spéciaux, provinces, animaux…
 DECOR_ORDER = [2, 3]
+# ordre d'affichage des groupes
 ESCOFFIER_GROUPES = ["Maisons et bâtisses", "Façades", "Crèches et étables",
-                     "Puits, fontaines et ponts", "Roulottes et charrettes"]
+                     "Puits, fontaines et ponts", "Roulottes et charrettes",
+                     "Accessoires", "Arbres et végétation"]
+# rubriques du site qui font entrer un décor dans l'appli (les arbres seulement
+# s'ils sont aussi rangés dans « Accessoires »)
+ESCOFFIER_RETENUS = set(ESCOFFIER_GROUPES) - {"Arbres et végétation"}
 ESCOFFIER_TAILLE = re.compile(r"Collection (2|5|9) ?cm|^Santon", re.I)
 
 
@@ -25,7 +32,7 @@ def section(it):
     if it.get("marque") == "escoffier":
         if ESCOFFIER_TAILLE.search(it.get("gamme") or ""):
             return None
-        return "escoffier" if set(it.get("groupes", [])) & set(ESCOFFIER_GROUPES) else None
+        return "escoffier" if set(it.get("groupes", [])) & ESCOFFIER_RETENUS else None
     if 13 in it["cat"] or it["name"].startswith("Pastel"):
         return None
     if set(it["cat"]) & DECOR_CATS:
@@ -37,7 +44,8 @@ def section(it):
 
 
 GROUPE_PRIORITE = ["Façades", "Crèches et étables", "Puits, fontaines et ponts",
-                   "Roulottes et charrettes", "Maisons et bâtisses"]
+                   "Roulottes et charrettes", "Maisons et bâtisses",
+                   "Arbres et végétation", "Accessoires"]
 
 
 def groupe(it):

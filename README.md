@@ -21,7 +21,7 @@ l'année (rubrique « Nouveautés » des deux boutiques) portent un badge
 | Onglet | Contenu | Nombre |
 |---|---|---|
 | Santons Carbonel | N°2 pied vert à l'unité, dont 13 anciens modèles hors boutique | 264 |
-| Bâtiments Escoffier | Collection 7 cm : maisons et bâtisses, façades, crèches et étables, puits, fontaines et ponts, roulottes et charrettes | 76 |
+| Escoffier | Collection 7 cm : maisons et bâtisses, façades, crèches et étables, puits, fontaines et ponts, roulottes et charrettes (76) ; accessoires : murs, escaliers, rivières, quais, pointus, champs… (53) ; arbres et buissons rangés par Escoffier dans les accessoires (24) | 153 |
 | Décors Carbonel | Bâtiments et accessoires N°2 | 82 |
 
 ## Mise en route (une fois, environ 15 minutes)
@@ -133,11 +133,12 @@ remplacée par une réponse fixe.
   `scraper/anciens.py`.
 - **Bâtiments Escoffier** : [escoffier.fr](https://www.escoffier.fr), rubrique
   « Décors de crèche », relevée par `scraper/escoffier.py` (173 décors). Sont
-  retenus les bâtiments de la collection 7 cm, l'échelle des santons N°2, et
-  ceux sans gamme indiquée (moulins, églises, phare…). Les autres tailles
-  (2, 5, 9 cm), les accessoires et les arbres sont écartés.
+  retenus les bâtiments et les accessoires de la collection 7 cm, l'échelle des
+  santons N°2, et ceux sans gamme indiquée (moulins, églises, phare…). Les
+  autres tailles (2, 5, 9 cm) et les arbres absents de la rubrique
+  « Accessoires » sont écartés.
 - **Sélection** : `scraper/selection.py` (N°2 pied vert à l'unité ; bâtiments
-  et accessoires Carbonel N°2 ; bâtiments Escoffier 7 cm ; ni coffrets, ni
+  et accessoires Carbonel N°2 ; bâtiments et accessoires Escoffier 7 cm ; ni coffrets, ni
   lots, ni Pastel).
 
 Pour le mettre à jour :

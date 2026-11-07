@@ -181,7 +181,7 @@ def main():
         ESCOFFIER.write_text(json.dumps(escoffier, ensure_ascii=False, indent=1))
     count = collections.Counter(it["section"] for it in ordered)
     print(f"{count['santons']} santons N°2 pied vert, {count['decor']} bâtiments et accessoires N°2, "
-          f"{count['escoffier']} bâtiments Escoffier")
+          f"{count["escoffier"]} bâtiments et accessoires Escoffier")
 
 
 if __name__ == "__main__":

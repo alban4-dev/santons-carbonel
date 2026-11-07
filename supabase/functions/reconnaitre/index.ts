@@ -73,7 +73,7 @@ Deno.serve(async (req) => {
     ]),
     {
       type: "text" as const,
-      text: `Tu aides une famille à inventorier sa crèche provençale (santons Marcel Carbonel N°2 et bâtiments Escoffier, échelle 7 cm).
+      text: `Tu aides une famille à inventorier sa crèche provençale (santons Marcel Carbonel N°2, bâtiments et accessoires Escoffier, échelle 7 cm).
 Correspondance des numéros des planches :
 ${liste}
 

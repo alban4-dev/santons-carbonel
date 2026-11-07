@@ -232,7 +232,7 @@ dialog::backdrop { background: rgba(20, 14, 26, .55); }
       </div>
       <div class="tabs" role="tablist" id="tabs" hidden>
         <button class="tab" role="tab" type="button" data-tab="santons" id="tab-santons">Santons Carbonel <span class="n"></span></button>
-        <button class="tab" role="tab" type="button" data-tab="escoffier" id="tab-escoffier">Bâtiments Escoffier <span class="n"></span></button>
+        <button class="tab" role="tab" type="button" data-tab="escoffier" id="tab-escoffier">Escoffier <span class="n"></span></button>
         <button class="tab" role="tab" type="button" data-tab="decor" id="tab-decor">Décors Carbonel <span class="n"></span></button>
       </div>
     </div>
@@ -368,7 +368,7 @@ for (const it of ITEMS) {
 }
 const SECTIONS = ["santons", "escoffier", "decor"];
 const ANNEE = (DATA.scrapedAt || "").slice(0, 4) || String(new Date().getFullYear());
-const SEC_LABEL = { santons: "Santons Carbonel", escoffier: "Bâtiments Escoffier", decor: "Décors Carbonel" };
+const SEC_LABEL = { santons: "Santons Carbonel", escoffier: "Bâtiments et accessoires Escoffier", decor: "Décors Carbonel" };
 const N_SEC = Object.fromEntries(SECTIONS.map(t => [t, ITEMS.filter(i => i.section === t).length]));
 const euro = n => n == null ? "" : n.toLocaleString("fr-FR", { style: "currency", currency: "EUR" });
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -376,7 +376,7 @@ const $ = id => document.getElementById(id);
 const initial = n => ((n || "?").trim().charAt(0) || "?").toUpperCase();
 function hashColor(s) { let h = 0; for (const c of String(s)) h = (h * 31 + c.charCodeAt(0)) | 0; return PALETTE[Math.abs(h) % PALETTE.length]; }
 function groupOf(it) {
-  if (it.esc) return it.groupe || "Bâtiments Escoffier";
+  if (it.esc) return it.groupe || "Escoffier";
   if (it.old) return "Anciens modèles (hors boutique)";
   const c = it.cat[0];
   if (c === 12 || c === 7) return CATS[9];
@@ -597,7 +597,7 @@ function render() {
 function measureTop() { document.documentElement.style.setProperty("--top-h", $("top").offsetHeight + "px"); }
 window.addEventListener("resize", measureTop);
 function renderFoot() {
-  $("foot").innerHTML = `Santons Marcel Carbonel taille N°2 (7 cm) au pied vert, à l'unité, d'après <a href="https://marcelcarbonel.com" target="_blank" rel="noopener">marcelcarbonel.com</a> et le catalogue papier N°2 de 2024 ; bâtiments Escoffier de la collection 7 cm d'après <a href="https://www.escoffier.fr" target="_blank" rel="noopener">escoffier.fr</a>. Photos © Ateliers Marcel Carbonel et Santons Escoffier.`;
+  $("foot").innerHTML = `Santons Marcel Carbonel taille N°2 (7 cm) au pied vert, à l'unité, d'après <a href="https://marcelcarbonel.com" target="_blank" rel="noopener">marcelcarbonel.com</a> et le catalogue papier N°2 de 2024 ; bâtiments et accessoires Escoffier de la collection 7 cm d'après <a href="https://www.escoffier.fr" target="_blank" rel="noopener">escoffier.fr</a>. Photos © Ateliers Marcel Carbonel et Santons Escoffier.`;
 }
 const avatarHTML = (uid, cls = "") => `<span class="avatar ${cls}" style="--c:${hashColor(uid)}">${esc(initial(nameOf(uid)))}</span>`;
 function counts(l) {
