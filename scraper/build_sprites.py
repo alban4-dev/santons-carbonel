@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
 """Télécharge une vignette de chaque santon et les assemble en planches.
 
-Lit ../data/santons.json (boutique) et ../data/anciens.json (modèles du
-catalogue papier, photos dans ./anciens/), écrit ../site/sprites/planche-NN.webp
+Lit ../data/santons.json (boutique Carbonel), ../data/anciens.json (modèles du
+catalogue papier, photos dans ./anciens/) et ../data/escoffier.json (bâtiments
+Escoffier), écrit ../site/sprites/planche-NN.webp
 et ajoute à chaque santon :
   "sp"   : sa position dans les planches [planche, case] ;
   "pied" : la couleur de son socle lue sur la photo ("vert" ou "autre"),
            pour les personnages, animaux et coffrets (pas pour les décors) ;
   "noPhoto": true quand le site n'affiche que son logo à la place de la photo ;
-  "section": "santons" ou "decor" pour ce que montre l'appli (voir selection.py).
+  "section": "santons", "decor" ou "escoffier" pour ce que montre l'appli
+             (voir selection.py).
 Seule cette sélection est mise en planches.
 Les vignettes téléchargées restent en cache dans ./cache/ (non versionné),
 une relance ne retélécharge que les nouveautés.
@@ -27,6 +29,8 @@ import io
 import json
 import time
 import urllib.request
+
+from PIL import ImageChops
 from pathlib import Path
 
 from PIL import Image
@@ -38,6 +42,7 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
 DATA = ROOT / "data" / "santons.json"
 ANCIENS = ROOT / "data" / "anciens.json"
+ESCOFFIER = ROOT / "data" / "escoffier.json"
 DECOR = {2, 3, 5, 10}  # maisons, accessoires, affiches, pièces détachées : pas de « pied »
 SPRITES = ROOT / "site" / "sprites"
 CACHE = HERE / "cache"
@@ -54,7 +59,17 @@ def thumb_url(img):
 
 def to_cell(src, dst):
     """Photo quelconque -> vignette CELL_W×CELL_H centrée sur fond blanc."""
-    im = Image.open(src).convert("RGB")
+    im = Image.open(src)
+    if im.mode in ("RGBA", "LA", "P"):  # fond transparent -> blanc
+        im = im.convert("RGBA")
+        bg = Image.new("RGBA", im.size, "white")
+        bg.alpha_composite(im)
+        im = bg
+    im = im.convert("RGB")
+    box = ImageChops.difference(im, Image.new("RGB", im.size, "white")).point(lambda v: 255 if v > 18 else 0).getbbox()
+    if box:  # rogne les marges blanches
+        pad = 8
+        im = im.crop((max(0, box[0] - pad), max(0, box[1] - pad), min(im.width, box[2] + pad), min(im.height, box[3] + pad)))
     im.thumbnail((CELL_W - 12, CELL_H - 12))
     bg = Image.new("RGB", (CELL_W, CELL_H), "white")
     bg.paste(im, ((CELL_W - im.width) // 2, (CELL_H - im.height) // 2))
@@ -70,6 +85,18 @@ def fetch(item):
         return item["id"], path
     if path.exists() and path.stat().st_size > 0:
         return item["id"], path
+    if item.get("marque") == "escoffier" and item.get("img"):  # photo d'origine, pas d'imgix
+        raw = CACHE / f"{item['id']}.orig"
+        try:
+            req = urllib.request.Request(item["img"], headers={"User-Agent": UA})
+            with urllib.request.urlopen(req, timeout=60) as r:
+                raw.write_bytes(r.read())
+            to_cell(raw, path)
+            raw.unlink()
+            return item["id"], path
+        except Exception as e:
+            print(f"  ! {item['id']} {item['name']}: {e}")
+            return item["id"], None
     if not item.get("img"):
         return item["id"], None
     for attempt in range(4):
@@ -88,7 +115,10 @@ def fetch(item):
 def main():
     data = json.loads(DATA.read_text())
     anciens = json.loads(ANCIENS.read_text()) if ANCIENS.exists() else {"items": []}
-    items = data["items"] + anciens["items"]
+    escoffier = json.loads(ESCOFFIER.read_text()) if ESCOFFIER.exists() else {"items": []}
+    for it in escoffier["items"]:
+        it.update(marque="escoffier", cat=it.get("cat", []), size=it.get("size"))
+    items = data["items"] + anciens["items"] + escoffier["items"]
     CACHE.mkdir(exist_ok=True)
     SPRITES.mkdir(exist_ok=True)
 
@@ -104,7 +134,7 @@ def main():
         if digests.get(it["id"]) in common:
             it["noPhoto"] = True
             paths[it["id"]] = None
-        elif paths.get(it["id"]) and not (set(it["cat"]) & DECOR):
+        elif paths.get(it["id"]) and it.get("marque") != "escoffier" and not (set(it["cat"]) & DECOR):
             lab = socle(paths[it["id"]])[0]
             it["pied"] = "vert" if lab == "vert" else "autre"
 
@@ -147,8 +177,11 @@ def main():
     DATA.write_text(json.dumps(data, ensure_ascii=False, indent=1))
     if anciens["items"]:
         ANCIENS.write_text(json.dumps(anciens, ensure_ascii=False, indent=1))
+    if escoffier["items"]:
+        ESCOFFIER.write_text(json.dumps(escoffier, ensure_ascii=False, indent=1))
     count = collections.Counter(it["section"] for it in ordered)
-    print(f"{count['santons']} santons N°2 pied vert, {count['decor']} bâtiments et accessoires N°2")
+    print(f"{count['santons']} santons N°2 pied vert, {count['decor']} bâtiments et accessoires N°2, "
+          f"{count['escoffier']} bâtiments Escoffier")
 
 
 if __name__ == "__main__":

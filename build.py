@@ -13,11 +13,17 @@ data = json.loads((ROOT / "data" / "santons.json").read_text())
 anciens = ROOT / "data" / "anciens.json"
 if anciens.exists():  # modèles du catalogue papier absents de la boutique
     data["items"] += json.loads(anciens.read_text())["items"]
+escoffier = ROOT / "data" / "escoffier.json"
+if escoffier.exists():  # bâtiments Escoffier (collection 7 cm)
+    data["items"] += [dict(it, marque="escoffier", cat=it.get("cat", [])) for it in json.loads(escoffier.read_text())["items"]]
 # l'appli ne montre que la sélection (N°2 pied vert + bâtiments N°2), dans l'ordre des planches
 import sys
 sys.path.insert(0, str(ROOT / "scraper"))
-from selection import sort_key  # noqa: E402
-keep = ("id", "name", "ref", "cat", "col", "price", "img", "url", "source", "sp", "section")
+from selection import groupe, sort_key  # noqa: E402
+keep = ("id", "name", "ref", "cat", "col", "price", "img", "url", "source", "sp", "section", "marque", "groupe")
+for it in data["items"]:
+    if it.get("marque") == "escoffier":
+        it["groupe"] = groupe(it)
 data["items"] = [{k: it[k] for k in keep if it.get(k) is not None}
                  for it in sorted((i for i in data["items"] if i.get("section")), key=sort_key)]
 blob = json.dumps(data, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")

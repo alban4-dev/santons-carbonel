@@ -1,5 +1,5 @@
 // Fonction Supabase « reconnaitre » : repère, sur une photo de crèche, les
-// santons du catalogue Carbonel, à l'aide de Claude.
+// santons Carbonel et bâtiments Escoffier du catalogue, à l'aide de Claude.
 //
 // Entrée (POST JSON, utilisateur connecté et membre d'une famille) :
 //   { photo: "<jpeg base64>", planches: ["<jpeg base64>", ...], liste: "1 = Ange\n2 = Bœuf\n..." }
@@ -68,12 +68,12 @@ Deno.serve(async (req) => {
     { type: "text" as const, text: "Image 1 : la photo de la crèche de la famille." },
     image(photo as string),
     ...(planches as string[]).flatMap((p, i) => [
-      { type: "text" as const, text: `Planche de référence ${i + 1} du catalogue Carbonel (chaque case porte un numéro en haut à gauche).` },
+      { type: "text" as const, text: `Planche de référence ${i + 1} du catalogue (chaque case porte un numéro en haut à gauche).` },
       image(p),
     ]),
     {
       type: "text" as const,
-      text: `Tu aides une famille à inventorier sa crèche provençale de santons Marcel Carbonel (taille N°2, 7 cm).
+      text: `Tu aides une famille à inventorier sa crèche provençale (santons Marcel Carbonel N°2 et bâtiments Escoffier, échelle 7 cm).
 Correspondance des numéros des planches :
 ${liste}
 

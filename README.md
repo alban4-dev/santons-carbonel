@@ -13,9 +13,14 @@ comme un petit réseau social familial :
 - chaque crèche a son **lien de visite** : la personne voit cette crèche
   seulement, en lecture seule (un oncle, une marraine…), et on peut la retirer.
 
-Dans chaque crèche : ✓ je l'ai, ♡ envie, deux onglets (264 santons à l'unité,
-dont 13 anciens modèles hors boutique ; 82 bâtiments et accessoires), photo de
-la crèche pour pointer, liste d'envies à copier pour les cadeaux.
+Dans chaque crèche : ✓ je l'ai, ♡ envie, trois onglets, photo de la crèche
+pour pointer, liste d'envies à copier pour les cadeaux.
+
+| Onglet | Contenu | Nombre |
+|---|---|---|
+| Santons Carbonel | N°2 pied vert à l'unité, dont 13 anciens modèles hors boutique | 264 |
+| Bâtiments Escoffier | Collection 7 cm : maisons et bâtisses, façades, crèches et étables, puits, fontaines et ponts, roulottes et charrettes | 76 |
+| Décors Carbonel | Bâtiments et accessoires N°2 | 82 |
 
 ## Mise en route (une fois, environ 15 minutes)
 
@@ -124,8 +129,14 @@ remplacée par une réponse fixe.
 - **Anciens modèles** : 13 santons N°2 pied vert du catalogue papier 2024
   absents de la boutique, photos découpées dans le PDF par
   `scraper/anciens.py`.
+- **Bâtiments Escoffier** : [escoffier.fr](https://www.escoffier.fr), rubrique
+  « Décors de crèche », relevée par `scraper/escoffier.py` (173 décors). Sont
+  retenus les bâtiments de la collection 7 cm, l'échelle des santons N°2, et
+  ceux sans gamme indiquée (moulins, églises, phare…). Les autres tailles
+  (2, 5, 9 cm), les accessoires et les arbres sont écartés.
 - **Sélection** : `scraper/selection.py` (N°2 pied vert à l'unité ; bâtiments
-  et accessoires N°2 ; ni coffrets, ni lots, ni Pastel).
+  et accessoires Carbonel N°2 ; bâtiments Escoffier 7 cm ; ni coffrets, ni
+  lots, ni Pastel).
 
 Pour le mettre à jour :
 
@@ -133,12 +144,14 @@ Pour le mettre à jour :
 cd scraper
 python3 scrape.py          # relève la boutique -> data/santons.json
 python3 anciens.py         # anciens N°2 du catalogue PDF (pdfplumber)
+python3 escoffier.py       # bâtiments Escoffier -> data/escoffier.json
 python3 build_sprites.py   # vignettes, pied, sélection -> site/sprites/ (Pillow)
 cd .. && python3 build.py  # site/index.html
 ```
 
-Les identifiants des santons sont ceux de la boutique (5001 et plus pour les
-anciens modèles), donc les coches restent valables après une mise à jour.
+Les identifiants sont ceux des boutiques (5001 et plus pour les anciens
+modèles Carbonel, 100000 + l'identifiant Escoffier pour Escoffier), donc les
+coches restent valables après une mise à jour.
 
 ## Fichiers
 
@@ -150,7 +163,7 @@ anciens modèles), donc les coches restent valables après une mise à jour.
 | `supabase/schema.sql` | Tables, règles d'accès, fonctions d'invitation |
 | `supabase/functions/reconnaitre/` | Reconnaissance des santons sur photo (Claude) |
 | `supabase/tests/` | Tests des droits et du parcours |
-| `data/` | Le catalogue relevé |
+| `data/` | Les catalogues relevés (Carbonel, anciens modèles, Escoffier) |
 | `scraper/` | Relevé, couleur du pied, anciens modèles, vignettes |
 
 GitHub ne contenait aucun outil de collection de santons ni de catalogue
@@ -159,4 +172,4 @@ Carbonel (recherche de novembre 2026). Les seuls dépôts proches,
 [karim1407/santonniers](https://github.com/karim1407/santonniers), ne
 correspondent pas à ce besoin.
 
-Photos et noms des santons © Ateliers Marcel Carbonel. Usage familial et privé.
+Photos et noms © Ateliers Marcel Carbonel et Santons Escoffier. Usage familial et privé.
