@@ -673,7 +673,7 @@ function spriteStyle(it) {
   if (!it.sp) return "";
   const [s, i] = it.sp, rows = sheetRows[s], c = i % SP.cols, r = Math.floor(i / SP.cols);
   const x = SP.cols > 1 ? c / (SP.cols - 1) * 100 : 0, y = rows > 1 ? r / (rows - 1) * 100 : 0;
-  return `background-image:url(sprites/planche-${String(s).padStart(2, "0")}.webp);background-size:${SP.cols * 100}% ${rows * 100}%;background-position:${x}% ${y}%`;
+  return `background-image:url(sprites/planche-${String(s).padStart(2, "0")}.webp?v=${SP.v || ""});background-size:${SP.cols * 100}% ${rows * 100}%;background-position:${x}% ${y}%`;
 }
 const inTab = it => it.section === ui.tab;
 const statut = (l, id) => { const r = l.items.get(id); return r ? r.statut : null; };
@@ -930,7 +930,7 @@ async function referenceSheets(items, count) {
     const g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, c.width, c.height);
     for (let k = 0; k < chunk.length; k++) {
       const it = chunk[k], n = s * per + k + 1, [sh, i] = it.sp, key = String(sh).padStart(2, "0");
-      sheets[key] = sheets[key] || await loadImage(`sprites/planche-${key}.webp`);
+      sheets[key] = sheets[key] || await loadImage(`sprites/planche-${key}.webp?v=${SP.v || ""}`);
       const x = (k % cols) * cw, y = Math.floor(k / cols) * ch;
       g.drawImage(sheets[key], (i % SP.cols) * SP.cellW, Math.floor(i / SP.cols) * SP.cellH, SP.cellW, SP.cellH, x, y, cw, ch);
       g.strokeStyle = "#ccc"; g.strokeRect(x + .5, y + .5, cw - 1, ch - 1);

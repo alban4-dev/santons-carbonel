@@ -29,6 +29,13 @@ for it in data["items"]:
         it["nouveau"] = True
 data["items"] = [{k: it[k] for k in keep if it.get(k) is not None}
                  for it in sorted((i for i in data["items"] if i.get("section")), key=sort_key)]
+# version des planches : change dès qu'une vignette change, pour que les
+# navigateurs ne recombinent jamais d'anciennes planches avec un nouveau catalogue
+import hashlib  # noqa: E402
+h = hashlib.sha256()
+for f in sorted((ROOT / "site" / "sprites").glob("planche-*.webp")):
+    h.update(f.read_bytes())
+data.setdefault("sprite", {})["v"] = h.hexdigest()[:10]
 blob = json.dumps(data, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
 src = (ROOT / "src" / "app.html").read_text()
 assert "/*__DATA__*/null" in src
