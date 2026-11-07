@@ -1,6 +1,9 @@
 {
- "source": "https://storage.marcelcarbonel.com/catalogues/n2_tradition_2024.pdf",
- "note": "Modèles du catalogue papier absents de la boutique en ligne",
+ "sources": [
+  "https://storage.marcelcarbonel.com/catalogues/n2_tradition_2024.pdf",
+  "https://cdn.shopify.com/s/files/1/0253/1419/files/N2-2015.pdf"
+ ],
+ "note": "Modèles des catalogues papier absents de la boutique en ligne",
  "items": [
   {
    "id": 5001,
@@ -460,6 +463,29 @@
    "sp": [
     2,
     94
+   ]
+  },
+  {
+   "id": 5021,
+   "name": "Colombe N°2",
+   "ref": null,
+   "size": 2,
+   "cat": [
+    4
+   ],
+   "col": [
+    "tradition",
+    "ancien"
+   ],
+   "price": null,
+   "img": null,
+   "url": "https://marcelcarbonel.com/catalogue",
+   "source": "Dépliant N°2 (2010), page 2",
+   "pied": "autre",
+   "section": "santons",
+   "sp": [
+    3,
+    2
    ]
   }
  ]

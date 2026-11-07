@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Modèles N°2 du catalogue papier absents de la boutique en ligne.
+"""Modèles N°2 des catalogues papier absents de la boutique en ligne.
 
 Le catalogue « N°2 Collection Tradition » (édition 2024, PDF sur
 marcelcarbonel.com/catalogue) montre des santons que la boutique en ligne ne
@@ -19,12 +19,17 @@ import pdfplumber
 from PIL import Image
 
 HERE = Path(__file__).resolve().parent
-PDF_URL = "https://storage.marcelcarbonel.com/catalogues/n2_tradition_2024.pdf"
-SOURCE = "Catalogue N°2 Tradition 2024"
+# catalogues papier utilisés : clé -> (adresse du PDF, nom affiché dans la fiche)
+SOURCES = {
+    "2024": ("https://storage.marcelcarbonel.com/catalogues/n2_tradition_2024.pdf", "Catalogue N°2 Tradition 2024"),
+    "2010": ("https://cdn.shopify.com/s/files/1/0253/1419/files/N2-2015.pdf", "Dépliant N°2 (2010)"),
+}
+PDF_URL = SOURCES["2024"][0]
 
 # id, nom affiché, catégorie (voir scrape.CATEGORIES), page du PDF,
 # libellé exact dans le PDF (texte vertical à droite de la photo),
-# ou cadre de la photo en points PDF quand le libellé déborde dessus.
+# ou cadre de la photo en points PDF quand le libellé déborde dessus,
+# et en option la source (clé de SOURCES, "2024" par défaut).
 MODELES = [
     (5001, "Mireille à la cruche jaune N°2", 8, 6, "Mireille à la cruche jaune", None),
     (5002, "Mireille à la cruche orange N°2", 8, 6, "Mireille à la cruche orange", None),
@@ -46,6 +51,8 @@ MODELES = [
     (5018, "Pont-Aven blanche N°2", 6, 11, "Pont-Aven blanche", None),
     (5019, "Pont-Aven verte N°2", 6, 11, "Pont-Aven verte", None),
     (5020, "Fileuse au rouet N°2", 9, 9, None, (300, 141, 372, 229)),  # fileuse + rouet : deux images
+    # dépliant N°2 de 2010 : la colombe blanche, photo minuscule (36 × 18 px) sur fond jaune
+    (5021, "Colombe N°2", 4, 2, None, (986, 546, 1016, 563), "2010"),
 ]
 
 
@@ -96,27 +103,37 @@ def main_blob(im):
 
 
 def main():
-    req = urllib.request.Request(PDF_URL, headers={"User-Agent": "Mozilla/5.0"})
-    data = urllib.request.urlopen(req, timeout=120).read()
+    pdfs = {}
+    for key, (url, _) in SOURCES.items():
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0"})
+        pdfs[key] = pdfplumber.open(io.BytesIO(urllib.request.urlopen(req, timeout=120).read()))
     out_dir = HERE / "anciens"
     out_dir.mkdir(exist_ok=True)
     items = []
-    with pdfplumber.open(io.BytesIO(data)) as pdf:
-        for pid, name, cat, page_no, label, box in MODELES:
-            page = pdf.pages[page_no - 1]
+    try:
+        for pid, name, cat, page_no, label, box, *rest in MODELES:
+            src = rest[0] if rest else "2024"
+            page = pdfs[src].pages[page_no - 1]
             img = page.crop(box or find_box(page, label)).to_image(resolution=300).original.convert("RGB")
             # cadre trouvé d'après le libellé : on écarte les bouts d'images voisines ;
             # cadre donné à la main : on le garde tel quel (il peut réunir deux images)
-            (img if box else main_blob(img)).save(out_dir / f"{pid}.png")
+            img = img if box else main_blob(img)
+            if img.width < 150:  # photo minuscule : on l'agrandit pour la vignette
+                k = 170 / img.width
+                img = img.resize((170, round(img.height * k)), Image.LANCZOS)
+            img.save(out_dir / f"{pid}.png")
             items.append({
                 "id": pid, "name": name, "ref": None, "size": 2, "cat": [cat],
                 "col": ["tradition", "ancien"], "price": None, "img": None,
                 "url": "https://marcelcarbonel.com/catalogue",
-                "source": f"{SOURCE}, page {page_no}",
+                "source": f"{SOURCES[src][1]}, page {page_no}",
             })
             print(f"{pid} {name}")
+    finally:
+        for pdf in pdfs.values():
+            pdf.close()
     (HERE.parent / "data" / "anciens.json").write_text(json.dumps(
-        {"source": PDF_URL, "note": "Modèles du catalogue papier absents de la boutique en ligne",
+        {"sources": [u for u, _ in SOURCES.values()], "note": "Modèles des catalogues papier absents de la boutique en ligne",
          "items": items}, ensure_ascii=False, indent=1))
 
 

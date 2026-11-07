@@ -26,7 +26,7 @@ l'année (rubrique « Nouveautés » des deux boutiques) portent un badge
 
 | Onglet | Contenu | Nombre |
 |---|---|---|
-| Santons Carbonel | Toute la gamme du catalogue papier N°2 Tradition 2024 (283 modèles, dont 20 absents de la boutique en ligne), plus les autres santons N°2 au pied vert de la boutique | 302 |
+| Santons Carbonel | Toute la gamme du catalogue papier N°2 Tradition 2024 (283 modèles, dont 20 absents de la boutique en ligne), la Colombe du dépliant N°2 de 2010, plus les autres santons N°2 au pied vert de la boutique | 303 |
 | Escoffier | Collection 7 cm : maisons et bâtisses, façades, crèches et étables, puits, fontaines et ponts, roulottes et charrettes (76) ; accessoires : murs, escaliers, rivières, quais, pointus, champs… (53) ; arbres et buissons rangés par Escoffier dans les accessoires (24) | 153 |
 | Décors Carbonel | Bâtiments et accessoires N°2 | 82 |
 
@@ -154,9 +154,14 @@ reconnaissance est remplacée par une réponse fixe.
   modèles → `data/catalogue_n2_2024.json`. **Toute cette gamme est dans
   l'appli**, quel que soit le socle (Provinces de France, Marins, Catalans…) ;
   `build.py` refuse de construire le site s'il en manque un.
-- **Anciens modèles** : 20 santons du catalogue papier absents de la boutique
-  (Mireille, Ravi coupé, Bastidanes, Pont-Aven, Fileuse au rouet…), photos
-  découpées dans le PDF par `scraper/anciens.py`.
+- **Anciens modèles** : 21 santons des catalogues papier absents de la
+  boutique (Mireille, Ravi coupé, Bastidanes, Pont-Aven, Fileuse au rouet… et
+  la Colombe du dépliant N°2 de 2010, dont la photo ne fait que 36 × 18 pixels),
+  photos découpées dans les PDF par `scraper/anciens.py`.
+- **Autres catalogues vérifiés** : N°2 Tradition 2023 (site Carbonel), liste
+  N°2 « Crèche 2022 » (publiée par une paroisse) et dépliant N°2 de 2010 : tous
+  leurs modèles sont dans l'appli. Aucun catalogue plus ancien n'est en ligne ;
+  les modèles d'il y a 30 ans s'ajoutent avec « + Santon ancien ».
 - **Pied vert** : en plus du catalogue, les santons N°2 de la boutique au socle
   peint en vert (lu sur chaque photo par `scraper/socle.py`), et ceux sans socle
   (Jésus et le Berceau dans leur paille, Canard nageant, Cigogne :

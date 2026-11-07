@@ -55,7 +55,7 @@ def section(it):
     if set(it["cat"]) & DECOR_CATS:
         n2 = it["size"] == 2 or "N°2" in it["name"]
         return "decor" if n2 else None
-    if it["id"] in CATALOGUE_N2:
+    if it["id"] in CATALOGUE_N2 or "ancien" in it.get("col", []):  # gamme du catalogue, anciens modèles
         return "santons"
     if it["size"] == 2 and (it.get("pied") == "vert" or it["id"] in SANS_SOCLE):
         return "santons"
