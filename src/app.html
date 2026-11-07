@@ -136,6 +136,7 @@ a { color: var(--accent); }
 .ic.w[aria-pressed="true"] { background: #fbe4ea; border-color: #b8304f; color: #b8304f; }
 .ic:disabled { cursor: default; }
 .ic:disabled[aria-pressed="false"] { display: none; }
+.nouv { position: absolute; left: 5px; bottom: 34px; font-size: .6rem; font-weight: 700; text-transform: uppercase; background: #5a3986; color: #fff; padding: 1px 6px; border-radius: 999px; pointer-events: none; }
 .old { position: absolute; right: 5px; bottom: 34px; font-size: .6rem; font-weight: 700; text-transform: uppercase; background: #7a4b12; color: #fff; padding: 1px 6px; border-radius: 999px; pointer-events: none; }
 .fam { display: flex; gap: 2px; padding: 0 6px 5px; margin-top: -2px; }
 .empty { grid-column: 1 / -1; text-align: center; padding: 40px 16px; color: var(--muted); border: 1px dashed var(--line); border-radius: 10px; }
@@ -366,6 +367,7 @@ for (const it of ITEMS) {
   it.old = it.col.includes("ancien");
 }
 const SECTIONS = ["santons", "escoffier", "decor"];
+const ANNEE = (DATA.scrapedAt || "").slice(0, 4) || String(new Date().getFullYear());
 const SEC_LABEL = { santons: "Santons Carbonel", escoffier: "Bâtiments Escoffier", decor: "Décors Carbonel" };
 const N_SEC = Object.fromEntries(SECTIONS.map(t => [t, ITEMS.filter(i => i.section === t).length]));
 const euro = n => n == null ? "" : n.toLocaleString("fr-FR", { style: "currency", currency: "EUR" });
@@ -679,6 +681,7 @@ function statusOf(it, s, l) {
   if (s === "all") return true;
   if (s === "own") return statut(l, it.id) === "own";
   if (s === "missing") return statut(l, it.id) !== "own";
+  if (s === "new") return !!it.nouveau;
   return statut(l, it.id) === "wish";
 }
 function siblings(l) { return [...st.listes.values()].filter(x => x.id !== l.id && x.famille_id === l.famille_id); }
@@ -697,6 +700,7 @@ function cardHTML(it) {
     <button class="ic o" type="button" data-act="own" data-id="${it.id}" aria-pressed="${own}" aria-label="J'ai : ${esc(it.short)}"${ro}>${ICON.own}</button>
     ${own ? "" : `<button class="ic w" type="button" data-act="wish" data-id="${it.id}" aria-pressed="${wish}" aria-label="Envie : ${esc(it.short)}"${ro}>${ICON.wish}</button>`}
     ${it.old ? '<span class="old">Ancien</span>' : ""}
+    ${it.nouveau ? `<span class="nouv">Nouveau ${ANNEE}</span>` : ""}
     <div class="nm">${esc(it.short)}</div>
     ${famHTML(it, l)}
   </article>`;
@@ -720,7 +724,7 @@ function renderGrid() {
     if (g !== grp) { grp = g; html += `<div class="sec"><h2>${esc(g)}</h2><span data-sec="${esc(g)}"></span></div>`; }
     html += cardHTML(it);
   }
-  if (!list.length) html = `<div class="empty">${ui.status === "own" ? "Rien de coché pour l'instant." : ui.status === "wish" ? "Pas encore d'envie dans cet onglet." : "Rien ne correspond."}</div>`;
+  if (!list.length) html = `<div class="empty">${ui.status === "own" ? "Rien de coché pour l'instant." : ui.status === "wish" ? "Pas encore d'envie dans cet onglet." : ui.status === "new" ? "Pas de nouveauté dans cet onglet cette année." : "Rien ne correspond."}</div>`;
   $("grid").innerHTML = html;
   renderSectionCounts();
 }
@@ -739,7 +743,10 @@ function renderProgress() {
 }
 function renderStatus() {
   const l = curList(), pool = ITEMS.filter(inTab);
-  $("status").innerHTML = [["all", "Tous"], ["own", "J'ai"], ["missing", "Il manque"], ["wish", "Envies"]].map(([v, t]) =>
+  const opts = [["all", "Tous"], ["own", "J'ai"], ["missing", "Il manque"], ["wish", "Envies"]];
+  if (pool.some(it => it.nouveau)) opts.push(["new", "Nouveautés " + ANNEE]);
+  else if (ui.status === "new") ui.status = "all";
+  $("status").innerHTML = opts.map(([v, t]) =>
     `<button class="chip" type="button" data-status="${v}" aria-pressed="${ui.status === v}">${t}<span class="n">${pool.filter(it => statusOf(it, v, l)).length}</span></button>`).join("");
 }
 
@@ -782,6 +789,7 @@ function openItem(id) {
           <dt>Marque</dt><dd>${it.esc ? "Santons Escoffier (Aubagne)" : "Ateliers Marcel Carbonel (Marseille)"}</dd>
           <dt>Catégorie</dt><dd>${esc(groupOf(it))}</dd>
           ${it.ref ? `<dt>Référence</dt><dd>${esc(it.ref)}</dd>` : ""}
+          ${it.nouveau ? `<dt>Sortie</dt><dd>Nouveauté ${ANNEE}</dd>` : ""}
           ${it.price != null ? `<dt>Prix</dt><dd>${euro(it.price)} <span class="muted">(boutique)</span></dd>` : ""}
           ${it.source ? `<dt>Source</dt><dd>${esc(it.source)}. Plus vendu en ligne.</dd>` : ""}
         </dl>

@@ -14,7 +14,9 @@ comme un petit réseau social familial :
   seulement, en lecture seule (un oncle, une marraine…), et on peut la retirer.
 
 Dans chaque crèche : ✓ je l'ai, ♡ envie, trois onglets, photo de la crèche
-pour pointer, liste d'envies à copier pour les cadeaux.
+pour pointer, liste d'envies à copier pour les cadeaux. Les nouveautés de
+l'année (rubrique « Nouveautés » des deux boutiques) portent un badge
+« Nouveau 2026 » et ont leur filtre.
 
 | Onglet | Contenu | Nombre |
 |---|---|---|

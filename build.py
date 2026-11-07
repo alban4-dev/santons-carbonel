@@ -20,10 +20,13 @@ if escoffier.exists():  # bâtiments Escoffier (collection 7 cm)
 import sys
 sys.path.insert(0, str(ROOT / "scraper"))
 from selection import groupe, sort_key  # noqa: E402
-keep = ("id", "name", "ref", "cat", "col", "price", "img", "url", "source", "sp", "section", "marque", "groupe")
+keep = ("id", "name", "ref", "cat", "col", "price", "img", "url", "source", "sp", "section", "marque", "groupe", "nouveau")
 for it in data["items"]:
     if it.get("marque") == "escoffier":
         it["groupe"] = groupe(it)
+    # nouveautés de l'année : rubrique « Nouveautés » des deux boutiques
+    if "nouveaute" in it.get("col", []) or it.get("nouveaute"):
+        it["nouveau"] = True
 data["items"] = [{k: it[k] for k in keep if it.get(k) is not None}
                  for it in sorted((i for i in data["items"] if i.get("section")), key=sort_key)]
 blob = json.dumps(data, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")

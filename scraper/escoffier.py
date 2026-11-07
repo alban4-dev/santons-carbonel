@@ -2,7 +2,8 @@
 """Relève les décors de crèche (bâtiments) des Santons Escoffier (escoffier.fr).
 
 Écrit ../data/escoffier.json : un élément par modèle (nom, photo, référence,
-prix, gamme, catégorie, lien). Les identifiants valent 100000 + l'identifiant
+prix, gamme, catégorie, lien, et "nouveaute": true pour ceux de la rubrique
+Nouveautés du site). Les identifiants valent 100000 + l'identifiant
 de la boutique Escoffier, pour ne jamais croiser ceux de Carbonel.
 
 Uniquement la bibliothèque standard. Une requête toutes les ~0,5 s.
@@ -98,6 +99,19 @@ def main():
             if not found or not new:  # au-delà de la dernière page, le site renvoie la dernière
                 break
         print(f"{label:<28} {n:>4} modèles")
+    # Rubrique « Nouveautés » : surtout des santons, parfois un décor
+    nouveaux = set()
+    for p in range(1, 30):
+        found = parse(get(f"https://www.escoffier.fr/fr/nouveautes.html?product_list_limit=36&p={p}"))
+        fresh = {f["id"] for f in found} - nouveaux
+        if not fresh:
+            break
+        nouveaux |= fresh
+    for i in items.values():
+        i.pop("nouveaute", None)
+        if i["id"] in nouveaux:
+            i["nouveaute"] = True
+    print(f"Nouveautés : {len(nouveaux)} au total, dont {sum(1 for i in items.values() if i.get('nouveaute'))} décors")
     data = {
         "source": "https://www.escoffier.fr/fr/decors-de-creche.html",
         "scrapedAt": time.strftime("%Y-%m-%d"),
