@@ -141,8 +141,8 @@ PostgreSQL 16 local :
 exécute chaque requête avec l'identité de l'utilisateur, donc avec les vraies
 règles. `auth_factice.sql` crée le schéma `auth` minimal. Le temps réel et
 l'appel à Claude ne sont pas couverts ; le stockage des photos est imité
-(dépôt soumis aux mêmes règles, fichiers sur le disque) : la fonction de reconnaissance est
-remplacée par une réponse fixe.
+(dépôt soumis aux mêmes règles, fichiers sur le disque). La fonction de
+reconnaissance est remplacée par une réponse fixe.
 
 ## Le catalogue
 
