@@ -29,6 +29,14 @@ for it in data["items"]:
         it["nouveau"] = True
 data["items"] = [{k: it[k] for k in keep if it.get(k) is not None}
                  for it in sorted((i for i in data["items"] if i.get("section")), key=sort_key)]
+
+# garde-fou : toute la gamme du catalogue papier N°2 Tradition doit être dans l'appli
+catalogue = ROOT / "data" / "catalogue_n2_2024.json"
+if catalogue.exists():
+    presents = {it["id"] for it in data["items"]}
+    absents = [m["libelle"] for m in json.loads(catalogue.read_text())["modeles"] if not set(m["ids"]) <= presents]
+    if absents:
+        sys.exit("Modèles du catalogue N°2 absents de l'appli : " + ", ".join(absents))
 # version des planches : change dès qu'une vignette change, pour que les
 # navigateurs ne recombinent jamais d'anciennes planches avec un nouveau catalogue
 import hashlib  # noqa: E402

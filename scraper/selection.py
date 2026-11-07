@@ -1,7 +1,8 @@
 """Ce que montre l'application : N°2 / 7 cm seulement, pièces à l'unité.
 
-- section "santons"   : les santons Carbonel N°2 au pied vert (personnages,
-  animaux), boutique + anciens modèles du catalogue papier ;
+- section "santons"   : toute la gamme du catalogue papier « N°2 Collection
+  Tradition » 2024 (quel que soit le socle), plus les santons Carbonel N°2 au
+  pied vert de la boutique (personnages, animaux) ;
 - section "decor"     : les bâtiments et accessoires Carbonel N°2 (Tradition) ;
 - section "escoffier" : les bâtiments et accessoires Escoffier de la collection
   7 cm (maisons, façades, crèches et étables, puits, fontaines, ponts,
@@ -9,8 +10,15 @@
   quais, arbres…).
 Pas de coffrets ni de lots, pas de pièces sans photo, pas d'autres tailles.
 """
+import json
 import re
 import unicodedata
+from pathlib import Path
+
+_CAT = Path(__file__).resolve().parent.parent / "data" / "catalogue_n2_2024.json"
+# tous les modèles du catalogue papier N°2 Tradition (voir catalogue_n2.py)
+CATALOGUE_N2 = ({i for m in json.loads(_CAT.read_text())["modeles"] for i in m["ids"]}
+                if _CAT.exists() else set())
 
 PACK = re.compile(r"\b(coffret|lot)\b|\+", re.I)
 DECOR_CATS = {2, 3}           # Carbonel : maisons et étables ; accessoires, arbres, fleurs
@@ -47,6 +55,8 @@ def section(it):
     if set(it["cat"]) & DECOR_CATS:
         n2 = it["size"] == 2 or "N°2" in it["name"]
         return "decor" if n2 else None
+    if it["id"] in CATALOGUE_N2:
+        return "santons"
     if it["size"] == 2 and (it.get("pied") == "vert" or it["id"] in SANS_SOCLE):
         return "santons"
     return None

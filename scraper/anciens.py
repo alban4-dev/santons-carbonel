@@ -45,6 +45,7 @@ MODELES = [
     (5017, "Pont-Aven rose N°2", 6, 11, "Pont-Aven rose", None),
     (5018, "Pont-Aven blanche N°2", 6, 11, "Pont-Aven blanche", None),
     (5019, "Pont-Aven verte N°2", 6, 11, "Pont-Aven verte", None),
+    (5020, "Fileuse au rouet N°2", 9, 9, None, (300, 141, 372, 229)),  # fileuse + rouet : deux images
 ]
 
 
@@ -103,9 +104,10 @@ def main():
     with pdfplumber.open(io.BytesIO(data)) as pdf:
         for pid, name, cat, page_no, label, box in MODELES:
             page = pdf.pages[page_no - 1]
-            box = box or find_box(page, label)
-            img = page.crop(box).to_image(resolution=300).original.convert("RGB")
-            main_blob(img).save(out_dir / f"{pid}.png")
+            img = page.crop(box or find_box(page, label)).to_image(resolution=300).original.convert("RGB")
+            # cadre trouvé d'après le libellé : on écarte les bouts d'images voisines ;
+            # cadre donné à la main : on le garde tel quel (il peut réunir deux images)
+            (img if box else main_blob(img)).save(out_dir / f"{pid}.png")
             items.append({
                 "id": pid, "name": name, "ref": None, "size": 2, "cat": [cat],
                 "col": ["tradition", "ancien"], "price": None, "img": None,

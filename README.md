@@ -1,6 +1,7 @@
 # Santons Carbonel en famille
 
-Le catalogue des santons Marcel Carbonel **N°2 (7 cm) au pied vert**, partagé
+Le catalogue des santons Marcel Carbonel **N°2 (7 cm)** et des bâtiments
+**Escoffier** (collection 7 cm), partagé
 comme un petit réseau social familial :
 
 - chaque **crèche** est une liste au nom de quelqu'un (« Crèche de Léa »,
@@ -21,7 +22,7 @@ l'année (rubrique « Nouveautés » des deux boutiques) portent un badge
 
 | Onglet | Contenu | Nombre |
 |---|---|---|
-| Santons Carbonel | N°2 pied vert à l'unité, plus les 5 sans socle (Jésus, Jésus seul, Berceau, Canard nageant, Cigogne), dont 13 anciens modèles hors boutique | 269 |
+| Santons Carbonel | Toute la gamme du catalogue papier N°2 Tradition 2024 (283 modèles, dont 20 absents de la boutique en ligne), plus les autres santons N°2 au pied vert de la boutique | 302 |
 | Escoffier | Collection 7 cm : maisons et bâtisses, façades, crèches et étables, puits, fontaines et ponts, roulottes et charrettes (76) ; accessoires : murs, escaliers, rivières, quais, pointus, champs… (53) ; arbres et buissons rangés par Escoffier dans les accessoires (24) | 153 |
 | Décors Carbonel | Bâtiments et accessoires N°2 | 82 |
 
@@ -137,22 +138,28 @@ remplacée par une réponse fixe.
 
 - **Boutique** : [marcelcarbonel.com](https://marcelcarbonel.com), relevée en
   entier (1 321 références) par `scraper/scrape.py`.
-- **Pied vert** : socle peint en vert, lu sur chaque photo par
-  `scraper/socle.py`. Les Provinces de France, la Bonne Mère, les Confrères ou
-  les Marins ont un socle d'une autre couleur et ne sont pas retenus. Les
-  santons Tradition **sans socle** (Jésus, Jésus seul et Berceau de Jésus dans
-  leur paille, Canard nageant, Cigogne) sont ajoutés à la main
-  (`SANS_SOCLE` dans `scraper/selection.py`).
-- **Anciens modèles** : 13 santons N°2 pied vert du catalogue papier 2024
-  absents de la boutique, photos découpées dans le PDF par
-  `scraper/anciens.py`.
+- **Catalogue N°2 Tradition 2024** (le PDF de marcelcarbonel.com/catalogue) :
+  `scraper/catalogue_n2.py` lit les 283 modèles du catalogue (variantes de
+  couleur comprises) et retrouve chacun dans la boutique ou parmi les anciens
+  modèles → `data/catalogue_n2_2024.json`. **Toute cette gamme est dans
+  l'appli**, quel que soit le socle (Provinces de France, Marins, Catalans…) ;
+  `build.py` refuse de construire le site s'il en manque un.
+- **Anciens modèles** : 20 santons du catalogue papier absents de la boutique
+  (Mireille, Ravi coupé, Bastidanes, Pont-Aven, Fileuse au rouet…), photos
+  découpées dans le PDF par `scraper/anciens.py`.
+- **Pied vert** : en plus du catalogue, les santons N°2 de la boutique au socle
+  peint en vert (lu sur chaque photo par `scraper/socle.py`), et ceux sans socle
+  (Jésus et le Berceau dans leur paille, Canard nageant, Cigogne :
+  `SANS_SOCLE` dans `scraper/selection.py`). Restent écartés, hors catalogue et
+  au socle d'une autre couleur : la Bonne Mère, les Confrères, le Comte de
+  Monte-Cristo, le Carabinier de Monaco.
 - **Bâtiments Escoffier** : [escoffier.fr](https://www.escoffier.fr), rubrique
   « Décors de crèche », relevée par `scraper/escoffier.py` (173 décors). Sont
   retenus les bâtiments et les accessoires de la collection 7 cm, l'échelle des
   santons N°2, et ceux sans gamme indiquée (moulins, églises, phare…). Les
   autres tailles (2, 5, 9 cm) et les arbres absents de la rubrique
   « Accessoires » sont écartés.
-- **Sélection** : `scraper/selection.py` (N°2 pied vert à l'unité ; bâtiments
+- **Sélection** : `scraper/selection.py` (gamme du catalogue N°2 et N°2 pied vert, à l'unité ; bâtiments
   et accessoires Carbonel N°2 ; bâtiments et accessoires Escoffier 7 cm ; ni coffrets, ni
   lots, ni Pastel).
 
@@ -162,6 +169,7 @@ Pour le mettre à jour :
 cd scraper
 python3 scrape.py          # relève la boutique -> data/santons.json
 python3 anciens.py         # anciens N°2 du catalogue PDF (pdfplumber)
+python3 catalogue_n2.py    # liste de la gamme du catalogue N°2 Tradition
 python3 escoffier.py       # bâtiments Escoffier -> data/escoffier.json
 python3 build_sprites.py   # vignettes, pied, sélection -> site/sprites/ (Pillow)
 cd .. && python3 build.py  # site/index.html

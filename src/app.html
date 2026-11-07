@@ -1,5 +1,5 @@
 <title>Santons Carbonel en famille</title>
-<meta name="description" content="Les crèches de la famille en santons Carbonel N°2 pied vert : chacun ses listes, ses envies, et les visiteurs invités.">
+<meta name="description" content="Les crèches de la famille en santons Carbonel N°2 et bâtiments Escoffier : chacun ses listes, ses envies, et une page publique par crèche.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600;700&family=Young+Serif&display=swap">
@@ -200,7 +200,7 @@ dialog::backdrop { background: rgba(20, 14, 26, .55); }
 <section class="solo" id="scr-auth" hidden>
   <form class="card-solo" id="auth-form" novalidate>
     <h1>Santons Carbonel</h1>
-    <p class="help">Les crèches de la famille en santons N°2 pied vert.</p>
+    <p class="help">Les crèches de la famille : santons Carbonel N°2, bâtiments Escoffier.</p>
     <div class="invite-banner" id="auth-invite" hidden></div>
     <div class="seg" role="group" aria-label="Connexion ou création de compte">
       <button type="button" data-mode="in" aria-pressed="true">J'ai un compte</button>
@@ -605,7 +605,7 @@ function render() {
 function measureTop() { document.documentElement.style.setProperty("--top-h", $("top").offsetHeight + "px"); }
 window.addEventListener("resize", measureTop);
 function renderFoot() {
-  $("foot").innerHTML = `Santons Marcel Carbonel taille N°2 (7 cm) au pied vert, à l'unité, d'après <a href="https://marcelcarbonel.com" target="_blank" rel="noopener">marcelcarbonel.com</a> et le catalogue papier N°2 de 2024 ; bâtiments et accessoires Escoffier de la collection 7 cm d'après <a href="https://www.escoffier.fr" target="_blank" rel="noopener">escoffier.fr</a>. Photos © Ateliers Marcel Carbonel et Santons Escoffier.`;
+  $("foot").innerHTML = `Santons Marcel Carbonel taille N°2 (7 cm), à l'unité : toute la gamme du catalogue N°2 Tradition 2024 et les modèles au pied vert de <a href="https://marcelcarbonel.com" target="_blank" rel="noopener">marcelcarbonel.com</a> ; bâtiments et accessoires Escoffier de la collection 7 cm d'après <a href="https://www.escoffier.fr" target="_blank" rel="noopener">escoffier.fr</a>. Photos © Ateliers Marcel Carbonel et Santons Escoffier.`;
 }
 const avatarHTML = (uid, cls = "") => `<span class="avatar ${cls}" style="--c:${hashColor(uid)}">${esc(initial(nameOf(uid)))}</span>`;
 function counts(l) {
