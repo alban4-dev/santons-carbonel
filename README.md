@@ -16,7 +16,11 @@ comme un petit réseau social familial :
   « Changer » le lien coupe l'ancien.
 
 Dans chaque crèche : ✓ je l'ai, ♡ envie, trois onglets, photo de la crèche
-pour pointer, liste d'envies à copier pour les cadeaux. Les nouveautés de
+pour pointer, liste d'envies à copier pour les cadeaux, et **« + Santon
+ancien »** pour les modèles qu'aucun catalogue ne montre (crèches commencées
+il y a 30 ans) : nom, marque, note, photo prise au téléphone. Le modèle entre
+dans le catalogue de toute la famille, dans le bon onglet, sous « Ajoutés par
+la famille », et se coche comme les autres. Les nouveautés de
 l'année (rubrique « Nouveautés » des deux boutiques) portent un badge
 « Nouveau 2026 » et ont leur filtre.
 
@@ -55,7 +59,9 @@ Une base déjà installée reçoit les nouveautés par les fichiers de
 [`supabase/migrations/`](supabase/migrations), à exécuter une fois chacun dans
 le SQL Editor (`schema.sql` les contient déjà pour une nouvelle installation) :
 
-- `2026-11-08_page_publique.sql` : page publique d'une crèche, sans compte.
+- `2026-11-08b_santons_ajoutes.sql` : santons ajoutés par la famille, espace
+  « photos » pour leurs photos, et page publique d'une crèche (contient aussi
+  `2026-11-08_page_publique.sql`, qu'il n'est donc pas utile de lancer).
 
 ### 2. Le site : GitHub Pages
 
@@ -120,18 +126,22 @@ ses droits.
 `supabase/tests/lancer.sh` rejoue tout sans compte Supabase, sur un
 PostgreSQL 16 local :
 
-- `droits.sql` : 39 vérifications des règles d'accès (inconnu, membre, gérant,
-  visiteur, ancien membre, anonyme, page publique) ;
+- `droits.sql` : 47 vérifications des règles d'accès (inconnu, membre, gérant,
+  visiteur, ancien membre, anonyme, page publique, santons ajoutés et photos) ;
 - `parcours.js` : dans un vrai navigateur, Papa crée la famille et la crèche
   de Léa, coche, utilise la photo ; Maman arrive par le lien d'invitation, est
   en lecture seule, puis devient gérante ; Mamie ouvre le lien public sans
   compte et ne voit que la crèche de Léa ; après « Changer », l'ancien lien
-  ne marche plus.
+  ne marche plus ;
+- `ajout.js` : Papa ajoute un santon ancien avec sa photo, coché dans la
+  crèche ; Maman le voit dans le catalogue, la page publique l'affiche ; Papa
+  le retire et il disparaît de toutes les crèches.
 
 `faux_supabase.py` imite les routes de Supabase utilisées par l'appli et
 exécute chaque requête avec l'identité de l'utilisateur, donc avec les vraies
 règles. `auth_factice.sql` crée le schéma `auth` minimal. Le temps réel et
-l'appel à Claude ne sont pas couverts : la fonction de reconnaissance est
+l'appel à Claude ne sont pas couverts ; le stockage des photos est imité
+(dépôt soumis aux mêmes règles, fichiers sur le disque) : la fonction de reconnaissance est
 remplacée par une réponse fixe.
 
 ## Le catalogue

@@ -74,6 +74,7 @@ a { color: var(--accent); }
 .btn.sm { padding: 5px 10px; font-size: .85rem; }
 .btn:disabled { opacity: .5; cursor: default; }
 .field { display: grid; gap: 4px; }
+.field-sel { border: 1px solid var(--line); background: var(--bg); border-radius: 8px; padding: 9px 11px; width: 100%; min-width: 0; }
 .field input { border: 1px solid var(--line); background: var(--bg); border-radius: 8px; padding: 9px 11px; width: 100%; min-width: 0; }
 .chip { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 5px 11px; font-size: .88rem; white-space: nowrap; }
 .chip[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--bg); }
@@ -148,6 +149,11 @@ a { color: var(--accent); }
 .ic:disabled { cursor: default; }
 .ic:disabled[aria-pressed="false"] { display: none; }
 .nouv { position: absolute; left: 5px; bottom: 34px; font-size: .6rem; font-weight: 700; text-transform: uppercase; background: #5a3986; color: #fff; padding: 1px 6px; border-radius: 999px; pointer-events: none; }
+.ajout { position: absolute; right: 5px; bottom: 34px; font-size: .6rem; font-weight: 700; text-transform: uppercase; background: #1f6f8b; color: #fff; padding: 1px 6px; border-radius: 999px; pointer-events: none; }
+.ph.vide { display: grid; place-items: center; font-family: var(--f-display); font-size: 2.6rem; color: #8a7f95; background-size: contain !important; }
+.ph.photo { background-size: contain; background-position: center; }
+.add-btn { border: 1.5px dashed var(--accent); color: var(--accent); background: var(--surface); }
+.preview { max-height: 180px; max-width: 100%; border-radius: 10px; display: block; }
 .old { position: absolute; right: 5px; bottom: 34px; font-size: .6rem; font-weight: 700; text-transform: uppercase; background: #7a4b12; color: #fff; padding: 1px 6px; border-radius: 999px; pointer-events: none; }
 .fam { display: flex; gap: 2px; padding: 0 6px 5px; margin-top: -2px; }
 .empty { grid-column: 1 / -1; text-align: center; padding: 40px 16px; color: var(--muted); border: 1px dashed var(--line); border-radius: 10px; }
@@ -258,6 +264,7 @@ dialog::backdrop { background: rgba(20, 14, 26, .55); }
       <span class="who" id="l-who"></span>
       <span class="badge" id="l-badge"></span>
       <span class="row" style="margin-left:auto">
+        <button class="btn sm add-btn" type="button" id="l-add" hidden>+ Santon ancien</button>
         <button class="btn sm" type="button" id="l-copy">Copier les envies</button>
         <button class="btn sm" type="button" id="l-settings" hidden>Réglages</button>
       </span>
@@ -297,6 +304,26 @@ dialog::backdrop { background: rgba(20, 14, 26, .55); }
     <p class="help" id="me-mail"></p>
     <div class="field"><label class="label" for="me-nom">Prénom affiché</label><input id="me-nom" maxlength="40" required></div>
     <div class="row"><button class="btn primary" type="submit">Enregistrer</button><button class="btn" type="button" id="me-out">Se déconnecter</button></div>
+  </form>
+</dialog>
+
+<dialog id="dlg-add" aria-labelledby="add-title">
+  <form class="dlg" id="add-form">
+    <div class="dlg-head"><h2 id="add-title">Ajouter un santon ancien</h2><button class="x" type="button" data-close aria-label="Fermer">✕</button></div>
+    <p class="help">Pour un modèle qu'aucun catalogue ne montre : il rejoint le catalogue de toute la famille, dans le bon onglet, sous « Ajoutés par la famille ».</p>
+    <div class="field"><label class="label" for="add-nom">Nom</label><input id="add-nom" maxlength="80" required placeholder="Par ex. Berger à l'agneau (1994)"></div>
+    <div class="row">
+      <div class="field" style="flex:1 1 150px"><label class="label" for="add-type">Type</label>
+        <select id="add-type" class="field-sel"><option value="santon">Santon</option><option value="decor">Bâtiment ou décor</option></select></div>
+      <div class="field" style="flex:1 1 150px"><label class="label" for="add-marque">Marque</label>
+        <select id="add-marque" class="field-sel"><option>Carbonel</option><option>Escoffier</option><option>Autre</option></select></div>
+    </div>
+    <div class="field"><label class="label" for="add-note">Note (année, taille, couleur…)</label><input id="add-note" maxlength="200"></div>
+    <div class="field"><span class="label">Photo</span>
+      <label class="drop" style="padding:14px"><span id="add-photo-txt">Prendre ou choisir une photo</span><img class="preview" id="add-preview" alt="" hidden><input type="file" id="add-photo" accept="image/*"></label></div>
+    <label class="row" id="add-own-row"><input type="checkbox" id="add-own" checked> <span id="add-own-txt">Je l'ai dans cette crèche</span></label>
+    <p class="err" id="add-err" hidden></p>
+    <div class="row"><button class="btn primary" type="submit" id="add-go">Ajouter au catalogue</button></div>
   </form>
 </dialog>
 
@@ -381,13 +408,29 @@ for (const it of ITEMS) {
 const SECTIONS = ["santons", "escoffier", "decor"];
 const ANNEE = (DATA.scrapedAt || "").slice(0, 4) || String(new Date().getFullYear());
 const SEC_LABEL = { santons: "Santons Carbonel", escoffier: "Bâtiments et accessoires Escoffier", decor: "Décors Carbonel" };
-const N_SEC = Object.fromEntries(SECTIONS.map(t => [t, ITEMS.filter(i => i.section === t).length]));
+/* Modèles ajoutés par la famille (table modeles_famille) : ils rejoignent ITEMS */
+const PHOTO_OK = /^[0-9a-f-]{36}\/[0-9a-z-]{8,64}\.(jpg|jpeg|png|webp)$/i;
+const photoUrl = path => PHOTO_OK.test(path || "") ? `${(CFG.supabaseUrl || "").replace(/\/$/, "")}/storage/v1/object/public/photos/${path}` : "";
+function setCustom(rows, publicMode) {
+  for (let k = ITEMS.length - 1; k >= 0; k--) if (ITEMS[k].custom) { BY_ID.delete(ITEMS[k].id); ITEMS.splice(k, 1); }
+  for (const r of rows || []) {
+    if (!Number.isInteger(r.id) || BY_ID.has(r.id)) continue;
+    const it = { id: r.id, name: r.nom, short: r.nom, section: SECTIONS.includes(r.section) ? r.section : "santons",
+      marqueNom: r.marque, note: r.note, photo: photoUrl(r.photo), ajoutePar: r.ajoute_par, cree: r.created_at,
+      famille: publicMode ? null : r.famille_id, custom: true, cat: [], col: [], esc: r.marque === "Escoffier" };
+    it._s = norm(it.name + " " + (it.note || "") + " " + (r.marque || ""));
+    ITEMS.push(it); BY_ID.set(it.id, it);
+  }
+}
+const visibleFor = (it, l) => !it.custom || !l || it.famille === l.famille_id;
+const nSec = (t, l) => ITEMS.filter(i => i.section === t && visibleFor(i, l)).length;
 const euro = n => n == null ? "" : n.toLocaleString("fr-FR", { style: "currency", currency: "EUR" });
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const $ = id => document.getElementById(id);
 const initial = n => ((n || "?").trim().charAt(0) || "?").toUpperCase();
 function hashColor(s) { let h = 0; for (const c of String(s)) h = (h * 31 + c.charCodeAt(0)) | 0; return PALETTE[Math.abs(h) % PALETTE.length]; }
 function groupOf(it) {
+  if (it.custom) return "Ajoutés par la famille";
   if (it.esc) return it.groupe || "Escoffier";
   if (it.old) return "Anciens modèles (hors boutique)";
   const c = it.cat[0];
@@ -522,12 +565,14 @@ async function fetchAll(table, cols) {
 }
 async function loadAll() {
   const q = (t, c) => sb.from(t).select(c).then(r => { if (r.error) throw r.error; return r.data; });
-  const [fam, mem, prof, lst, ger, vis, invL, invF, items] = await Promise.all([
+  const [fam, mem, prof, lst, ger, vis, invL, invF, modeles, items] = await Promise.all([
     q("familles", "id,nom"), q("membres", "famille_id,user_id,role"), q("profils", "id,nom"),
     q("listes", "id,famille_id,nom,cree_par,created_at"), q("liste_gerants", "liste_id,user_id"),
     q("liste_visiteurs", "liste_id,user_id"), q("liste_invitations", "liste_id,code"), q("famille_invitations", "famille_id,code"),
+    q("modeles_famille", "id,famille_id,nom,marque,section,note,photo,ajoute_par,created_at").catch(() => []),
     fetchAll("liste_items", "liste_id,santon_id,statut,modifie_par,updated_at"),
   ]);
+  setCustom(modeles, false);
   st.familles = new Map(fam.map(f => [f.id, f]));
   st.membres = mem; st.gerants = ger; st.visiteurs = vis;
   st.profils = new Map(prof.map(p => [p.id, p]));
@@ -555,6 +600,7 @@ function subscribe() {
       .on("postgres_changes", { event: "*", schema: "public", table: "liste_gerants" }, reloadSoon)
       .on("postgres_changes", { event: "*", schema: "public", table: "liste_visiteurs" }, reloadSoon)
       .on("postgres_changes", { event: "*", schema: "public", table: "membres" }, reloadSoon)
+      .on("postgres_changes", { event: "*", schema: "public", table: "modeles_famille" }, reloadSoon)
       .subscribe();
   } catch (e) { /* temps réel indisponible : on recharge au retour sur la page */ }
   document.addEventListener("visibilitychange", () => { if (!document.hidden && me) reloadSoon(); });
@@ -627,8 +673,8 @@ function listCard(l) {
   return `<button class="lcard" type="button" data-list="${l.id}">
     <span class="row" style="justify-content:space-between"><h3>${esc(l.nom)}</h3>${edit ? '<span class="badge edit">Vous gérez</span>' : '<span class="badge">Lecture seule</span>'}</span>
     <span class="who">${g.length ? "Gérée par " + esc(g.map(nameOf).join(", ")) : "Sans gérant"}</span>
-    <span class="meter"><i style="width:${c.santons / N_SEC.santons * 100}%"></i></span>
-    <span class="nums"><span><b>${c.santons}</b> / ${N_SEC.santons} santons</span><span><b>${c.escoffier}</b> Escoffier</span><span><b>${c.decor}</b> décors Carbonel</span><span><b>${c.w}</b> envies</span></span>
+    <span class="meter"><i style="width:${c.santons / nSec("santons", l) * 100}%"></i></span>
+    <span class="nums"><span><b>${c.santons}</b> / ${nSec("santons", l)} santons</span><span><b>${c.escoffier}</b> Escoffier</span><span><b>${c.decor}</b> décors Carbonel</span><span><b>${c.w}</b> envies</span></span>
   </button>`;
 }
 function feedHTML(listIds) {
@@ -683,12 +729,13 @@ const ICON = {
   wish: '<svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 14s-5.5-3.4-5.5-7.2A3 3 0 0 1 8 4.6a3 3 0 0 1 5.5 2.2C13.5 10.6 8 14 8 14z" fill="currentColor" fill-opacity=".2" stroke="currentColor" stroke-width="1.5"/></svg>',
 };
 function spriteStyle(it) {
+  if (it.custom) return it.photo ? `background-image:url('${it.photo}')` : "";
   if (!it.sp) return "";
   const [s, i] = it.sp, rows = sheetRows[s], c = i % SP.cols, r = Math.floor(i / SP.cols);
   const x = SP.cols > 1 ? c / (SP.cols - 1) * 100 : 0, y = rows > 1 ? r / (rows - 1) * 100 : 0;
   return `background-image:url(sprites/planche-${String(s).padStart(2, "0")}.webp?v=${SP.v || ""});background-size:${SP.cols * 100}% ${rows * 100}%;background-position:${x}% ${y}%`;
 }
-const inTab = it => it.section === ui.tab;
+const inTab = it => it.section === ui.tab && visibleFor(it, curList());
 const statut = (l, id) => { const r = l.items.get(id); return r ? r.statut : null; };
 function statusOf(it, s, l) {
   if (s === "all") return true;
@@ -709,10 +756,11 @@ function famHTML(it, l) {
 function cardHTML(it) {
   const l = curList(), s = statut(l, it.id), own = s === "own", wish = s === "wish", ro = canEdit(l.id) ? "" : " disabled";
   return `<article class="card${own ? " own" : ""}" data-card="${it.id}">
-    <button class="ph" type="button" data-open="${it.id}" style="${spriteStyle(it)}" aria-label="${esc(it.name)} : fiche"></button>
+    <button class="ph${it.custom ? (it.photo ? " photo" : " vide") : ""}" type="button" data-open="${it.id}" style="${spriteStyle(it)}" aria-label="${esc(it.name)} : fiche">${it.custom && !it.photo ? esc(initial(it.name)) : ""}</button>
     <button class="ic o" type="button" data-act="own" data-id="${it.id}" aria-pressed="${own}" aria-label="J'ai : ${esc(it.short)}"${ro}>${ICON.own}</button>
     ${own ? "" : `<button class="ic w" type="button" data-act="wish" data-id="${it.id}" aria-pressed="${wish}" aria-label="Envie : ${esc(it.short)}"${ro}>${ICON.wish}</button>`}
     ${it.old ? '<span class="old">Ancien</span>' : ""}
+    ${it.custom ? '<span class="ajout">Famille</span>' : ""}
     ${it.nouveau ? `<span class="nouv">Nouveau ${ANNEE}</span>` : ""}
     <div class="nm">${esc(it.short)}</div>
     ${famHTML(it, l)}
@@ -726,6 +774,7 @@ function renderList() {
   $("l-badge").className = "badge" + (edit ? " edit" : "");
   $("l-settings").hidden = !canManage(l.id);
   $("photo-btn").hidden = !edit;
+  $("l-add").hidden = PUBLIC || !isMember(l.famille_id);
   renderProgress(); renderStatus(); renderGrid();
 }
 function renderGrid() {
@@ -753,9 +802,9 @@ function renderProgress() {
   $("prog-txt").innerHTML = `<b>${n}</b> / ${pool.length}${w ? ` · <b>${w}</b> envie${w > 1 ? "s" : ""}` : ""}`;
   $("prog-bar").style.width = (pool.length ? n / pool.length * 100 : 0) + "%";
   for (const t of SECTIONS) {
-    const b = $("tab-" + t), n = ITEMS.filter(i => i.section === t && statut(l, i.id) === "own").length;
+    const b = $("tab-" + t), n = ITEMS.filter(i => i.section === t && visibleFor(i, l) && statut(l, i.id) === "own").length;
     b.setAttribute("aria-selected", String(ui.tab === t));
-    b.querySelector(".n").textContent = `${n} / ${N_SEC[t]}`;
+    b.querySelector(".n").textContent = `${n} / ${nSec(t, l)}`;
   }
 }
 function renderStatus() {
@@ -800,10 +849,13 @@ function openItem(id) {
   const fam = siblings(l).map(o => [o, statut(o, it.id)]).filter(x => x[1]);
   $("item-body").innerHTML = `
     <div class="dlg-head"><h2 id="it-name">${esc(it.name)}</h2><button class="x" type="button" data-close aria-label="Fermer">✕</button></div>
-    <div class="item"><div class="pic">${it.img ? `<img src="${esc(it.img)}${it.esc ? "" : "?auto=format&w=480&h=640&fit=max"}" alt="${esc(it.name)}" data-fallback="1">` : `<div class="ph" style="${spriteStyle(it)};cursor:default"></div>`}</div>
+    <div class="item"><div class="pic">${it.custom ? (it.photo ? `<img src="${esc(it.photo)}" alt="${esc(it.name)}">` : `<div class="ph vide" style="cursor:default">${esc(initial(it.name))}</div>`)
+      : it.img ? `<img src="${esc(it.img)}${it.esc ? "" : "?auto=format&w=480&h=640&fit=max"}" alt="${esc(it.name)}" data-fallback="1">` : `<div class="ph" style="${spriteStyle(it)};cursor:default"></div>`}</div>
       <div style="display:grid;gap:12px;align-content:start;min-width:0">
         <dl>
-          <dt>Marque</dt><dd>${it.esc ? "Santons Escoffier (Aubagne)" : "Ateliers Marcel Carbonel (Marseille)"}</dd>
+          <dt>Marque</dt><dd>${it.custom ? esc(it.marqueNom || "") : it.esc ? "Santons Escoffier (Aubagne)" : "Ateliers Marcel Carbonel (Marseille)"}</dd>
+          ${it.custom && it.note ? `<dt>Note</dt><dd>${esc(it.note)}</dd>` : ""}
+          ${it.custom ? `<dt>Ajouté</dt><dd>${it.ajoutePar && st.profils.has(it.ajoutePar) ? "par " + esc(nameOf(it.ajoutePar)) + ", " : ""}${it.cree ? esc(new Date(it.cree).toLocaleDateString("fr-FR")) : ""}</dd>` : ""}
           <dt>Catégorie</dt><dd>${esc(groupOf(it))}</dd>
           ${it.ref ? `<dt>Référence</dt><dd>${esc(it.ref)}</dd>` : ""}
           ${it.nouveau ? `<dt>Sortie</dt><dd>Nouveauté ${ANNEE}</dd>` : ""}
@@ -816,6 +868,7 @@ function openItem(id) {
         </div>
         ${fam.length ? `<div style="display:grid;gap:6px"><span class="label">Dans les autres crèches</span>${fam.map(([o, x]) => `<div class="row"><span class="avatar sm${x === "own" ? "" : " ring"}" style="--c:${hashColor(o.id)}"></span><span><b>${esc(o.nom)}</b> : ${x === "own" ? "l'a" : "envie"}</span></div>`).join("")}</div>` : ""}
         ${it.url ? `<a class="btn" href="${esc(it.url)}" target="_blank" rel="noopener">${it.esc ? "Voir sur escoffier.fr ↗" : it.source ? "Catalogues Carbonel ↗" : "Voir sur marcelcarbonel.com ↗"}</a>` : ""}
+        ${it.custom && !PUBLIC && (it.ajoutePar === me.id || isAdmin(it.famille)) ? `<button class="btn danger" type="button" data-unmodel="${it.id}">Retirer du catalogue de la famille</button>` : ""}
       </div></div>`;
   const img = $("item-body").querySelector("img[data-fallback]");
   if (img) img.addEventListener("error", () => { img.outerHTML = `<div class="ph" style="${spriteStyle(it)}"></div>`; }, { once: true });
@@ -1000,7 +1053,7 @@ $("ph-apply").addEventListener("click", async () => {
 function wishText(l) {
   const lines = [`Liste d'envies – ${l.nom}`];
   for (const sec of SECTIONS) {
-    const its = ITEMS.filter(it => it.section === sec && statut(l, it.id) === "wish");
+    const its = ITEMS.filter(it => it.section === sec && visibleFor(it, l) && statut(l, it.id) === "wish");
     if (!its.length) continue;
     lines.push("", `${SEC_LABEL[sec]} (${its.length})`);
     for (const it of its) lines.push("- " + it.name + (it.ref ? " [" + it.ref + "]" : "") + (it.price ? " – " + euro(it.price) : ""));
@@ -1032,6 +1085,15 @@ document.addEventListener("click", async e => {
     await loadAll(); render(); return;
   }
   if (t.id === "create-family") { $("dlg-family").showModal(); return; }
+  if (d.unmodel) {
+    if (t.dataset.sure !== "1") { t.dataset.sure = "1"; t.textContent = "Confirmer : retirer de toutes les crèches de la famille"; return; }
+    const it = BY_ID.get(+d.unmodel);
+    const { error } = await sb.from("modeles_famille").delete().eq("id", +d.unmodel);
+    if (error) return toast(frErr(error));
+    if (it && it.photo) { const path = it.photo.split("/object/public/photos/")[1]; if (path) await sb.storage.from("photos").remove([path]); }
+    dlgItem.close(); await loadAll(); render(); toast("Retiré du catalogue de la famille.");
+    return;
+  }
 });
 $("back").addEventListener("click", () => go("home"));
 $("l-settings").addEventListener("click", async () => { try { await loadAll(); } catch (e) { /* on garde l'état connu */ } if (curList()) openSettings(); });
@@ -1064,6 +1126,57 @@ let qTimer = null;
 $("q").addEventListener("input", e => { clearTimeout(qTimer); qTimer = setTimeout(() => { ui.q = e.target.value; renderGrid(); }, 120); });
 for (const d of document.querySelectorAll("dialog")) d.addEventListener("click", e => { if (e.target === d) d.close(); });
 
+/* ================= Ajouter un santon ancien ================= */
+const dlgAdd = $("dlg-add");
+let addPhoto = null;
+function openAdd() {
+  const l = curList(); if (!l || !isMember(l.famille_id)) return;
+  $("add-form").reset(); addPhoto = null;
+  $("add-preview").hidden = true; $("add-photo-txt").hidden = false; $("add-err").hidden = true;
+  $("add-type").value = ui.tab === "santons" ? "santon" : "decor";
+  $("add-marque").value = ui.tab === "escoffier" ? "Escoffier" : "Carbonel";
+  $("add-own-row").hidden = !canEdit(l.id);
+  $("add-own-txt").textContent = `Je l'ai dans « ${l.nom} »`;
+  dlgAdd.showModal();
+}
+$("add-photo").addEventListener("change", async e => {
+  const f = e.target.files && e.target.files[0]; e.target.value = ""; if (!f) return;
+  let blob = null; try { blob = await shrink(f, 1000, .85); } catch (err) { blob = null; }
+  if (!blob) { $("add-err").textContent = "Cette image ne s'ouvre pas : essayez une photo JPEG."; $("add-err").hidden = false; return; }
+  addPhoto = blob;
+  $("add-preview").src = URL.createObjectURL(blob); $("add-preview").hidden = false; $("add-photo-txt").hidden = true;
+});
+$("add-form").addEventListener("submit", async e => {
+  e.preventDefault();
+  const l = curList(), nom = $("add-nom").value.trim().slice(0, 80);
+  if (!l || !nom) return;
+  const marque = $("add-marque").value, type = $("add-type").value;
+  const section = type === "santon" ? "santons" : marque === "Escoffier" ? "escoffier" : "decor";
+  const fail = m => { $("add-err").textContent = m; $("add-err").hidden = false; $("add-go").disabled = false; };
+  $("add-go").disabled = true; $("add-err").hidden = true;
+  let photo = null;
+  if (addPhoto) {
+    const id = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2)).replace(/[^0-9a-z-]/gi, "");
+    photo = `${l.famille_id}/${id}.jpg`;
+    const up = await sb.storage.from("photos").upload(photo, addPhoto, { contentType: "image/jpeg", upsert: false });
+    if (up.error) return fail("La photo n'a pas pu être envoyée : " + frErr(up.error));
+  }
+  const { data, error } = await sb.from("modeles_famille")
+    .insert({ famille_id: l.famille_id, nom, marque, section, note: $("add-note").value.trim().slice(0, 200) || null, photo })
+    .select("id").single();
+  if (error) return fail(frErr(error));
+  if (!$("add-own-row").hidden && $("add-own").checked)
+    await sb.from("liste_items").upsert({ liste_id: l.id, santon_id: data.id, statut: "own" }, { onConflict: "liste_id,santon_id" });
+  $("add-go").disabled = false; dlgAdd.close();
+  await loadAll();
+  ui.tab = section; ui.status = "all"; ui.q = ""; $("q").value = "";
+  render();
+  const card = document.querySelector(`[data-card="${data.id}"]`);
+  if (card) card.scrollIntoView({ block: "center" });
+  toast(`« ${nom} » ajouté au catalogue de la famille.`);
+});
+$("l-add").addEventListener("click", openAdd);
+
 /* ================= Page publique d'une crèche (#voir=…) ================= */
 async function publicView() {
   PUBLIC = true;
@@ -1075,6 +1188,7 @@ async function publicView() {
     screen("scr-config"); return;
   }
   me = { id: "__public__" };
+  setCustom(data.modeles, true);
   st.listes = new Map([[data.id, { id: data.id, famille_id: null, nom: data.nom,
     items: new Map((data.items || []).map(r => [r.santon_id, Object.assign({ liste_id: data.id }, r)])) }]]);
   st.gerants = (data.gerants || []).map(g => ({ liste_id: data.id, user_id: g.id }));

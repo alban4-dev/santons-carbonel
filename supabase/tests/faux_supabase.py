@@ -24,7 +24,8 @@ from psycopg2 import sql
 SITE = Path(__file__).resolve().parents[2] / "site"
 DSN, PORT = sys.argv[1], int(sys.argv[2])
 TABLES = {"profils", "familles", "famille_invitations", "membres", "listes", "liste_gerants",
-          "liste_visiteurs", "liste_invitations", "liste_items"}
+          "liste_visiteurs", "liste_invitations", "liste_items", "modeles_famille"}
+STOCK = Path(os.environ.get("SCRATCH", "/tmp")) / "stockage"
 RPCS = {"creer_famille", "rejoindre_famille", "creer_liste", "devenir_visiteur", "voir_liste",
         "nouveau_code_famille", "nouveau_code_visite"}
 USERS = {}  # email -> {id, password, nom}
@@ -131,6 +132,17 @@ class H(http.server.SimpleHTTPRequestHandler):
             return self.send(200, user_obj(us[0])) if us else self.send(401, {"message": "invalid token"})
         if u.path.startswith("/rest/v1/"):
             return self.rest("GET", u)
+        if u.path.startswith("/storage/v1/object/public/photos/"):
+            f = STOCK / u.path.split("/storage/v1/object/public/photos/", 1)[1]
+            if not f.is_file():
+                return self.send(404, {"message": "introuvable"})
+            data = f.read_bytes()
+            self.send_response(200)
+            self.send_header("Content-Type", "image/jpeg")
+            self.send_header("Content-Length", str(len(data)))
+            self.end_headers()
+            self.wfile.write(data)
+            return
         if u.path.startswith("/realtime/"):
             return self.send(404, {})
         return super().do_GET()
@@ -170,6 +182,25 @@ class H(http.server.SimpleHTTPRequestHandler):
             return self.send(200, session_for(us[0])) if us else self.send(400, {"error": "invalid_grant"})
         if u.path in ("/auth/v1/logout", "/auth/v1/recover"):
             return self.send(204 if u.path.endswith("logout") else 200, None if u.path.endswith("logout") else {})
+        if u.path.startswith("/storage/v1/object/photos/"):
+            name = u.path.split("/storage/v1/object/photos/", 1)[1]
+            data = self.rfile.read(int(self.headers.get("Content-Length") or 0))
+            ctype = self.headers.get("Content-Type", "")
+            if ctype.startswith("multipart/form-data"):  # supabase-js envoie un Blob en formulaire
+                from email import policy
+                from email.parser import BytesParser
+                msg = BytesParser(policy=policy.default).parsebytes(b"Content-Type: " + ctype.encode() + b"\r\n\r\n" + data)
+                parts = [m for m in msg.iter_parts() if m.get_filename() or m.get_content_type().startswith("image/")]
+                data = parts[-1].get_payload(decode=True) if parts else b""
+            try:
+                run(uid_from(self.headers), "insert into storage.objects (bucket_id, name) values ('photos', %s)", (name,))
+            except psycopg2.Error as e:
+                db.rollback()
+                return self.send(400, {"statusCode": "403", "error": "Unauthorized", "message": "new row violates row-level security policy"})
+            f = STOCK / name
+            f.parent.mkdir(parents=True, exist_ok=True)
+            f.write_bytes(data)
+            return self.send(200, {"Key": "photos/" + name, "Id": name})
         if u.path.startswith("/rest/v1/rpc/"):
             fn = u.path.rsplit("/", 1)[1]
             if fn not in RPCS:
@@ -198,7 +229,14 @@ class H(http.server.SimpleHTTPRequestHandler):
         return self.rest("PATCH", urlparse(self.path))
 
     def do_DELETE(self):
-        return self.rest("DELETE", urlparse(self.path))
+        u = urlparse(self.path)
+        if u.path.startswith("/storage/v1/object/photos"):
+            b = self.body() or {}
+            for name in b.get("prefixes", []):
+                run(uid_from(self.headers), "delete from storage.objects where bucket_id = 'photos' and name = %s", (name,))
+                (STOCK / name).unlink(missing_ok=True)
+            return self.send(200, [])
+        return self.rest("DELETE", u)
 
     # ------------------------------------------------------------------ REST
     def rest(self, method, u):
@@ -226,6 +264,7 @@ class H(http.server.SimpleHTTPRequestHandler):
                 rows = b if isinstance(b, list) else [b]
                 prefer = self.headers.get("Prefer", "")
                 conflict = qs.get("on_conflict", [None])[0]
+                out = []
                 for r in rows:
                     keys = list(r)
                     q = sql.SQL("insert into {} ({}) values ({})").format(
@@ -241,8 +280,14 @@ class H(http.server.SimpleHTTPRequestHandler):
                         q += sql.SQL(" on conflict ({}) do ").format(sql.SQL(", ").join(map(sql.Identifier, target)))
                         q += (sql.SQL("update set ") + sql.SQL(", ").join(
                             sql.SQL("{} = excluded.{}").format(sql.Identifier(k), sql.Identifier(k)) for k in upd)) if upd else sql.SQL("nothing")
-                    run(uid, q, [r[k] for k in keys])
-                return self.send(201, None if "return=minimal" in prefer or "representation" not in prefer else rows)
+                    if "representation" in prefer:
+                        q += sql.SQL(" returning *")
+                    out += run(uid, q, [r[k] for k in keys])
+                if "representation" not in prefer:
+                    return self.send(201, None)
+                if "vnd.pgrst.object" in self.headers.get("Accept", ""):
+                    return self.send(201, out[0] if out else None)
+                return self.send(201, out)
             if method == "PATCH":
                 b = self.body()
                 q = sql.SQL("update {} set ").format(t) + sql.SQL(", ").join(

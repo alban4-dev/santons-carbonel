@@ -1,8 +1,9 @@
 #!/bin/sh
 # Tests sans compte Supabase : PostgreSQL 16 local + faux serveur + navigateur.
-#   1. droits.sql  : 33 vérifications des règles d'accès (membres, gérants, visiteurs, inconnus)
+#   1. droits.sql  : vérifications des règles d'accès (membres, gérants, visiteurs, inconnus)
 #   2. parcours.js : Papa crée la famille et la crèche de Léa, Maman la rejoint par le lien,
-#                    Mamie la visite par le lien de visite (Playwright, captures dans $SCRATCH).
+#                    Mamie ouvre la page publique sans compte (Playwright, captures dans $SCRATCH).
+#   3. ajout.js    : un santon ancien ajouté avec photo, coché, vu par Maman et en public, retiré.
 # Prérequis : PostgreSQL démarré sur le port 54329 (socket /tmp), psycopg2, Playwright,
 #             et une photo de crèche en $SCRATCH/creche.jpg.
 set -e
@@ -22,4 +23,6 @@ python3 build.py >/dev/null
 python3 supabase/tests/faux_supabase.py "host=/tmp port=54329 user=postgres dbname=app" 8766 & SRV=$!
 sleep 1.5
 node supabase/tests/parcours.js || true
+echo "== Santon ancien ajouté par la famille"
+node supabase/tests/ajout.js || true
 kill $SRV

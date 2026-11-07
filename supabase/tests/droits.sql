@@ -118,3 +118,36 @@ set role anon;
 select 'T77 sans compte : toujours pas de tables';
 select count(*) from liste_items;
 reset role;
+
+-- SANTONS AJOUTÉS PAR LA FAMILLE (+ photos)
+select id as fam from familles \gset
+select set_config('request.jwt.claim.sub', :'papa', false); set role authenticated;
+insert into modeles_famille (famille_id, nom, photo) values (:'fam', 'Berger ancien 1995', :'fam' || '/berger.jpg');
+select 'T80 papa ajoute un santon ancien', count(*) = 1 and min(id) >= 1000000 from modeles_famille;
+insert into liste_items (liste_id, santon_id, statut) select :'lea', id, 'own' from modeles_famille;
+select 'T81 papa le coche dans Léa', count(*) = 1 from liste_items where santon_id >= 1000000;
+insert into storage.objects (bucket_id, name) values ('photos', :'fam' || '/berger.jpg');
+reset role;  -- (un membre dépose mais ne liste pas le stockage : on compte en administrateur)
+select 'T82 papa dépose la photo dans le dossier de sa famille', count(*) = 1 from storage.objects;
+set role authenticated;
+insert into storage.objects (bucket_id, name) values ('photos', 'pas-une-famille/x.jpg');
+insert into storage.objects (bucket_id, name) values ('photos', '00000000-0000-0000-0000-000000000099/x.jpg');
+reset role;
+select 'T83 photo refusée hors du dossier de la famille', count(*) = 1 from storage.objects;
+select set_config('request.jwt.claim.sub', :'inconnu', false); set role authenticated;
+select 'T84 inconnu : ne voit pas les santons ajoutés', count(*) = 0 from modeles_famille;
+insert into modeles_famille (famille_id, nom) values (:'fam', 'intrus');
+insert into storage.objects (bucket_id, name) values ('photos', :'fam' || '/intrus.jpg');
+update modeles_famille set nom = 'piraté';
+delete from modeles_famille;
+reset role;
+select 'T85 inconnu : ni ajout, ni photo, ni modification', (select count(*) from modeles_famille) = 1
+  and (select count(*) from storage.objects) = 1 and (select min(nom) from modeles_famille) = 'Berger ancien 1995';
+set role anon;
+select 'T86 page publique : le santon ajouté et sa photo', (voir_liste(:'vcode2')->'modeles'->0->>'nom') = 'Berger ancien 1995'
+  and (voir_liste(:'vcode2')->'modeles'->0->>'photo') like '%/berger.jpg';
+reset role;
+select set_config('request.jwt.claim.sub', :'papa', false); set role authenticated;
+delete from modeles_famille;
+reset role;
+select 'T87 retiré du catalogue : décoché partout', (select count(*) from liste_items where santon_id >= 1000000) = 0;
