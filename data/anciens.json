@@ -1,0 +1,413 @@
+{
+ "source": "https://storage.marcelcarbonel.com/catalogues/n2_tradition_2024.pdf",
+ "note": "Modèles du catalogue papier absents de la boutique en ligne",
+ "items": [
+  {
+   "id": 5001,
+   "name": "Mireille à la cruche jaune N°2",
+   "ref": null,
+   "size": 2,
+   "cat": [
+    8
+   ],
+   "col": [
+    "tradition",
+    "ancien"
+   ],
+   "price": null,
+   "img": null,
+   "url": "https://marcelcarbonel.com/catalogue",
+   "source": "Catalogue N°2 Tradition 2024, page 6",
+   "pied": "vert",
+   "section": "santons",
+   "sp": [
+    2,
+    52
+   ]
+  },
+  {
+   "id": 5002,
+   "name": "Mireille à la cruche orange N°2",
+   "ref": null,
+   "size": 2,
+   "cat": [
+    8
+   ],
+   "col": [
+    "tradition",
+    "ancien"
+   ],
+   "price": null,
+   "img": null,
+   "url": "https://marcelcarbonel.com/catalogue",
+   "source": "Catalogue N°2 Tradition 2024, page 6",
+   "pied": "vert",
+   "section": "santons",
+   "sp": [
+    2,
+    53
+   ]
+  },
+  {
+   "id": 5003,
+   "name": "Ravi coupé blanc N°2",
+   "ref": null,
+   "size": 2,
+   "cat": [
+    8
+   ],
+   "col": [
+    "tradition",
+    "ancien"
+   ],
+   "price": null,
+   "img": null,
+   "url": "https://marcelcarbonel.com/catalogue",
+   "source": "Catalogue N°2 Tradition 2024, page 6",
+   "pied": "autre"
+  },
+  {
+   "id": 5004,
+   "name": "Ravi coupé bleu N°2",
+   "ref": null,
+   "size": 2,
+   "cat": [
+    8
+   ],
+   "col": [
+    "tradition",
+    "ancien"
+   ],
+   "price": null,
+   "img": null,
+   "url": "https://marcelcarbonel.com/catalogue",
+   "source": "Catalogue N°2 Tradition 2024, page 6",
+   "pied": "autre"
+  },
+  {
+   "id": 5005,
+   "name": "Gitane verte N°2",
+   "ref": null,
+   "size": 2,
+   "cat": [
+    8
+   ],
+   "col": [
+    "tradition",
+    "ancien"
+   ],
+   "price": null,
+   "img": null,
+   "url": "https://marcelcarbonel.com/catalogue",
+   "source": "Catalogue N°2 Tradition 2024, page 5",
+   "pied": "vert",
+   "section": "santons",
+   "sp": [
+    2,
+    51
+   ]
+  },
+  {
+   "id": 5006,
+   "name": "Victorine violette N°2",
+   "ref": null,
+   "size": 2,
+   "cat": [
+    9
+   ],
+   "col": [
+    "tradition",
+    "ancien"
+   ],
+   "price": null,
+   "img": null,
+   "url": "https://marcelcarbonel.com/catalogue",
+   "source": "Catalogue N°2 Tradition 2024, page 8",
+   "pied": "vert",
+   "section": "santons",
+   "sp": [
+    2,
+    63
+   ]
+  },
+  {
+   "id": 5007,
+   "name": "Femme sur l'âne N°2",
+   "ref": null,
+   "size": 2,
+   "cat": [
+    9
+   ],
+   "col": [
+    "tradition",
+    "ancien"
+   ],
+   "price": null,
+   "img": null,
+   "url": "https://marcelcarbonel.com/catalogue",
+   "source": "Catalogue N°2 Tradition 2024, page 9",
+   "pied": "vert",
+   "section": "santons",
+   "sp": [
+    2,
+    60
+   ]
+  },
+  {
+   "id": 5008,
+   "name": "Homme à l'aïoli N°2",
+   "ref": null,
+   "size": 2,
+   "cat": [
+    9
+   ],
+   "col": [
+    "tradition",
+    "ancien"
+   ],
+   "price": null,
+   "img": null,
+   "url": "https://marcelcarbonel.com/catalogue",
+   "source": "Catalogue N°2 Tradition 2024, page 9",
+   "pied": "vert",
+   "section": "santons",
+   "sp": [
+    2,
+    61
+   ]
+  },
+  {
+   "id": 5009,
+   "name": "Maraîcher N°2",
+   "ref": null,
+   "size": 2,
+   "cat": [
+    9
+   ],
+   "col": [
+    "tradition",
+    "ancien"
+   ],
+   "price": null,
+   "img": null,
+   "url": "https://marcelcarbonel.com/catalogue",
+   "source": "Catalogue N°2 Tradition 2024, page 10",
+   "pied": "vert",
+   "section": "santons",
+   "sp": [
+    2,
+    62
+   ]
+  },
+  {
+   "id": 5010,
+   "name": "Étalage de la Poissonnière N°2",
+   "ref": null,
+   "size": 2,
+   "cat": [
+    9
+   ],
+   "col": [
+    "tradition",
+    "ancien"
+   ],
+   "price": null,
+   "img": null,
+   "url": "https://marcelcarbonel.com/catalogue",
+   "source": "Catalogue N°2 Tradition 2024, page 10",
+   "pied": "vert",
+   "section": "santons",
+   "sp": [
+    2,
+    59
+   ]
+  },
+  {
+   "id": 5011,
+   "name": "Étalage de la Maraîchère N°2",
+   "ref": null,
+   "size": 2,
+   "cat": [
+    9
+   ],
+   "col": [
+    "tradition",
+    "ancien"
+   ],
+   "price": null,
+   "img": null,
+   "url": "https://marcelcarbonel.com/catalogue",
+   "source": "Catalogue N°2 Tradition 2024, page 10",
+   "pied": "vert",
+   "section": "santons",
+   "sp": [
+    2,
+    58
+   ]
+  },
+  {
+   "id": 5012,
+   "name": "Couple de Bastidanes rose N°2",
+   "ref": null,
+   "size": 2,
+   "cat": [
+    9
+   ],
+   "col": [
+    "tradition",
+    "ancien"
+   ],
+   "price": null,
+   "img": null,
+   "url": "https://marcelcarbonel.com/catalogue",
+   "source": "Catalogue N°2 Tradition 2024, page 10",
+   "pied": "vert",
+   "section": "santons",
+   "sp": [
+    2,
+    56
+   ]
+  },
+  {
+   "id": 5013,
+   "name": "Couple de Bastidanes vert N°2",
+   "ref": null,
+   "size": 2,
+   "cat": [
+    9
+   ],
+   "col": [
+    "tradition",
+    "ancien"
+   ],
+   "price": null,
+   "img": null,
+   "url": "https://marcelcarbonel.com/catalogue",
+   "source": "Catalogue N°2 Tradition 2024, page 10",
+   "pied": "vert",
+   "section": "santons",
+   "sp": [
+    2,
+    57
+   ]
+  },
+  {
+   "id": 5014,
+   "name": "Arlésiennes rose et bleue sur le banc N°2",
+   "ref": null,
+   "size": 2,
+   "cat": [
+    9
+   ],
+   "col": [
+    "tradition",
+    "ancien"
+   ],
+   "price": null,
+   "img": null,
+   "url": "https://marcelcarbonel.com/catalogue",
+   "source": "Catalogue N°2 Tradition 2024, page 10",
+   "pied": "vert",
+   "section": "santons",
+   "sp": [
+    2,
+    54
+   ]
+  },
+  {
+   "id": 5015,
+   "name": "Arlésiennes verte et orange sur le banc N°2",
+   "ref": null,
+   "size": 2,
+   "cat": [
+    9
+   ],
+   "col": [
+    "tradition",
+    "ancien"
+   ],
+   "price": null,
+   "img": null,
+   "url": "https://marcelcarbonel.com/catalogue",
+   "source": "Catalogue N°2 Tradition 2024, page 10",
+   "pied": "vert",
+   "section": "santons",
+   "sp": [
+    2,
+    55
+   ]
+  },
+  {
+   "id": 5016,
+   "name": "Pont-Aven bleue N°2",
+   "ref": null,
+   "size": 2,
+   "cat": [
+    6
+   ],
+   "col": [
+    "tradition",
+    "ancien"
+   ],
+   "price": null,
+   "img": null,
+   "url": "https://marcelcarbonel.com/catalogue",
+   "source": "Catalogue N°2 Tradition 2024, page 11",
+   "pied": "autre"
+  },
+  {
+   "id": 5017,
+   "name": "Pont-Aven rose N°2",
+   "ref": null,
+   "size": 2,
+   "cat": [
+    6
+   ],
+   "col": [
+    "tradition",
+    "ancien"
+   ],
+   "price": null,
+   "img": null,
+   "url": "https://marcelcarbonel.com/catalogue",
+   "source": "Catalogue N°2 Tradition 2024, page 11",
+   "pied": "autre"
+  },
+  {
+   "id": 5018,
+   "name": "Pont-Aven blanche N°2",
+   "ref": null,
+   "size": 2,
+   "cat": [
+    6
+   ],
+   "col": [
+    "tradition",
+    "ancien"
+   ],
+   "price": null,
+   "img": null,
+   "url": "https://marcelcarbonel.com/catalogue",
+   "source": "Catalogue N°2 Tradition 2024, page 11",
+   "pied": "autre"
+  },
+  {
+   "id": 5019,
+   "name": "Pont-Aven verte N°2",
+   "ref": null,
+   "size": 2,
+   "cat": [
+    6
+   ],
+   "col": [
+    "tradition",
+    "ancien"
+   ],
+   "price": null,
+   "img": null,
+   "url": "https://marcelcarbonel.com/catalogue",
+   "source": "Catalogue N°2 Tradition 2024, page 11",
+   "pied": "autre"
+  }
+ ]
+}

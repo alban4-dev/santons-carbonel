@@ -1,0 +1,1042 @@
+<title>Santons Carbonel en famille</title>
+<meta name="description" content="Les crèches de la famille en santons Carbonel N°2 pied vert : chacun ses listes, ses envies, et les visiteurs invités.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600;700&family=Young+Serif&display=swap">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
+<style>
+/* Mise en page : en-tête collant ; accueil = crèches de la famille (cartes), membres,
+   fil d'activité ; page d'une crèche = planche dense de vignettes par catégorie. */
+:root {
+  --bg: #f4f2f7; --surface: #ffffff; --surface-2: #ebe7f1; --ink: #241c2c; --muted: #675d72;
+  --line: #ddd6e6; --accent: #5a3986; --accent-ink: #ffffff; --owned: #2b7a4b; --wish: #b8304f;
+  --wish-soft: #f8e3e8; --photo: #ffffff;
+  --shadow: 0 1px 2px rgba(36, 28, 44, .06), 0 4px 14px rgba(36, 28, 44, .08);
+  --f-display: "Young Serif", "Iowan Old Style", Georgia, serif;
+  --f-body: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --gut-l: max(16px, env(safe-area-inset-left, 0px)); --gut-r: max(16px, env(safe-area-inset-right, 0px));
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #15111a; --surface: #201a27; --surface-2: #2a2333; --ink: #efe9f5; --muted: #a99fb5;
+    --line: #362d41; --accent: #b99de3; --accent-ink: #1a1222; --owned: #6fc493; --wish: #f07d98;
+    --wish-soft: #42202b; --photo: #f4f1f6; --shadow: 0 1px 2px rgba(0,0,0,.3), 0 6px 18px rgba(0,0,0,.25); color-scheme: dark; }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.4; -webkit-font-smoothing: antialiased; }
+button, input, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+img { max-width: 100%; }
+[hidden] { display: none !important; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+h1, h2, h3 { font-family: var(--f-display); font-weight: 400; margin: 0; text-wrap: balance; }
+a { color: var(--accent); }
+.wrap { padding-left: var(--gut-l); padding-right: var(--gut-r); max-width: 1480px; margin-inline: auto; }
+.muted { color: var(--muted); }
+.row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.label { font-size: .7rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 700; }
+.help { font-size: .88rem; color: var(--muted); margin: 0; }
+
+/* En-tête */
+.top { position: sticky; top: 0; z-index: 5; background: var(--surface); border-bottom: 1px solid var(--line); padding-top: env(safe-area-inset-top, 0px); }
+.bar1 { display: flex; align-items: center; gap: 10px; padding-block: 8px; min-height: 52px; }
+.brand { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; }
+.brand h1 { font-size: clamp(1.05rem, 3.4vw, 1.35rem); line-height: 1.1; color: var(--accent); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.back { border: 0; background: var(--surface-2); border-radius: 999px; padding: 6px 12px; font-weight: 700; white-space: nowrap; }
+.me { display: flex; align-items: center; gap: 7px; padding: 4px 10px 4px 4px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); max-width: 45%; min-width: 0; }
+.me .nm { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 700; font-size: .9rem; }
+.avatar { flex: none; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: .78rem; color: #fff; background: var(--c, var(--accent)); }
+.avatar.sm { width: 16px; height: 16px; font-size: .55rem; }
+.avatar.lg { width: 34px; height: 34px; font-size: .95rem; }
+.avatar.ring { background: var(--surface); color: var(--c); box-shadow: inset 0 0 0 1.5px var(--c); }
+.tabs { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; }
+.tab { border: 0; background: none; padding: 8px 10px 9px; font-weight: 700; color: var(--muted); border-bottom: 3px solid transparent; white-space: nowrap; }
+.tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
+.tab .n { font-weight: 400; font-size: .85em; }
+
+/* Boutons, champs */
+.btn { border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 9px 14px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; justify-content: center; text-decoration: none; color: var(--ink); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn.danger { color: var(--wish); }
+.btn.sm { padding: 5px 10px; font-size: .85rem; }
+.btn:disabled { opacity: .5; cursor: default; }
+.field { display: grid; gap: 4px; }
+.field input { border: 1px solid var(--line); background: var(--bg); border-radius: 8px; padding: 9px 11px; width: 100%; min-width: 0; }
+.chip { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 5px 11px; font-size: .88rem; white-space: nowrap; }
+.chip[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+.chip .n { opacity: .65; margin-left: 3px; font-size: .85em; }
+.badge { font-size: .7rem; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: var(--surface-2); color: var(--muted); white-space: nowrap; }
+.badge.edit { background: color-mix(in srgb, var(--owned) 16%, var(--surface)); color: var(--owned); }
+
+/* Écrans plein (connexion, accueil vide) */
+.solo { min-height: 100dvh; display: grid; place-items: center; padding: 24px var(--gut-r) 24px var(--gut-l); }
+.card-solo { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); width: min(440px, 100%); padding: 24px; display: grid; gap: 14px; }
+.card-solo h1 { color: var(--accent); font-size: 1.6rem; }
+.invite-banner { background: var(--surface-2); border-radius: 10px; padding: 10px 12px; font-size: .9rem; }
+.seg { display: grid; grid-template-columns: 1fr 1fr; background: var(--surface-2); border-radius: 999px; padding: 3px; }
+.seg button { border: 0; background: none; border-radius: 999px; padding: 7px; font-weight: 700; color: var(--muted); }
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: var(--shadow); }
+.err { color: var(--wish); font-size: .9rem; margin: 0; }
+
+/* Accueil */
+.home { display: grid; gap: 22px; padding-block: 18px 40px; }
+.fam-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px; }
+.fam-head h2 { font-size: 1.5rem; }
+.lists { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }
+.lcard { text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: grid; gap: 8px; align-content: start; min-width: 0; }
+.lcard:hover { border-color: var(--accent); }
+.lcard h3 { font-size: 1.2rem; overflow-wrap: anywhere; }
+.lcard .who { font-size: .82rem; color: var(--muted); }
+.lcard .meter { height: 7px; }
+.lcard .nums { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: .85rem; color: var(--muted); }
+.lcard .nums b { color: var(--ink); font-variant-numeric: tabular-nums; }
+.lcard.new { border-style: dashed; place-content: center; text-align: center; color: var(--accent); font-weight: 700; min-height: 120px; }
+.cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 22px; }
+@media (max-width: 760px) { .cols { grid-template-columns: 1fr; } }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: grid; gap: 10px; align-content: start; min-width: 0; }
+.panel h3 { font-size: 1.1rem; }
+.people { display: grid; gap: 6px; }
+.person { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.person .pn { font-weight: 600; min-width: 0; overflow-wrap: anywhere; flex: 1; }
+.feed { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.feed li { display: flex; gap: 8px; align-items: flex-start; font-size: .9rem; }
+.feed .when { color: var(--muted); font-size: .8rem; white-space: nowrap; }
+
+/* Page d'une crèche */
+.lhead { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding-top: 12px; }
+.lhead h2 { font-size: clamp(1.3rem, 4vw, 1.7rem); overflow-wrap: anywhere; }
+.lhead .who { color: var(--muted); font-size: .85rem; }
+.tools { display: grid; gap: 8px; padding-block: 10px; }
+.progress { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.meter { flex: 1 1 120px; height: 8px; border-radius: 4px; background: var(--surface-2); overflow: hidden; min-width: 80px; display: block; }
+.meter i { display: block; height: 100%; background: var(--owned); }
+.photo-btn { display: inline-flex; align-items: center; gap: 8px; border: 0; border-radius: 999px; padding: 9px 16px; font-weight: 700; background: var(--accent); color: var(--accent-ink); }
+.search { flex: 1 1 160px; min-width: 0; display: flex; align-items: center; gap: 6px; background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 0 12px; }
+.search input { border: 0; background: none; outline: none; padding: 7px 0; width: 100%; min-width: 0; }
+.pin { position: sticky; top: var(--top-h, 96px); z-index: 4; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); display: flex; gap: 10px; padding: 6px; align-items: flex-start; margin-bottom: 10px; }
+.pin img { display: block; height: 130px; max-width: 65%; object-fit: contain; border-radius: 8px; background: #000; cursor: zoom-in; }
+.pin.big { flex-direction: column; }
+.pin.big img { height: min(55vh, 520px); max-width: 100%; cursor: zoom-out; }
+.pin .pin-side { display: grid; gap: 6px; font-size: .85rem; color: var(--muted); min-width: 0; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 8px; padding-bottom: 40px; }
+@media (max-width: 440px) { .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; } }
+.sec { grid-column: 1 / -1; display: flex; align-items: baseline; gap: 10px; padding: 14px 2px 2px; }
+.sec h2 { font-size: 1.15rem; }
+.sec span { color: var(--muted); font-size: .85rem; font-variant-numeric: tabular-nums; }
+.card { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 9px; overflow: hidden; display: flex; flex-direction: column; min-width: 0; }
+.card.own { border-color: var(--owned); box-shadow: inset 0 0 0 1px var(--owned); }
+.ph { all: unset; cursor: pointer; display: block; aspect-ratio: 3 / 4; width: 100%; max-width: 100%; background-color: var(--photo); background-repeat: no-repeat; }
+.nm { font-size: .76rem; font-weight: 600; line-height: 1.2; padding: 4px 6px 6px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow-wrap: anywhere; }
+.ic { position: absolute; width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; border: 1px solid rgba(60,47,74,.18); background: rgba(255,255,255,.92); color: #6d6377; }
+.ic.o { left: 5px; top: 5px; }
+.ic.w { right: 5px; top: 5px; }
+.ic.o[aria-pressed="true"] { background: #2b7a4b; border-color: #2b7a4b; color: #fff; }
+.ic.w[aria-pressed="true"] { background: #fbe4ea; border-color: #b8304f; color: #b8304f; }
+.ic:disabled { cursor: default; }
+.ic:disabled[aria-pressed="false"] { display: none; }
+.old { position: absolute; right: 5px; bottom: 34px; font-size: .6rem; font-weight: 700; text-transform: uppercase; background: #7a4b12; color: #fff; padding: 1px 6px; border-radius: 999px; pointer-events: none; }
+.fam { display: flex; gap: 2px; padding: 0 6px 5px; margin-top: -2px; }
+.empty { grid-column: 1 / -1; text-align: center; padding: 40px 16px; color: var(--muted); border: 1px dashed var(--line); border-radius: 10px; }
+
+/* Boîtes de dialogue */
+dialog { border: 0; padding: 0; border-radius: 14px; background: var(--surface); color: var(--ink); width: min(620px, calc(100vw - 20px)); max-height: calc(100dvh - 24px); box-shadow: var(--shadow); }
+dialog.wide { width: min(980px, calc(100vw - 20px)); }
+dialog::backdrop { background: rgba(20, 14, 26, .55); }
+.dlg { display: grid; gap: 12px; padding: 18px; }
+.dlg-head { display: flex; justify-content: space-between; align-items: start; gap: 12px; }
+.dlg-head h2 { font-size: 1.3rem; }
+.x { border: 0; background: var(--surface-2); border-radius: 50%; width: 34px; height: 34px; flex: none; }
+.sep { border: 0; border-top: 1px solid var(--line); margin: 2px 0; width: 100%; }
+.checks { display: grid; gap: 6px; }
+.checks label { display: flex; align-items: center; gap: 8px; }
+.linkbox { display: flex; gap: 6px; }
+.linkbox input { flex: 1; min-width: 0; border: 1px solid var(--line); background: var(--bg); border-radius: 8px; padding: 7px 9px; font-size: .8rem; }
+.item { display: grid; grid-template-columns: minmax(0, 200px) minmax(0, 1fr); gap: 16px; }
+@media (max-width: 520px) { .item { grid-template-columns: 1fr; } .item .pic { max-width: 220px; margin-inline: auto; width: 100%; } }
+.item .pic { border-radius: 10px; overflow: hidden; background: var(--photo); }
+.item .pic img { display: block; width: 100%; }
+.item dl { display: grid; grid-template-columns: auto 1fr; gap: 3px 12px; margin: 0; font-size: .9rem; }
+.item dt { color: var(--muted); }
+.item dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.duo { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.tg { border: 1px solid var(--line); border-radius: 8px; background: var(--surface); padding: 9px; font-weight: 700; color: var(--muted); }
+.tg.o[aria-pressed="true"] { background: var(--owned); border-color: var(--owned); color: var(--surface); }
+.tg.w[aria-pressed="true"] { background: var(--wish-soft); border-color: var(--wish); color: var(--wish); }
+.tg:disabled { opacity: .5; cursor: default; }
+.drop { position: relative; display: grid; place-items: center; gap: 6px; text-align: center; border: 2px dashed var(--line); border-radius: 12px; padding: 28px 16px; cursor: pointer; color: var(--muted); }
+.drop:hover, .drop:focus-within { border-color: var(--accent); color: var(--ink); }
+.drop input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.shot { display: block; max-width: 100%; max-height: 46vh; margin-inline: auto; border-radius: 10px; }
+.found { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 6px; max-height: 46vh; overflow: auto; padding: 2px; }
+.found label { position: relative; display: block; border: 2px solid var(--line); border-radius: 9px; overflow: hidden; background: var(--surface); cursor: pointer; }
+.found label:has(input:checked) { border-color: var(--owned); }
+.found input { position: absolute; top: 5px; left: 5px; width: 20px; height: 20px; accent-color: #2b7a4b; }
+.found .doubt { position: absolute; right: 4px; top: 4px; font-size: .6rem; font-weight: 700; background: #a86a12; color: #fff; border-radius: 999px; padding: 1px 6px; }
+.spin { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--line); border-top-color: var(--accent); animation: rot .9s linear infinite; flex: none; }
+@keyframes rot { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spin { animation-duration: 3s; } }
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); z-index: 50; background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 999px; font-weight: 700; max-width: calc(100vw - 32px); box-shadow: var(--shadow); }
+.foot { padding-block: 8px 36px; font-size: .78rem; color: var(--muted); border-top: 1px solid var(--line); }
+</style>
+
+<!-- Écran : site pas encore configuré -->
+<section class="solo" id="scr-config" hidden>
+  <div class="card-solo">
+    <h1>Santons Carbonel</h1>
+    <p>Le site n'est pas encore relié à sa base de données. Renseignez l'adresse et la clé publique du projet Supabase dans <code>config.js</code> (voir le README).</p>
+  </div>
+</section>
+
+<!-- Écran : connexion -->
+<section class="solo" id="scr-auth" hidden>
+  <form class="card-solo" id="auth-form" novalidate>
+    <h1>Santons Carbonel</h1>
+    <p class="help">Les crèches de la famille en santons N°2 pied vert.</p>
+    <div class="invite-banner" id="auth-invite" hidden></div>
+    <div class="seg" role="group" aria-label="Connexion ou création de compte">
+      <button type="button" data-mode="in" aria-pressed="true">J'ai un compte</button>
+      <button type="button" data-mode="up" aria-pressed="false">Créer un compte</button>
+    </div>
+    <div class="field" id="f-nom" hidden><label class="label" for="a-nom">Votre prénom</label><input id="a-nom" autocomplete="given-name" maxlength="40"></div>
+    <div class="field"><label class="label" for="a-mail">E-mail</label><input id="a-mail" type="email" autocomplete="email" required></div>
+    <div class="field" id="f-pass"><label class="label" for="a-pass">Mot de passe</label><input id="a-pass" type="password" autocomplete="current-password" minlength="6" required></div>
+    <p class="err" id="auth-err" hidden></p>
+    <button class="btn primary" type="submit" id="auth-go">Se connecter</button>
+    <button class="btn sm" type="button" id="auth-forgot" style="justify-self:start;border:0;background:none;color:var(--accent);padding:0">Mot de passe oublié ?</button>
+  </form>
+</section>
+
+<!-- Écran : nouveau mot de passe (lien reçu par e-mail) -->
+<section class="solo" id="scr-reset" hidden>
+  <form class="card-solo" id="reset-form">
+    <h1>Nouveau mot de passe</h1>
+    <div class="field"><label class="label" for="r-pass">Mot de passe (6 caractères minimum)</label><input id="r-pass" type="password" autocomplete="new-password" minlength="6" required></div>
+    <p class="err" id="reset-err" hidden></p>
+    <button class="btn primary" type="submit">Enregistrer</button>
+  </form>
+</section>
+
+<!-- Application -->
+<div id="scr-app" hidden>
+  <header class="top" id="top">
+    <div class="wrap">
+      <div class="bar1">
+        <div class="brand">
+          <button class="back" type="button" id="back" hidden>‹ Crèches</button>
+          <h1 id="title">Santons Carbonel</h1>
+        </div>
+        <button class="me" id="me-btn" type="button" aria-haspopup="dialog"><span class="avatar" id="me-av">?</span><span class="nm" id="me-name">…</span></button>
+      </div>
+      <div class="tabs" role="tablist" id="tabs" hidden>
+        <button class="tab" role="tab" type="button" data-tab="santons" id="tab-santons">Santons <span class="n"></span></button>
+        <button class="tab" role="tab" type="button" data-tab="decor" id="tab-decor">Bâtiments et accessoires <span class="n"></span></button>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap" id="view-home" hidden></main>
+
+  <main class="wrap" id="view-list" hidden>
+    <div class="lhead">
+      <h2 id="l-name"></h2>
+      <span class="who" id="l-who"></span>
+      <span class="badge" id="l-badge"></span>
+      <span class="row" style="margin-left:auto">
+        <button class="btn sm" type="button" id="l-copy">Copier les envies</button>
+        <button class="btn sm" type="button" id="l-settings" hidden>Réglages</button>
+      </span>
+    </div>
+    <section class="tools" aria-label="Outils">
+      <div class="progress">
+        <span id="prog-txt"></span>
+        <span class="meter" aria-hidden="true"><i id="prog-bar"></i></span>
+        <button class="photo-btn" id="photo-btn" type="button" hidden>
+          <svg width="18" height="18" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 6.5h3l1.5-2h5L14 6.5h3v9H3z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="10" cy="11" r="3" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+          Photo de la crèche
+        </button>
+      </div>
+      <div class="row">
+        <div class="row" id="status" role="group" aria-label="Afficher"></div>
+        <label class="search"><svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M11 11l3.5 3.5" stroke="currentColor" stroke-width="1.6"/></svg><input id="q" type="search" placeholder="Chercher" aria-label="Chercher un santon" autocomplete="off"></label>
+      </div>
+    </section>
+    <div class="pin" id="pin" hidden>
+      <img id="pin-img" alt="Photo de la crèche">
+      <div class="pin-side">
+        <span>Cochez ✓ ce que vous voyez sur la photo.</span>
+        <button class="btn sm" type="button" id="pin-size">Agrandir</button>
+        <button class="btn sm" type="button" id="pin-close">Fermer la photo</button>
+      </div>
+    </div>
+    <div class="grid" id="grid"></div>
+  </main>
+  <footer class="wrap foot" id="foot"></footer>
+</div>
+
+<dialog id="dlg-item" aria-labelledby="it-name"><div class="dlg" id="item-body"></div></dialog>
+
+<dialog id="dlg-me" aria-labelledby="me-title">
+  <form class="dlg" id="me-form">
+    <div class="dlg-head"><h2 id="me-title">Mon compte</h2><button class="x" type="button" data-close aria-label="Fermer">✕</button></div>
+    <p class="help" id="me-mail"></p>
+    <div class="field"><label class="label" for="me-nom">Prénom affiché</label><input id="me-nom" maxlength="40" required></div>
+    <div class="row"><button class="btn primary" type="submit">Enregistrer</button><button class="btn" type="button" id="me-out">Se déconnecter</button></div>
+  </form>
+</dialog>
+
+<dialog id="dlg-new" aria-labelledby="new-title">
+  <form class="dlg" id="new-form">
+    <div class="dlg-head"><h2 id="new-title">Nouvelle crèche</h2><button class="x" type="button" data-close aria-label="Fermer">✕</button></div>
+    <p class="help">Une liste par personne : vous en serez gérant, et vous pourrez ajouter d'autres gérants (l'autre parent, le parrain…).</p>
+    <div class="field"><label class="label" for="new-nom">Nom</label><input id="new-nom" maxlength="60" required value="Crèche de "></div>
+    <div class="row"><button class="btn primary" type="submit">Créer</button></div>
+  </form>
+</dialog>
+
+<dialog id="dlg-family" aria-labelledby="fam-title">
+  <form class="dlg" id="family-form">
+    <div class="dlg-head"><h2 id="fam-title">Créer la famille</h2><button class="x" type="button" data-close aria-label="Fermer">✕</button></div>
+    <div class="field"><label class="label" for="fam-nom">Nom de la famille</label><input id="fam-nom" maxlength="60" required placeholder="Famille Dupont"></div>
+    <div class="row"><button class="btn primary" type="submit">Créer</button></div>
+  </form>
+</dialog>
+
+<dialog id="dlg-settings" aria-labelledby="set-title"><div class="dlg" id="settings-body"></div></dialog>
+
+<dialog id="dlg-photo" class="wide" aria-labelledby="ph-title">
+  <div class="dlg">
+    <div class="dlg-head"><h2 id="ph-title">Photo de la crèche</h2><button class="x" type="button" data-close aria-label="Fermer">✕</button></div>
+    <div id="ph-pick">
+      <label class="drop">
+        <svg width="34" height="34" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 6.5h3l1.5-2h5L14 6.5h3v9H3z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><circle cx="10" cy="11" r="3" fill="none" stroke="currentColor" stroke-width="1.3"/></svg>
+        <b>Prendre ou choisir une photo</b>
+        <span class="help">Toute la crèche, de face et bien éclairée. Si elle est grande, plusieurs photos l'une après l'autre.</span>
+        <input type="file" id="ph-file" accept="image/*">
+      </label>
+    </div>
+    <div id="ph-step2" hidden>
+      <div style="display:grid;gap:12px">
+        <img class="shot" id="ph-shot" alt="Photo choisie">
+        <p class="help" id="ph-msg"></p>
+        <div class="row">
+          <button class="btn primary" type="button" id="ph-ai" hidden>Reconnaître les santons</button>
+          <button class="btn" type="button" id="ph-manual">Pointer à la main avec la photo</button>
+          <button class="btn" type="button" id="ph-other">Autre photo</button>
+        </div>
+      </div>
+    </div>
+    <div id="ph-step3" hidden>
+      <div style="display:grid;gap:12px">
+        <p class="help" id="ph-found-msg"></p>
+        <div class="found" id="ph-found"></div>
+        <div class="row">
+          <button class="btn primary" type="button" id="ph-apply">Ajouter</button>
+          <button class="btn" type="button" id="ph-manual2">Pointer le reste à la main</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</dialog>
+
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script>
+const DATA = /*__DATA__*/null;
+(function () {
+"use strict";
+
+/* ================= Catalogue ================= */
+const ITEMS = DATA.items;
+const BY_ID = new Map(ITEMS.map(i => [i.id, i]));
+const CATS = DATA.categories;
+const SP = DATA.sprite;
+const sheetRows = {};
+for (const it of ITEMS) if (it.sp) sheetRows[it.sp[0]] = Math.max(sheetRows[it.sp[0]] || 0, Math.floor(it.sp[1] / SP.cols) + 1);
+const PALETTE = ["#5a3986", "#b8304f", "#2b7a4b", "#a86a12", "#1f6f8b", "#8a4fb5", "#c0562b", "#4d6b2e"];
+const norm = s => (s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+const short = n => n.replace(/\s*N°2(?![\d/])/, "").replace(/\s+/g, " ").trim();
+for (const it of ITEMS) { it._s = norm(it.name + " " + (it.ref || "")); it.short = short(it.name); it.old = (it.col || []).includes("ancien"); }
+const N_SEC = { santons: ITEMS.filter(i => i.section === "santons").length, decor: ITEMS.filter(i => i.section === "decor").length };
+const euro = n => n == null ? "" : n.toLocaleString("fr-FR", { style: "currency", currency: "EUR" });
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const $ = id => document.getElementById(id);
+const initial = n => ((n || "?").trim().charAt(0) || "?").toUpperCase();
+function hashColor(s) { let h = 0; for (const c of String(s)) h = (h * 31 + c.charCodeAt(0)) | 0; return PALETTE[Math.abs(h) % PALETTE.length]; }
+function groupOf(it) {
+  if (it.old) return "Anciens modèles (hors boutique)";
+  const c = it.cat[0];
+  if (c === 12 || c === 7) return CATS[9];
+  return CATS[c] || "Autres";
+}
+const rtf = new Intl.RelativeTimeFormat("fr", { numeric: "auto" });
+function ago(iso) {
+  const s = (Date.parse(iso) - Date.now()) / 1000;
+  for (const [u, n] of [["year", 31536000], ["month", 2592000], ["day", 86400], ["hour", 3600], ["minute", 60]]) if (Math.abs(s) >= n) return rtf.format(Math.round(s / n), u);
+  return "à l'instant";
+}
+
+/* ================= État ================= */
+const CFG = window.SANTONS_CONFIG || {};
+let sb = null, me = null;           // client Supabase, utilisateur connecté
+const st = { familles: new Map(), membres: [], profils: new Map(), listes: new Map(), gerants: [], visiteurs: [], invListe: new Map(), invFamille: new Map() };
+const ui = { view: "home", listId: null, tab: "santons", status: "all", q: "" };
+const nameOf = id => (st.profils.get(id) || {}).nom || "Quelqu'un";
+const isMember = f => st.membres.some(m => m.famille_id === f && m.user_id === me.id);
+const isAdmin = f => st.membres.some(m => m.famille_id === f && m.user_id === me.id && m.role === "admin");
+const gerantsOf = l => st.gerants.filter(g => g.liste_id === l).map(g => g.user_id);
+const visitorsOf = l => st.visiteurs.filter(v => v.liste_id === l).map(v => v.user_id);
+function canEdit(l) { const li = st.listes.get(l); return !!li && isMember(li.famille_id) && gerantsOf(l).includes(me.id); }
+function canManage(l) { const li = st.listes.get(l); return !!li && (canEdit(l) || isAdmin(li.famille_id)); }
+const curList = () => st.listes.get(ui.listId);
+
+/* ================= Messages d'erreur ================= */
+function frErr(e) {
+  const m = String((e && (e.message || e.error_description || e.msg)) || e || "");
+  if (/Invalid login credentials/i.test(m)) return "E-mail ou mot de passe incorrect.";
+  if (/already registered|already exists/i.test(m)) return "Un compte existe déjà avec cet e-mail : choisissez « J'ai un compte ».";
+  if (/Password should be at least|weak/i.test(m)) return "Mot de passe trop court : 6 caractères minimum.";
+  if (/Email not confirmed/i.test(m)) return "Confirmez d'abord votre adresse avec le lien reçu par e-mail.";
+  if (/rate limit|too many/i.test(m)) return "Trop d'essais : patientez quelques minutes.";
+  if (/invalid.*email|valid email/i.test(m)) return "Cette adresse e-mail n'est pas valide.";
+  if (/Failed to fetch|NetworkError|network/i.test(m)) return "Pas de connexion au serveur. Vérifiez internet et réessayez.";
+  if (/row-level security|permission denied/i.test(m)) return "Vous n'avez pas le droit de faire cela sur cette liste.";
+  return m.replace(/^.*?:\s*/, "") || "Une erreur est survenue.";
+}
+let toastTimer = null;
+function toast(msg) { const t = $("toast"); t.textContent = msg; t.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, 3200); }
+function screen(id) { for (const s of ["scr-config", "scr-auth", "scr-reset", "scr-app"]) $(s).hidden = s !== id; }
+
+/* ================= Invitations (#rejoindre=… / #voir=…) ================= */
+function readInvite() {
+  const h = decodeURIComponent(location.hash || "");
+  const m = h.match(/^#(rejoindre|voir)=([0-9a-f]{16,64})$/i);
+  if (m) {
+    try { sessionStorage.setItem("santons-invite", JSON.stringify({ type: m[1], code: m[2] })); } catch (e) { /* ignore */ }
+    try { history.replaceState(null, "", location.pathname + location.search); } catch (e) { /* ignore */ }
+  }
+  try { return JSON.parse(sessionStorage.getItem("santons-invite") || "null"); } catch (e) { return null; }
+}
+function clearInvite() { try { sessionStorage.removeItem("santons-invite"); } catch (e) { /* ignore */ } }
+async function acceptInvite() {
+  const inv = readInvite();
+  if (!inv) return null;
+  clearInvite();
+  if (inv.type === "rejoindre") {
+    const { error } = await sb.rpc("rejoindre_famille", { p_code: inv.code });
+    if (error) { toast(frErr(error)); return null; }
+    toast("Bienvenue dans la famille !");
+    return { home: true };
+  }
+  const { data, error } = await sb.rpc("devenir_visiteur", { p_code: inv.code });
+  if (error) { toast(frErr(error)); return null; }
+  toast("Vous pouvez maintenant voir cette crèche.");
+  return { list: data };
+}
+
+/* ================= Connexion ================= */
+let authMode = "in";
+function setAuthMode(m) {
+  authMode = m;
+  for (const b of document.querySelectorAll("[data-mode]")) b.setAttribute("aria-pressed", String(b.dataset.mode === m));
+  $("f-nom").hidden = m !== "up";
+  $("a-pass").autocomplete = m === "up" ? "new-password" : "current-password";
+  $("auth-go").textContent = m === "up" ? "Créer mon compte" : "Se connecter";
+  $("auth-err").hidden = true;
+}
+function showAuth() {
+  const inv = readInvite();
+  $("auth-invite").hidden = !inv;
+  if (inv) $("auth-invite").textContent = inv.type === "rejoindre"
+    ? "Vous êtes invité(e) à rejoindre la famille. Connectez-vous ou créez votre compte pour accepter."
+    : "On vous a partagé une crèche. Connectez-vous ou créez votre compte pour la voir.";
+  if (inv) setAuthMode("up");
+  screen("scr-auth");
+}
+function authError(msg) { $("auth-err").textContent = msg; $("auth-err").hidden = false; }
+$("auth-form").addEventListener("submit", async e => {
+  e.preventDefault();
+  const email = $("a-mail").value.trim(), password = $("a-pass").value, nom = $("a-nom").value.trim();
+  if (!email || !password) return authError("Renseignez l'e-mail et le mot de passe.");
+  if (authMode === "up" && !nom) return authError("Indiquez votre prénom : c'est ce que verra la famille.");
+  $("auth-go").disabled = true;
+  try {
+    if (authMode === "up") {
+      const { data, error } = await sb.auth.signUp({ email, password, options: { data: { nom }, emailRedirectTo: location.origin + location.pathname } });
+      if (error) return authError(frErr(error));
+      if (!data.session) return authError("Compte créé : ouvrez le lien de confirmation reçu par e-mail, puis connectez-vous.");
+    } else {
+      const { error } = await sb.auth.signInWithPassword({ email, password });
+      if (error) return authError(frErr(error));
+    }
+  } finally { $("auth-go").disabled = false; }
+});
+$("auth-forgot").addEventListener("click", async () => {
+  const email = $("a-mail").value.trim();
+  if (!email) return authError("Indiquez d'abord votre e-mail ci-dessus.");
+  const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname });
+  authError(error ? frErr(error) : "Si un compte existe, un lien pour choisir un nouveau mot de passe vient d'être envoyé.");
+});
+$("reset-form").addEventListener("submit", async e => {
+  e.preventDefault();
+  const { error } = await sb.auth.updateUser({ password: $("r-pass").value });
+  if (error) { $("reset-err").textContent = frErr(error); $("reset-err").hidden = false; return; }
+  toast("Mot de passe enregistré."); start();
+});
+document.addEventListener("click", e => { const b = e.target.closest("[data-mode]"); if (b) setAuthMode(b.dataset.mode); });
+
+/* ================= Chargement ================= */
+async function fetchAll(table, cols) {
+  const out = [];
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await sb.from(table).select(cols).range(from, from + 999);
+    if (error) throw error;
+    out.push(...data);
+    if (data.length < 1000) return out;
+  }
+}
+async function loadAll() {
+  const q = (t, c) => sb.from(t).select(c).then(r => { if (r.error) throw r.error; return r.data; });
+  const [fam, mem, prof, lst, ger, vis, invL, invF, items] = await Promise.all([
+    q("familles", "id,nom"), q("membres", "famille_id,user_id,role"), q("profils", "id,nom"),
+    q("listes", "id,famille_id,nom,cree_par,created_at"), q("liste_gerants", "liste_id,user_id"),
+    q("liste_visiteurs", "liste_id,user_id"), q("liste_invitations", "liste_id,code"), q("famille_invitations", "famille_id,code"),
+    fetchAll("liste_items", "liste_id,santon_id,statut,modifie_par,updated_at"),
+  ]);
+  st.familles = new Map(fam.map(f => [f.id, f]));
+  st.membres = mem; st.gerants = ger; st.visiteurs = vis;
+  st.profils = new Map(prof.map(p => [p.id, p]));
+  st.invListe = new Map(invL.map(i => [i.liste_id, i.code]));
+  st.invFamille = new Map(invF.map(i => [i.famille_id, i.code]));
+  const old = st.listes;
+  st.listes = new Map(lst.sort((a, b) => a.created_at.localeCompare(b.created_at)).map(l => [l.id, Object.assign(l, { items: new Map() })]));
+  for (const r of items) { const l = st.listes.get(r.liste_id); if (l) l.items.set(r.santon_id, r); }
+  void old;
+}
+let reloadTimer = null;
+function reloadSoon() { clearTimeout(reloadTimer); reloadTimer = setTimeout(async () => { try { await loadAll(); render(); } catch (e) { /* hors ligne */ } }, 600); }
+function subscribe() {
+  try {
+    sb.channel("famille")
+      .on("postgres_changes", { event: "*", schema: "public", table: "liste_items" }, p => {
+        const row = p.new && p.new.liste_id ? p.new : p.old;
+        const l = row && st.listes.get(row.liste_id);
+        if (!l) return reloadSoon();
+        if (p.eventType === "DELETE") l.items.delete(p.old.santon_id); else l.items.set(p.new.santon_id, p.new);
+        if (ui.view === "list" && ui.listId === l.id) { refreshCard(row.santon_id); renderProgress(); renderStatus(); renderSectionCounts(); }
+        else if (ui.view === "home") renderHome();
+      })
+      .on("postgres_changes", { event: "*", schema: "public", table: "listes" }, reloadSoon)
+      .on("postgres_changes", { event: "*", schema: "public", table: "liste_gerants" }, reloadSoon)
+      .on("postgres_changes", { event: "*", schema: "public", table: "liste_visiteurs" }, reloadSoon)
+      .on("postgres_changes", { event: "*", schema: "public", table: "membres" }, reloadSoon)
+      .subscribe();
+  } catch (e) { /* temps réel indisponible : on recharge au retour sur la page */ }
+  document.addEventListener("visibilitychange", () => { if (!document.hidden && me) reloadSoon(); });
+}
+
+/* ================= Démarrage ================= */
+let started = false, starting = null;
+function start() { if (!starting) starting = boot().finally(() => { starting = null; }); return starting; }
+async function boot() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { me = null; showAuth(); return; }
+  me = session.user;
+  // prénom : profils, sinon celui donné à l'inscription, sinon le début de l'e-mail
+  const { data: prof } = await sb.from("profils").select("id,nom").eq("id", me.id).maybeSingle();
+  if (!prof) {
+    const nom = ((me.user_metadata && me.user_metadata.nom) || (me.email || "Moi").split("@")[0]).slice(0, 40);
+    await sb.from("profils").upsert({ id: me.id, nom });
+  }
+  const invited = await acceptInvite();
+  try { await loadAll(); } catch (e) { screen("scr-app"); toast(frErr(e)); return; }
+  screen("scr-app");
+  if (!started) { started = true; subscribe(); }
+  routeFromHash();
+  if (invited && invited.list && st.listes.has(invited.list)) go("list", invited.list);
+  else render();
+}
+function routeFromHash() {
+  const m = (location.hash || "").match(/^#liste=([0-9a-f-]{36})$/i);
+  if (m && st.listes.has(m[1])) { ui.view = "list"; ui.listId = m[1]; } else { ui.view = "home"; ui.listId = null; }
+}
+function go(view, listId) {
+  ui.view = view; ui.listId = listId || null; ui.status = "all"; ui.q = ""; $("q").value = "";
+  const h = view === "list" ? "#liste=" + listId : "#accueil";
+  if (location.hash !== h) try { history.pushState(null, "", h); } catch (e) { location.hash = h; }
+  $("pin").hidden = true;
+  render(); window.scrollTo({ top: 0 });
+}
+window.addEventListener("popstate", () => { if (me) { routeFromHash(); render(); } });
+
+/* ================= Rendu commun ================= */
+function render() {
+  $("me-av").textContent = initial(nameOf(me.id)); $("me-av").style.setProperty("--c", hashColor(me.id));
+  $("me-name").textContent = nameOf(me.id);
+  const inList = ui.view === "list" && curList();
+  $("view-home").hidden = !!inList; $("view-list").hidden = !inList;
+  $("back").hidden = !inList; $("tabs").hidden = !inList;
+  $("title").textContent = inList ? curList().nom : "Santons Carbonel";
+  document.title = inList ? curList().nom + " · Santons Carbonel" : "Santons Carbonel en famille";
+  if (inList) renderList(); else renderHome();
+  renderFoot(); measureTop();
+}
+function measureTop() { document.documentElement.style.setProperty("--top-h", $("top").offsetHeight + "px"); }
+window.addEventListener("resize", measureTop);
+function renderFoot() {
+  $("foot").innerHTML = `Santons Marcel Carbonel taille N°2 (7 cm) au pied vert, à l'unité, d'après <a href="https://marcelcarbonel.com" target="_blank" rel="noopener">marcelcarbonel.com</a> et le catalogue papier N°2 de 2024. Photos © Ateliers Marcel Carbonel.`;
+}
+const avatarHTML = (uid, cls = "") => `<span class="avatar ${cls}" style="--c:${hashColor(uid)}">${esc(initial(nameOf(uid)))}</span>`;
+function counts(l) {
+  let s = 0, d = 0, w = 0;
+  for (const [id, r] of l.items) { const it = BY_ID.get(id); if (!it) continue; if (r.statut === "own") { if (it.section === "santons") s++; else d++; } else w++; }
+  return { s, d, w };
+}
+function joinLink(f) { const c = st.invFamille.get(f); return c ? location.origin + location.pathname + "#rejoindre=" + c : ""; }
+function visitLink(l) { const c = st.invListe.get(l); return c ? location.origin + location.pathname + "#voir=" + c : ""; }
+
+/* ================= Accueil ================= */
+function listCard(l) {
+  const c = counts(l), g = gerantsOf(l.id), edit = canEdit(l.id);
+  return `<button class="lcard" type="button" data-list="${l.id}">
+    <span class="row" style="justify-content:space-between"><h3>${esc(l.nom)}</h3>${edit ? '<span class="badge edit">Vous gérez</span>' : '<span class="badge">Lecture seule</span>'}</span>
+    <span class="who">${g.length ? "Gérée par " + esc(g.map(nameOf).join(", ")) : "Sans gérant"}</span>
+    <span class="meter"><i style="width:${c.s / N_SEC.santons * 100}%"></i></span>
+    <span class="nums"><span><b>${c.s}</b> / ${N_SEC.santons} santons</span><span><b>${c.d}</b> décors</span><span><b>${c.w}</b> envies</span></span>
+  </button>`;
+}
+function feedHTML(listIds) {
+  const rows = [];
+  for (const id of listIds) { const l = st.listes.get(id); for (const r of l.items.values()) rows.push([l, r]); }
+  rows.sort((a, b) => b[1].updated_at.localeCompare(a[1].updated_at));
+  if (!rows.length) return '<p class="help">Rien pour l\'instant. Les coches de chacun apparaîtront ici.</p>';
+  return `<ul class="feed">${rows.slice(0, 15).map(([l, r]) => {
+    const it = BY_ID.get(r.santon_id); if (!it) return "";
+    const who = r.modifie_par ? nameOf(r.modifie_par) : "Quelqu'un";
+    const verb = r.statut === "own" ? "a coché" : "voudrait";
+    return `<li>${r.modifie_par ? avatarHTML(r.modifie_par, "sm") : ""}<span><b>${esc(who)}</b> ${verb} <a href="#liste=${l.id}" data-list="${l.id}">${esc(it.short)}</a> · ${esc(l.nom)} <span class="when">${esc(ago(r.updated_at))}</span></span></li>`;
+  }).join("")}</ul>`;
+}
+function renderHome() {
+  const fams = [...st.familles.values()].filter(f => isMember(f.id));
+  const visited = [...st.listes.values()].filter(l => !isMember(l.famille_id));
+  let html = "";
+  for (const f of fams) {
+    const lists = [...st.listes.values()].filter(l => l.famille_id === f.id);
+    const mems = st.membres.filter(m => m.famille_id === f.id);
+    html += `<section style="display:grid;gap:14px">
+      <div class="fam-head"><h2>${esc(f.nom)}</h2><span class="row"><button class="btn sm primary" type="button" data-invite="${f.id}">Inviter dans la famille</button></span></div>
+      <div class="lists">${lists.map(listCard).join("")}<button class="lcard new" type="button" data-newlist="${f.id}">+ Nouvelle crèche</button></div>
+      <div class="cols">
+        <div class="panel"><h3>Membres <span class="muted" style="font-family:var(--f-body);font-size:.9rem">${mems.length}</span></h3>
+          <div class="people">${mems.map(m => `<div class="person">${avatarHTML(m.user_id)}<span class="pn">${esc(nameOf(m.user_id))}${m.user_id === me.id ? " (vous)" : ""}</span>${m.role === "admin" ? '<span class="badge">admin</span>' : ""}${isAdmin(f.id) && m.user_id !== me.id ? `<button class="btn sm danger" type="button" data-kick="${f.id}|${m.user_id}">Retirer</button>` : ""}</div>`).join("")}</div>
+          <p class="help">Le lien « Inviter dans la famille » fait de la personne un membre : elle voit toutes les crèches et peut créer les siennes. Pour quelqu'un qui doit seulement regarder une crèche, utilisez « Réglages » dans cette crèche.</p>
+        </div>
+        <div class="panel"><h3>Activité</h3>${feedHTML(lists.map(l => l.id))}</div>
+      </div>
+    </section>`;
+  }
+  if (visited.length) {
+    html += `<section style="display:grid;gap:14px"><div class="fam-head"><h2>Crèches partagées avec vous</h2></div>
+      <div class="lists">${visited.map(listCard).join("")}</div></section>`;
+  }
+  if (!fams.length && !visited.length) {
+    html += `<section class="panel" style="max-width:560px">
+      <h3>Bienvenue ${esc(nameOf(me.id))}</h3>
+      <p>Pour rejoindre votre famille, ouvrez le lien d'invitation qu'un membre vous a envoyé.</p>
+      <p class="help">Vous êtes le premier ? Créez la famille, puis envoyez-lui le lien d'invitation.</p>
+      <div class="row"><button class="btn primary" type="button" id="create-family">Créer la famille</button></div>
+    </section>`;
+  }
+  $("view-home").innerHTML = `<div class="home">${html}</div>`;
+}
+
+/* ================= Page d'une crèche ================= */
+const ICON = {
+  own: '<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3.2 3L13 4.5" fill="none" stroke="currentColor" stroke-width="2.2"/></svg>',
+  wish: '<svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 14s-5.5-3.4-5.5-7.2A3 3 0 0 1 8 4.6a3 3 0 0 1 5.5 2.2C13.5 10.6 8 14 8 14z" fill="currentColor" fill-opacity=".2" stroke="currentColor" stroke-width="1.5"/></svg>',
+};
+function spriteStyle(it) {
+  if (!it.sp) return "";
+  const [s, i] = it.sp, rows = sheetRows[s], c = i % SP.cols, r = Math.floor(i / SP.cols);
+  const x = SP.cols > 1 ? c / (SP.cols - 1) * 100 : 0, y = rows > 1 ? r / (rows - 1) * 100 : 0;
+  return `background-image:url(sprites/planche-${String(s).padStart(2, "0")}.webp);background-size:${SP.cols * 100}% ${rows * 100}%;background-position:${x}% ${y}%`;
+}
+const inTab = it => it.section === ui.tab;
+const statut = (l, id) => { const r = l.items.get(id); return r ? r.statut : null; };
+function statusOf(it, s, l) {
+  if (s === "all") return true;
+  if (s === "own") return statut(l, it.id) === "own";
+  if (s === "missing") return statut(l, it.id) !== "own";
+  return statut(l, it.id) === "wish";
+}
+function siblings(l) { return [...st.listes.values()].filter(x => x.id !== l.id && x.famille_id === l.famille_id); }
+function famHTML(it, l) {
+  const dots = [];
+  for (const o of siblings(l)) {
+    const s = statut(o, it.id); if (!s) continue;
+    dots.push(`<span class="avatar sm${s === "own" ? "" : " ring"}" style="--c:${hashColor(o.id)}" title="${esc(o.nom)} : ${s === "own" ? "l'a" : "envie"}">${esc(initial(o.nom.replace(/^cr[eè]che d[eu']?\s*/i, "")))}</span>`);
+  }
+  return dots.length ? `<div class="fam">${dots.slice(0, 6).join("")}</div>` : "";
+}
+function cardHTML(it) {
+  const l = curList(), s = statut(l, it.id), own = s === "own", wish = s === "wish", ro = canEdit(l.id) ? "" : " disabled";
+  return `<article class="card${own ? " own" : ""}" data-card="${it.id}">
+    <button class="ph" type="button" data-open="${it.id}" style="${spriteStyle(it)}" aria-label="${esc(it.name)} : fiche"></button>
+    <button class="ic o" type="button" data-act="own" data-id="${it.id}" aria-pressed="${own}" aria-label="J'ai : ${esc(it.short)}"${ro}>${ICON.own}</button>
+    ${own ? "" : `<button class="ic w" type="button" data-act="wish" data-id="${it.id}" aria-pressed="${wish}" aria-label="Envie : ${esc(it.short)}"${ro}>${ICON.wish}</button>`}
+    ${it.old ? '<span class="old">Ancien</span>' : ""}
+    <div class="nm">${esc(it.short)}</div>
+    ${famHTML(it, l)}
+  </article>`;
+}
+function renderList() {
+  const l = curList(), g = gerantsOf(l.id), edit = canEdit(l.id);
+  $("l-name").textContent = l.nom;
+  $("l-who").textContent = g.length ? "Gérée par " + g.map(nameOf).join(", ") : "Sans gérant";
+  $("l-badge").textContent = edit ? "Vous gérez" : "Lecture seule";
+  $("l-badge").className = "badge" + (edit ? " edit" : "");
+  $("l-settings").hidden = !canManage(l.id);
+  $("photo-btn").hidden = !edit;
+  renderProgress(); renderStatus(); renderGrid();
+}
+function renderGrid() {
+  const l = curList(), q = norm(ui.q).trim().split(/\s+/).filter(Boolean);
+  const list = ITEMS.filter(it => inTab(it) && statusOf(it, ui.status, l) && q.every(w => it._s.includes(w)));
+  let html = "", grp = null;
+  for (const it of list) {
+    const g = groupOf(it);
+    if (g !== grp) { grp = g; html += `<div class="sec"><h2>${esc(g)}</h2><span data-sec="${esc(g)}"></span></div>`; }
+    html += cardHTML(it);
+  }
+  if (!list.length) html = `<div class="empty">${ui.status === "own" ? "Rien de coché pour l'instant." : ui.status === "wish" ? "Pas encore d'envie dans cet onglet." : "Rien ne correspond."}</div>`;
+  $("grid").innerHTML = html;
+  renderSectionCounts();
+}
+function renderSectionCounts() {
+  const l = curList(), c = {};
+  for (const it of ITEMS) if (inTab(it)) { const g = groupOf(it); c[g] = c[g] || [0, 0]; c[g][1]++; if (statut(l, it.id) === "own") c[g][0]++; }
+  for (const el of document.querySelectorAll("[data-sec]")) { const x = c[el.dataset.sec]; el.textContent = x ? `${x[0]} / ${x[1]}` : ""; }
+}
+function refreshCard(id) { const el = document.querySelector(`[data-card="${id}"]`), it = BY_ID.get(id); if (el && it) el.outerHTML = cardHTML(it); }
+function renderProgress() {
+  const l = curList(), pool = ITEMS.filter(inTab);
+  const n = pool.filter(i => statut(l, i.id) === "own").length, w = pool.filter(i => statut(l, i.id) === "wish").length;
+  $("prog-txt").innerHTML = `<b>${n}</b> / ${pool.length}${w ? ` · <b>${w}</b> envie${w > 1 ? "s" : ""}` : ""}`;
+  $("prog-bar").style.width = (pool.length ? n / pool.length * 100 : 0) + "%";
+  for (const t of ["santons", "decor"]) { const b = $("tab-" + t); b.setAttribute("aria-selected", String(ui.tab === t)); b.querySelector(".n").textContent = N_SEC[t]; }
+}
+function renderStatus() {
+  const l = curList(), pool = ITEMS.filter(inTab);
+  $("status").innerHTML = [["all", "Tous"], ["own", "J'ai"], ["missing", "Il manque"], ["wish", "Envies"]].map(([v, t]) =>
+    `<button class="chip" type="button" data-status="${v}" aria-pressed="${ui.status === v}">${t}<span class="n">${pool.filter(it => statusOf(it, v, l)).length}</span></button>`).join("");
+}
+
+/* ================= Cocher ================= */
+async function setStatut(l, id, value) {
+  const before = l.items.get(id);
+  if (value) l.items.set(id, { liste_id: l.id, santon_id: id, statut: value, modifie_par: me.id, updated_at: new Date().toISOString() });
+  else l.items.delete(id);
+  const res = value
+    ? await sb.from("liste_items").upsert({ liste_id: l.id, santon_id: id, statut: value }, { onConflict: "liste_id,santon_id" })
+    : await sb.from("liste_items").delete().eq("liste_id", l.id).eq("santon_id", id);
+  if (res.error) {
+    if (before) l.items.set(id, before); else l.items.delete(id);
+    toast(frErr(res.error));
+    return false;
+  }
+  return true;
+}
+async function toggle(kind, id) {
+  const l = curList(); if (!l || !canEdit(l.id)) { toast("Cette crèche est en lecture seule pour vous."); return; }
+  const s = statut(l, id);
+  const value = kind === "own" ? (s === "own" ? null : "own") : (s === "wish" ? null : "wish");
+  const p = setStatut(l, id, value);
+  refreshCard(id); renderProgress(); renderStatus(); renderSectionCounts();
+  if (dlgItem.open && dlgItem.dataset.id === String(id)) openItem(id);
+  if (!(await p)) { refreshCard(id); renderProgress(); renderStatus(); renderSectionCounts(); }
+}
+
+/* ================= Fiche ================= */
+const dlgItem = $("dlg-item");
+function openItem(id) {
+  const it = BY_ID.get(+id); if (!it) return;
+  const l = curList(), s = statut(l, it.id), ro = canEdit(l.id) ? "" : " disabled";
+  const fam = siblings(l).map(o => [o, statut(o, it.id)]).filter(x => x[1]);
+  $("item-body").innerHTML = `
+    <div class="dlg-head"><h2 id="it-name">${esc(it.name)}</h2><button class="x" type="button" data-close aria-label="Fermer">✕</button></div>
+    <div class="item"><div class="pic">${it.img ? `<img src="${esc(it.img)}?auto=format&w=480&h=640&fit=max" alt="${esc(it.name)}" data-fallback="1">` : `<div class="ph" style="${spriteStyle(it)};cursor:default"></div>`}</div>
+      <div style="display:grid;gap:12px;align-content:start;min-width:0">
+        <dl>
+          <dt>Catégorie</dt><dd>${esc(groupOf(it))}</dd>
+          ${it.ref ? `<dt>Référence</dt><dd>${esc(it.ref)}</dd>` : ""}
+          ${it.price != null ? `<dt>Prix</dt><dd>${euro(it.price)} <span class="muted">(boutique)</span></dd>` : ""}
+          ${it.source ? `<dt>Source</dt><dd>${esc(it.source)}. Plus vendu en ligne.</dd>` : ""}
+        </dl>
+        <div class="duo">
+          <button class="tg o" type="button" data-act="own" data-id="${it.id}" aria-pressed="${s === "own"}"${ro}>✓ J'ai</button>
+          <button class="tg w" type="button" data-act="wish" data-id="${it.id}" aria-pressed="${s === "wish"}"${ro || (s === "own" ? " disabled" : "")}>♡ Envie</button>
+        </div>
+        ${fam.length ? `<div style="display:grid;gap:6px"><span class="label">Dans les autres crèches</span>${fam.map(([o, x]) => `<div class="row"><span class="avatar sm${x === "own" ? "" : " ring"}" style="--c:${hashColor(o.id)}"></span><span><b>${esc(o.nom)}</b> : ${x === "own" ? "l'a" : "envie"}</span></div>`).join("")}</div>` : ""}
+        ${it.url ? `<a class="btn" href="${esc(it.url)}" target="_blank" rel="noopener">${it.source ? "Catalogues Carbonel ↗" : "Voir sur marcelcarbonel.com ↗"}</a>` : ""}
+      </div></div>`;
+  const img = $("item-body").querySelector("img[data-fallback]");
+  if (img) img.addEventListener("error", () => { img.outerHTML = `<div class="ph" style="${spriteStyle(it)}"></div>`; }, { once: true });
+  dlgItem.dataset.id = String(it.id);
+  if (!dlgItem.open) dlgItem.showModal();
+}
+
+/* ================= Réglages d'une crèche ================= */
+const dlgSettings = $("dlg-settings");
+let confirmDelete = false;
+function openSettings() {
+  const l = curList(); if (!l || !canManage(l.id)) return;
+  const g = gerantsOf(l.id), v = visitorsOf(l.id);
+  const mems = st.membres.filter(m => m.famille_id === l.famille_id);
+  $("settings-body").innerHTML = `
+    <div class="dlg-head"><h2 id="set-title">Réglages : ${esc(l.nom)}</h2><button class="x" type="button" data-close aria-label="Fermer">✕</button></div>
+    <form class="row" id="rename-form"><div class="field" style="flex:1 1 200px"><label class="label" for="set-nom">Nom</label><input id="set-nom" maxlength="60" required value="${esc(l.nom)}"></div><button class="btn" type="submit" style="align-self:end">Renommer</button></form>
+    <hr class="sep">
+    <span class="label">Qui peut cocher dans cette crèche</span>
+    <div class="checks">${mems.map(m => `<label><input type="checkbox" data-gerant="${m.user_id}"${g.includes(m.user_id) ? " checked" : ""}> ${avatarHTML(m.user_id, "sm")} ${esc(nameOf(m.user_id))}</label>`).join("")}</div>
+    <p class="help">Tous les membres de la famille voient cette crèche ; seuls ceux cochés ici la modifient.</p>
+    <hr class="sep">
+    <span class="label">Visiteurs (lecture seule, cette crèche seulement)</span>
+    <div class="people">${v.length ? v.map(u => `<div class="person">${avatarHTML(u)}<span class="pn">${esc(nameOf(u))}</span><button class="btn sm danger" type="button" data-unvisit="${u}">Retirer</button></div>`).join("") : '<p class="help">Aucun visiteur pour l\'instant.</p>'}</div>
+    <div class="field"><label class="label" for="visit-link">Lien de visite à envoyer</label>
+      <div class="linkbox"><input id="visit-link" readonly value="${esc(visitLink(l.id))}"><button class="btn sm primary" type="button" id="copy-visit">Copier</button><button class="btn sm" type="button" id="new-visit">Changer</button></div></div>
+    <p class="help">La personne qui ouvre ce lien et se connecte voit cette crèche, sans pouvoir la modifier ni voir les autres. « Changer » crée un nouveau lien et désactive l'ancien.</p>
+    <hr class="sep">
+    <div class="row">${confirmDelete ? `<button class="btn danger" type="button" id="del-yes">Supprimer définitivement « ${esc(l.nom)} »</button><button class="btn" type="button" id="del-no">Annuler</button>` : '<button class="btn danger" type="button" id="del-list">Supprimer cette crèche</button>'}</div>`;
+  if (!dlgSettings.open) dlgSettings.showModal();
+}
+async function copyText(text, ok, input) {
+  try { await navigator.clipboard.writeText(text); toast(ok); }
+  catch (e) { if (input) { input.focus(); input.select(); } toast("Sélectionné : copiez avec Ctrl+C ou un appui long."); }
+}
+dlgSettings.addEventListener("change", async e => {
+  const cb = e.target.closest("[data-gerant]"); if (!cb) return;
+  const l = curList(), uid = cb.dataset.gerant;
+  if (!cb.checked && gerantsOf(l.id).length <= 1) { cb.checked = true; toast("Il faut au moins un gérant."); return; }
+  const res = cb.checked ? await sb.from("liste_gerants").insert({ liste_id: l.id, user_id: uid })
+    : await sb.from("liste_gerants").delete().eq("liste_id", l.id).eq("user_id", uid);
+  if (res.error) { cb.checked = !cb.checked; toast(frErr(res.error)); return; }
+  await loadAll(); render(); if (st.listes.has(l.id)) openSettings(); else dlgSettings.close();
+});
+dlgSettings.addEventListener("submit", async e => {
+  if (e.target.id !== "rename-form") return;
+  e.preventDefault();
+  const l = curList(), nom = $("set-nom").value.trim(); if (!nom) return;
+  const { error } = await sb.from("listes").update({ nom }).eq("id", l.id);
+  if (error) return toast(frErr(error));
+  l.nom = nom; render(); openSettings(); toast("Renommée.");
+});
+dlgSettings.addEventListener("click", async e => {
+  const t = e.target.closest("button"); if (!t) return;
+  const l = curList();
+  if (t.id === "copy-visit") return copyText($("visit-link").value, "Lien de visite copié.", $("visit-link"));
+  if (t.id === "new-visit") {
+    const { data, error } = await sb.rpc("nouveau_code_visite", { p_liste: l.id });
+    if (error) return toast(frErr(error));
+    st.invListe.set(l.id, data); openSettings(); toast("Nouveau lien créé ; l'ancien ne marche plus.");
+    return;
+  }
+  if (t.dataset.unvisit) {
+    const { error } = await sb.from("liste_visiteurs").delete().eq("liste_id", l.id).eq("user_id", t.dataset.unvisit);
+    if (error) return toast(frErr(error));
+    await loadAll(); render(); openSettings(); return;
+  }
+  if (t.id === "del-list") { confirmDelete = true; openSettings(); return; }
+  if (t.id === "del-no") { confirmDelete = false; openSettings(); return; }
+  if (t.id === "del-yes") {
+    const { error } = await sb.from("listes").delete().eq("id", l.id);
+    confirmDelete = false;
+    if (error) return toast(frErr(error));
+    dlgSettings.close(); await loadAll(); go("home"); toast("Crèche supprimée.");
+  }
+});
+dlgSettings.addEventListener("close", () => { confirmDelete = false; });
+
+/* ================= Photo de la crèche ================= */
+const dlgPhoto = $("dlg-photo");
+let photo = null, foundIds = [];
+const canAI = () => !!CFG.reconnaissance;
+function photoStep(n) { $("ph-pick").hidden = n !== 1; $("ph-step2").hidden = n !== 2; $("ph-step3").hidden = n !== 3; }
+function loadImage(src) { return new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = src; }); }
+async function shrink(file, max, q) {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await loadImage(url);
+    const k = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+    const c = document.createElement("canvas"); c.width = Math.round(img.naturalWidth * k); c.height = Math.round(img.naturalHeight * k);
+    c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+    return await new Promise(res => c.toBlob(res, "image/jpeg", q));
+  } finally { URL.revokeObjectURL(url); }
+}
+$("ph-file").addEventListener("change", async e => {
+  const f = e.target.files && e.target.files[0]; e.target.value = ""; if (!f) return;
+  let blob = null; try { blob = await shrink(f, 1600, .85); } catch (err) { blob = null; }
+  if (!blob) return toast("Cette image ne s'ouvre pas. Essayez une photo JPEG.");
+  if (photo) URL.revokeObjectURL(photo.url);
+  photo = { blob, url: URL.createObjectURL(blob) };
+  showPhotoStep2();
+});
+function showPhotoStep2() {
+  $("ph-shot").src = photo.url; $("ph-ai").hidden = !canAI(); $("ph-ai").disabled = false;
+  $("ph-msg").textContent = canAI()
+    ? "Claude peut repérer sur la photo les modèles du catalogue de cet onglet, puis vous validez. Ou gardez la photo à l'écran et cochez à la main."
+    : "Gardez la photo à l'écran au-dessus du catalogue et cochez ✓ ce que vous y voyez.";
+  photoStep(2);
+}
+$("ph-other").addEventListener("click", () => photoStep(1));
+function pinPhoto() {
+  dlgPhoto.close(); $("pin-img").src = photo.url; $("pin").hidden = false; $("pin").classList.remove("big"); $("pin-size").textContent = "Agrandir";
+  if (ui.status !== "all") { ui.status = "all"; renderStatus(); renderGrid(); }
+  window.scrollTo({ top: 0 });
+}
+$("ph-manual").addEventListener("click", pinPhoto);
+$("ph-manual2").addEventListener("click", pinPhoto);
+$("pin-close").addEventListener("click", () => { $("pin").hidden = true; });
+function togglePin() { const big = $("pin").classList.toggle("big"); $("pin-size").textContent = big ? "Réduire" : "Agrandir"; }
+$("pin-size").addEventListener("click", togglePin);
+$("pin-img").addEventListener("click", togglePin);
+const toB64 = blob => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(",")[1]); r.onerror = rej; r.readAsDataURL(blob); });
+async function referenceSheets(items, count) {
+  const per = Math.ceil(items.length / count), cols = Math.min(12, Math.ceil(Math.sqrt(per * 1.33)));
+  const cw = 120, ch = 160, sheets = {}, out = [];
+  for (let s = 0; s * per < items.length; s++) {
+    const chunk = items.slice(s * per, (s + 1) * per), rows = Math.ceil(chunk.length / cols);
+    const c = document.createElement("canvas"); c.width = cols * cw; c.height = rows * ch;
+    const g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, c.width, c.height);
+    for (let k = 0; k < chunk.length; k++) {
+      const it = chunk[k], n = s * per + k + 1, [sh, i] = it.sp, key = String(sh).padStart(2, "0");
+      sheets[key] = sheets[key] || await loadImage(`sprites/planche-${key}.webp`);
+      const x = (k % cols) * cw, y = Math.floor(k / cols) * ch;
+      g.drawImage(sheets[key], (i % SP.cols) * SP.cellW, Math.floor(i / SP.cols) * SP.cellH, SP.cellW, SP.cellH, x, y, cw, ch);
+      g.strokeStyle = "#ccc"; g.strokeRect(x + .5, y + .5, cw - 1, ch - 1);
+      g.fillStyle = "#000"; g.fillRect(x + 2, y + 2, 36, 20);
+      g.fillStyle = "#fff"; g.font = "bold 15px sans-serif"; g.textBaseline = "top"; g.fillText(String(n), x + 5, y + 4);
+    }
+    out.push(await new Promise(res => c.toBlob(res, "image/jpeg", 0.8)));
+  }
+  return out;
+}
+$("ph-ai").addEventListener("click", async () => {
+  const btn = $("ph-ai"); btn.disabled = true;
+  const items = ITEMS.filter(it => inTab(it) && it.sp);
+  $("ph-msg").innerHTML = `<span class="row"><span class="spin" aria-hidden="true"></span> Claude compare la photo aux ${items.length} modèles du catalogue, une minute environ…</span>`;
+  try {
+    const refs = await referenceSheets(items, 6);
+    const body = { photo: await toB64(photo.blob), planches: await Promise.all(refs.map(toB64)), liste: items.map((it, k) => `${k + 1} = ${it.short}`).join("\n") };
+    const { data, error } = await sb.functions.invoke("reconnaitre", { body });
+    if (error) throw error;
+    const seen = new Map();
+    for (const r of Array.isArray(data && data.trouves) ? data.trouves : []) { const it = items[Number(r && r.n) - 1]; if (it) seen.set(it.id, !!seen.get(it.id) || !!r.sur); }
+    foundIds = [...seen.entries()];
+    showFound();
+  } catch (e) {
+    $("ph-msg").textContent = "La reconnaissance n'a pas abouti. Réessayez, ou pointez à la main.";
+    btn.disabled = false;
+  }
+});
+function showFound() {
+  const l = curList(), fresh = foundIds.filter(([id]) => statut(l, id) !== "own"), already = foundIds.length - fresh.length;
+  $("ph-found-msg").textContent = !foundIds.length ? "Claude n'a reconnu aucun modèle du catalogue. Essayez une photo plus nette et plus proche, ou pointez à la main."
+    : `Claude a repéré ${foundIds.length} modèle${foundIds.length > 1 ? "s" : ""}${already ? `, dont ${already} déjà coché${already > 1 ? "s" : ""}` : ""}. Décochez ce qui n'est pas dans la crèche, puis ajoutez.`;
+  $("ph-found").innerHTML = fresh.map(([id, sure]) => { const it = BY_ID.get(id);
+    return `<label><input type="checkbox" value="${id}"${sure ? " checked" : ""}><div class="ph" style="${spriteStyle(it)};cursor:pointer"></div>${sure ? "" : '<span class="doubt">À vérifier</span>'}<div class="nm">${esc(it.short)}</div></label>`; }).join("");
+  updateApply(); photoStep(3);
+}
+function updateApply() { const n = $("ph-found").querySelectorAll("input:checked").length; $("ph-apply").textContent = n ? `Ajouter ${n} à « ${curList().nom} »` : "Rien à ajouter"; $("ph-apply").disabled = !n; }
+$("ph-found").addEventListener("change", updateApply);
+$("ph-apply").addEventListener("click", async () => {
+  const l = curList(); if (!canEdit(l.id)) return;
+  const ids = [...$("ph-found").querySelectorAll("input:checked")].map(i => +i.value);
+  const rows = ids.map(id => ({ liste_id: l.id, santon_id: id, statut: "own" }));
+  const { error } = await sb.from("liste_items").upsert(rows, { onConflict: "liste_id,santon_id" });
+  if (error) return toast(frErr(error));
+  for (const id of ids) l.items.set(id, { liste_id: l.id, santon_id: id, statut: "own", modifie_par: me.id, updated_at: new Date().toISOString() });
+  renderList(); toast(`${ids.length} ajouté${ids.length > 1 ? "s" : ""}.`); pinPhoto();
+});
+
+/* ================= Événements ================= */
+function wishText(l) {
+  const lines = [`Liste d'envies – ${l.nom} (santons Marcel Carbonel N°2 pied vert)`];
+  for (const sec of ["santons", "decor"]) {
+    const its = ITEMS.filter(it => it.section === sec && statut(l, it.id) === "wish");
+    if (!its.length) continue;
+    lines.push("", `${sec === "santons" ? "Santons" : "Bâtiments et accessoires"} (${its.length})`);
+    for (const it of its) lines.push("- " + it.name + (it.ref ? " [" + it.ref + "]" : "") + (it.price ? " – " + euro(it.price) : ""));
+  }
+  lines.push("", "Boutique : https://marcelcarbonel.com");
+  return lines.join("\n");
+}
+document.addEventListener("click", async e => {
+  const t = e.target.closest("button, a[data-list]");
+  if (!t) return;
+  const d = t.dataset;
+  if (d.close !== undefined) { t.closest("dialog").close(); return; }
+  if (d.list) { e.preventDefault(); go("list", d.list); return; }
+  if (d.act) { toggle(d.act, +d.id); return; }
+  if (d.open) { openItem(d.open); return; }
+  if (d.tab) { ui.tab = d.tab; ui.q = ""; $("q").value = ""; renderProgress(); renderStatus(); renderGrid(); return; }
+  if (d.status) { ui.status = d.status; renderStatus(); renderGrid(); return; }
+  if (d.newlist) { $("new-form").dataset.famille = d.newlist; $("new-nom").value = "Crèche de "; $("dlg-new").showModal(); return; }
+  if (d.invite) {
+    const link = joinLink(d.invite);
+    copyText(`Rejoins la famille sur notre catalogue de santons Carbonel : ${link}`, "Lien d'invitation copié : envoyez-le par message.");
+    return;
+  }
+  if (d.kick) {
+    const [f, u] = d.kick.split("|");
+    if (t.dataset.sure !== "1") { t.dataset.sure = "1"; t.textContent = "Confirmer"; return; }
+    const { error } = await sb.from("membres").delete().eq("famille_id", f).eq("user_id", u);
+    if (error) return toast(frErr(error));
+    await loadAll(); render(); return;
+  }
+  if (t.id === "create-family") { $("dlg-family").showModal(); return; }
+});
+$("back").addEventListener("click", () => go("home"));
+$("l-settings").addEventListener("click", async () => { try { await loadAll(); } catch (e) { /* on garde l'état connu */ } if (curList()) openSettings(); });
+$("l-copy").addEventListener("click", () => copyText(wishText(curList()), "Liste d'envies copiée."));
+$("photo-btn").addEventListener("click", () => { if (photo) showPhotoStep2(); else photoStep(1); dlgPhoto.showModal(); });
+$("me-btn").addEventListener("click", () => { $("me-nom").value = nameOf(me.id); $("me-mail").textContent = me.email || ""; $("dlg-me").showModal(); });
+$("me-form").addEventListener("submit", async e => {
+  e.preventDefault();
+  const nom = $("me-nom").value.trim().slice(0, 40); if (!nom) return;
+  const { error } = await sb.from("profils").upsert({ id: me.id, nom });
+  if (error) return toast(frErr(error));
+  st.profils.set(me.id, { id: me.id, nom }); $("dlg-me").close(); render(); toast("Prénom enregistré.");
+});
+$("me-out").addEventListener("click", async () => { $("dlg-me").close(); await sb.auth.signOut(); });
+$("new-form").addEventListener("submit", async e => {
+  e.preventDefault();
+  const nom = $("new-nom").value.trim(); if (!nom || nom === "Crèche de") return;
+  const { data, error } = await sb.rpc("creer_liste", { p_famille: e.target.dataset.famille, p_nom: nom });
+  if (error) return toast(frErr(error));
+  $("dlg-new").close(); await loadAll(); go("list", data); toast(`« ${nom} » créée : vous en êtes gérant.`);
+});
+$("family-form").addEventListener("submit", async e => {
+  e.preventDefault();
+  const nom = $("fam-nom").value.trim(); if (!nom) return;
+  const { error } = await sb.rpc("creer_famille", { p_nom: nom });
+  if (error) return toast(frErr(error));
+  $("dlg-family").close(); await loadAll(); render(); toast("Famille créée. Invitez les autres avec le bouton « Inviter dans la famille ».");
+});
+let qTimer = null;
+$("q").addEventListener("input", e => { clearTimeout(qTimer); qTimer = setTimeout(() => { ui.q = e.target.value; renderGrid(); }, 120); });
+for (const d of document.querySelectorAll("dialog")) d.addEventListener("click", e => { if (e.target === d) d.close(); });
+
+/* ================= Lancement ================= */
+readInvite();
+if (!CFG.supabaseUrl || !CFG.supabaseKey || !window.supabase) { screen("scr-config"); return; }
+sb = window.supabase.createClient(CFG.supabaseUrl, CFG.supabaseKey);
+sb.auth.onAuthStateChange((event, session) => {
+  if (event === "PASSWORD_RECOVERY") { screen("scr-reset"); return; }
+  if (event === "SIGNED_OUT") { me = null; showAuth(); return; }
+  if (event === "SIGNED_IN" && (!me || (session && session.user.id !== me.id))) setTimeout(start, 0);
+});
+start();
+})();
+</script>
