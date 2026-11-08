@@ -15,8 +15,9 @@ comme un petit réseau social familial :
   compte**, qui ne montre que cette crèche (pour un oncle, une marraine…).
   « Changer » le lien coupe l'ancien.
 
-Dans chaque crèche : ✓ je l'ai, ♡ envie, quatre onglets, photo de la crèche
-pour pointer, liste d'envies à copier pour les cadeaux, et **« + Santon
+Dans chaque crèche : ✓ je l'ai, ♡ envie, quatre onglets, une grande **photo
+de la crèche installée** (mise par ses gérants, en tête de la crèche, sur
+l'accueil et sur la page publique), liste d'envies à copier pour les cadeaux, et **« + Santon
 ancien »** pour les modèles qu'aucun catalogue ne montre (crèches commencées
 il y a 30 ans) : nom, marque, note, photo prise au téléphone. Le modèle entre
 dans le catalogue de toute la famille, dans le bon onglet, sous « Ajoutés par
@@ -62,7 +63,8 @@ le SQL Editor (`schema.sql` les contient déjà pour une nouvelle installation) 
 
 - `2026-11-08b_santons_ajoutes.sql` : santons ajoutés par la famille, espace
   « photos » pour leurs photos, et page publique d'une crèche (contient aussi
-  `2026-11-08_page_publique.sql`, qu'il n'est donc pas utile de lancer).
+  `2026-11-08_page_publique.sql`, qu'il n'est donc pas utile de lancer) ;
+- `2026-11-09_photo_creche.sql` : photo de la crèche installée.
 
 ### 2. Le site : GitHub Pages
 
@@ -78,26 +80,7 @@ Le site est publié automatiquement depuis ce dépôt :
 Le dossier `site/` peut aussi être déposé tel quel sur un autre hébergeur
 statique (par exemple Netlify Drop).
 
-### 3. Optionnel : la reconnaissance des santons sur photo
-
-Sans elle, « Photo de la crèche » garde la photo à l'écran pour cocher à la
-main. Avec elle, Claude repère sur la photo les modèles du catalogue et propose
-de les cocher (on valide avant).
-
-1. Créer une clé API sur [console.anthropic.com](https://console.anthropic.com)
-   (payant à l'usage : quelques centimes par photo).
-2. Supabase > **Edge Functions** > **Deploy a new function** > via l'éditeur,
-   nom `reconnaitre`, coller
-   [`supabase/functions/reconnaitre/index.ts`](supabase/functions/reconnaitre/index.ts).
-   Ou en ligne de commande : `supabase functions deploy reconnaitre`.
-3. Edge Functions > **Secrets** : ajouter `ANTHROPIC_API_KEY`.
-4. Dans `config.js`, mettre `reconnaissance: true`, puis `python3 build.py`
-   et republier `site/`.
-
-La fonction n'accepte que les membres connectés d'une famille, pour que la clé
-ne serve qu'à vous.
-
-### 4. Premiers pas
+### 3. Premiers pas
 
 1. Ouvrir le site, **Créer un compte** (prénom, e-mail, mot de passe), puis
    **Créer la famille**.
@@ -127,10 +110,11 @@ ses droits.
 `supabase/tests/lancer.sh` rejoue tout sans compte Supabase, sur un
 PostgreSQL 16 local :
 
-- `droits.sql` : 47 vérifications des règles d'accès (inconnu, membre, gérant,
-  visiteur, ancien membre, anonyme, page publique, santons ajoutés et photos) ;
+- `droits.sql` : 51 vérifications des règles d'accès (inconnu, membre, gérant,
+  visiteur, ancien membre, anonyme, page publique, santons ajoutés, photos
+  et photo de la crèche) ;
 - `parcours.js` : dans un vrai navigateur, Papa crée la famille et la crèche
-  de Léa, coche, utilise la photo ; Maman arrive par le lien d'invitation, est
+  de Léa, coche, met la photo de la crèche ; Maman arrive par le lien d'invitation, est
   en lecture seule, puis devient gérante ; Mamie ouvre le lien public sans
   compte et ne voit que la crèche de Léa ; après « Changer », l'ancien lien
   ne marche plus ;
@@ -140,10 +124,9 @@ PostgreSQL 16 local :
 
 `faux_supabase.py` imite les routes de Supabase utilisées par l'appli et
 exécute chaque requête avec l'identité de l'utilisateur, donc avec les vraies
-règles. `auth_factice.sql` crée le schéma `auth` minimal. Le temps réel et
-l'appel à Claude ne sont pas couverts ; le stockage des photos est imité
-(dépôt soumis aux mêmes règles, fichiers sur le disque). La fonction de
-reconnaissance est remplacée par une réponse fixe.
+règles. `auth_factice.sql` crée le schéma `auth` minimal. Le temps réel n'est
+pas couvert ; le stockage des photos est imité (dépôt soumis aux mêmes règles,
+fichiers sur le disque).
 
 ## Le catalogue
 
@@ -205,10 +188,9 @@ coches restent valables après une mise à jour.
 | Chemin | Rôle |
 |---|---|
 | `site/` | Le site à publier (généré) |
-| `config.js` | Adresse et clé publique Supabase, option de reconnaissance |
+| `config.js` | Adresse et clé publique Supabase |
 | `src/app.html` | Le code de l'application |
 | `supabase/schema.sql` | Tables, règles d'accès, fonctions d'invitation |
-| `supabase/functions/reconnaitre/` | Reconnaissance des santons sur photo (Claude) |
 | `supabase/tests/` | Tests des droits et du parcours |
 | `data/` | Les catalogues relevés (Carbonel, anciens modèles, Escoffier) |
 | `scraper/` | Relevé, couleur du pied, anciens modèles, vignettes |

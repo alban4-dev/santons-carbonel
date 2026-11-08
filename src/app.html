@@ -93,7 +93,7 @@ a { color: var(--accent); }
 .fam-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px; }
 .fam-head h2 { font-size: 1.5rem; }
 .lists { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }
-.lcard { text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: grid; gap: 8px; align-content: start; min-width: 0; }
+.lcard { overflow: hidden; text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: grid; gap: 8px; align-content: start; min-width: 0; }
 .lcard:hover { border-color: var(--accent); }
 .lcard h3 { font-size: 1.2rem; overflow-wrap: anywhere; }
 .lcard .who { font-size: .82rem; color: var(--muted); }
@@ -120,14 +120,17 @@ a { color: var(--accent); }
 .progress { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .meter { flex: 1 1 120px; height: 8px; border-radius: 4px; background: var(--surface-2); overflow: hidden; min-width: 80px; display: block; }
 .meter i { display: block; height: 100%; background: var(--owned); }
-.photo-btn { display: inline-flex; align-items: center; gap: 8px; border: 0; border-radius: 999px; padding: 9px 16px; font-weight: 700; background: var(--accent); color: var(--accent-ink); }
 .search { flex: 1 1 160px; min-width: 0; display: flex; align-items: center; gap: 6px; background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 0 12px; }
 .search input { border: 0; background: none; outline: none; padding: 7px 0; width: 100%; min-width: 0; }
-.pin { position: sticky; top: var(--top-h, 96px); z-index: 4; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); display: flex; gap: 10px; padding: 6px; align-items: flex-start; margin-bottom: 10px; }
-.pin img { display: block; height: 130px; max-width: 65%; object-fit: contain; border-radius: 8px; background: #000; cursor: zoom-in; }
-.pin.big { flex-direction: column; }
-.pin.big img { height: min(55vh, 520px); max-width: 100%; cursor: zoom-out; }
-.pin .pin-side { display: grid; gap: 6px; font-size: .85rem; color: var(--muted); min-width: 0; }
+.cover { position: relative; margin-top: 12px; border-radius: 14px; overflow: hidden; background: var(--surface-2); }
+.cover img { display: block; width: 100%; aspect-ratio: 4 / 3; max-height: min(60vh, 520px); object-fit: cover; cursor: zoom-in; }
+.cover.full img { aspect-ratio: auto; max-height: none; object-fit: contain; cursor: zoom-out; }
+.cover .cover-acts { position: absolute; right: 8px; bottom: 8px; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
+.cover .cover-acts .pick, .cover .cover-acts .btn { padding: 7px 12px; font-size: .85rem; border-radius: 999px; background: rgba(255,255,255,.92); color: #2a2233; border-color: transparent; }
+.cover.empty { display: grid; gap: 10px; padding: 16px; border: 2px dashed var(--line); background: var(--surface); }
+.cover.empty p { margin: 0; color: var(--muted); font-size: .9rem; }
+.cover.busy { opacity: .6; pointer-events: none; }
+.lthumb { display: block; margin: -14px -14px 2px; aspect-ratio: 16 / 7; background: var(--surface-2) center / cover no-repeat; }
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 8px; padding-bottom: 40px; }
 @media (max-width: 440px) { .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; } }
 .sec { grid-column: 1 / -1; display: flex; align-items: baseline; gap: 10px; padding: 14px 2px 2px; }
@@ -179,23 +182,12 @@ dialog::backdrop { background: rgba(20, 14, 26, .55); }
 .tg.o[aria-pressed="true"] { background: var(--owned); border-color: var(--owned); color: var(--surface); }
 .tg.w[aria-pressed="true"] { background: var(--wish-soft); border-color: var(--wish); color: var(--wish); }
 .tg:disabled { opacity: .5; cursor: default; }
-.drop { position: relative; display: grid; place-items: center; gap: 6px; text-align: center; border: 2px dashed var(--line); border-radius: 12px; padding: 28px 16px; cursor: pointer; color: var(--muted); }
-.drop:hover, .drop:focus-within { border-color: var(--accent); color: var(--ink); }
-.drop input, .pick input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.pick input { position: absolute; width: 1px; height: 1px; opacity: 0; }
 .picks { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .pick { position: relative; display: flex; align-items: center; justify-content: center; gap: 8px; text-align: center;
   border: 1.5px solid var(--line); border-radius: 12px; padding: 14px 8px; font-weight: 700; cursor: pointer; background: var(--surface); }
 .pick.main { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
 .pick:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
-.shot { display: block; max-width: 100%; max-height: 46vh; margin-inline: auto; border-radius: 10px; }
-.found { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 6px; max-height: 46vh; overflow: auto; padding: 2px; }
-.found label { position: relative; display: block; border: 2px solid var(--line); border-radius: 9px; overflow: hidden; background: var(--surface); cursor: pointer; }
-.found label:has(input:checked) { border-color: var(--owned); }
-.found input { position: absolute; top: 5px; left: 5px; width: 20px; height: 20px; accent-color: #2b7a4b; }
-.found .doubt { position: absolute; right: 4px; top: 4px; font-size: .6rem; font-weight: 700; background: #a86a12; color: #fff; border-radius: 999px; padding: 1px 6px; }
-.spin { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--line); border-top-color: var(--accent); animation: rot .9s linear infinite; flex: none; }
-@keyframes rot { to { transform: rotate(360deg); } }
-@media (prefers-reduced-motion: reduce) { .spin { animation-duration: 3s; } }
 .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); z-index: 50; background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 999px; font-weight: 700; max-width: calc(100vw - 32px); box-shadow: var(--shadow); }
 .foot { padding-block: 8px 36px; font-size: .78rem; color: var(--muted); border-top: 1px solid var(--line); }
 </style>
@@ -271,28 +263,17 @@ dialog::backdrop { background: rgba(20, 14, 26, .55); }
         <button class="btn sm" type="button" id="l-settings" hidden>Réglages</button>
       </span>
     </div>
+    <div id="cover"></div>
     <section class="tools" aria-label="Outils">
       <div class="progress">
         <span id="prog-txt"></span>
         <span class="meter" aria-hidden="true"><i id="prog-bar"></i></span>
-        <button class="photo-btn" id="photo-btn" type="button" hidden>
-          <svg width="18" height="18" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 6.5h3l1.5-2h5L14 6.5h3v9H3z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="10" cy="11" r="3" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
-          Photo de la crèche
-        </button>
       </div>
       <div class="row">
         <div class="row" id="status" role="group" aria-label="Afficher"></div>
         <label class="search"><svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M11 11l3.5 3.5" stroke="currentColor" stroke-width="1.6"/></svg><input id="q" type="search" placeholder="Chercher" aria-label="Chercher un santon" autocomplete="off"></label>
       </div>
     </section>
-    <div class="pin" id="pin" hidden>
-      <img id="pin-img" alt="Photo de la crèche">
-      <div class="pin-side">
-        <span>Cochez ✓ ce que vous voyez sur la photo.</span>
-        <button class="btn sm" type="button" id="pin-size">Agrandir</button>
-        <button class="btn sm" type="button" id="pin-close">Fermer la photo</button>
-      </div>
-    </div>
     <div class="grid" id="grid"></div>
   </main>
   <footer class="wrap foot" id="foot"></footer>
@@ -351,40 +332,6 @@ dialog::backdrop { background: rgba(20, 14, 26, .55); }
 </dialog>
 
 <dialog id="dlg-settings" aria-labelledby="set-title"><div class="dlg" id="settings-body"></div></dialog>
-
-<dialog id="dlg-photo" class="wide" aria-labelledby="ph-title">
-  <div class="dlg">
-    <div class="dlg-head"><h2 id="ph-title">Photo de la crèche</h2><button class="x" type="button" data-close aria-label="Fermer">✕</button></div>
-    <div id="ph-pick" style="display:grid;gap:10px">
-      <div class="picks">
-        <label class="pick main"><svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 6.5h3l1.5-2h5L14 6.5h3v9H3z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="10" cy="11" r="3" fill="none" stroke="currentColor" stroke-width="1.5"/></svg> Prendre une photo<input type="file" id="ph-file" accept="image/*" capture="environment"></label>
-        <label class="pick"><svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><rect x="3" y="4" width="14" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M4 14l4-4 3 3 2-2 3 3" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="13" cy="8" r="1.3" fill="currentColor"/></svg> Choisir dans la pellicule<input type="file" id="ph-file2" accept="image/*"></label>
-      </div>
-      <p class="help">Toute la crèche, de face, bien éclairée et sans flash. Si elle est grande, plusieurs photos l'une après l'autre.</p>
-    </div>
-    <div id="ph-step2" hidden>
-      <div style="display:grid;gap:12px">
-        <img class="shot" id="ph-shot" alt="Photo choisie">
-        <p class="help" id="ph-msg"></p>
-        <div class="row">
-          <button class="btn primary" type="button" id="ph-ai" hidden>Reconnaître les santons</button>
-          <button class="btn" type="button" id="ph-manual">Pointer à la main avec la photo</button>
-          <button class="btn" type="button" id="ph-other">Autre photo</button>
-        </div>
-      </div>
-    </div>
-    <div id="ph-step3" hidden>
-      <div style="display:grid;gap:12px">
-        <p class="help" id="ph-found-msg"></p>
-        <div class="found" id="ph-found"></div>
-        <div class="row">
-          <button class="btn primary" type="button" id="ph-apply">Ajouter</button>
-          <button class="btn" type="button" id="ph-manual2">Pointer le reste à la main</button>
-        </div>
-      </div>
-    </div>
-  </div>
-</dialog>
 
 <div class="toast" id="toast" role="status" hidden></div>
 
@@ -466,6 +413,7 @@ const curList = () => st.listes.get(ui.listId);
 /* ================= Messages d'erreur ================= */
 function frErr(e) {
   const m = String((e && (e.message || e.error_description || e.msg)) || e || "");
+  if (/photo/i.test(m) && /listes|schema cache/i.test(m)) return "La base de données n'est pas encore à jour : il faut exécuter la mise à jour SQL dans Supabase (fichier supabase/migrations/2026-11-09_photo_creche.sql).";
   if (/Bucket not found|schema cache|modeles_famille|voir_liste/i.test(m)) return "La base de données n'est pas encore à jour : il faut exécuter la mise à jour SQL dans Supabase (fichier supabase/migrations/2026-11-08b_santons_ajoutes.sql).";
   if (/Invalid login credentials/i.test(m)) return "E-mail ou mot de passe incorrect.";
   if (/already registered|already exists/i.test(m)) return "Un compte existe déjà avec cet e-mail : choisissez « J'ai un compte ».";
@@ -573,7 +521,8 @@ async function loadAll() {
   const q = (t, c) => sb.from(t).select(c).then(r => { if (r.error) throw r.error; return r.data; });
   const [fam, mem, prof, lst, ger, vis, invL, invF, modeles, items] = await Promise.all([
     q("familles", "id,nom"), q("membres", "famille_id,user_id,role"), q("profils", "id,nom"),
-    q("listes", "id,famille_id,nom,cree_par,created_at"), q("liste_gerants", "liste_id,user_id"),
+    q("listes", "id,famille_id,nom,cree_par,created_at,photo").catch(() => q("listes", "id,famille_id,nom,cree_par,created_at")),
+    q("liste_gerants", "liste_id,user_id"),
     q("liste_visiteurs", "liste_id,user_id"), q("liste_invitations", "liste_id,code"), q("famille_invitations", "famille_id,code"),
     q("modeles_famille", "id,famille_id,nom,marque,section,note,photo,ajoute_par,created_at").catch(() => []),
     fetchAll("liste_items", "liste_id,santon_id,statut,modifie_par,updated_at"),
@@ -641,7 +590,6 @@ function go(view, listId) {
   ui.view = view; ui.listId = listId || null; ui.status = "all"; ui.q = ""; $("q").value = "";
   const h = view === "list" ? "#liste=" + listId : "#accueil";
   if (location.hash !== h) try { history.pushState(null, "", h); } catch (e) { location.hash = h; }
-  $("pin").hidden = true;
   render(); window.scrollTo({ top: 0 });
 }
 window.addEventListener("popstate", () => { if (me && !PUBLIC) { routeFromHash(); render(); } });
@@ -676,7 +624,9 @@ function visitLink(l) { const c = st.invListe.get(l); return c ? location.origin
 /* ================= Accueil ================= */
 function listCard(l) {
   const c = counts(l), g = gerantsOf(l.id), edit = canEdit(l.id);
+  const ph = photoUrl(l.photo);
   return `<button class="lcard" type="button" data-list="${l.id}">
+    ${ph ? `<span class="lthumb" style="background-image:url('${esc(ph)}')" role="img" aria-label="Photo de ${esc(l.nom)}"></span>` : ""}
     <span class="row" style="justify-content:space-between"><h3>${esc(l.nom)}</h3>${edit ? '<span class="badge edit">Vous gérez</span>' : '<span class="badge">Lecture seule</span>'}</span>
     <span class="who">${g.length ? "Gérée par " + esc(g.map(nameOf).join(", ")) : "Sans gérant"}</span>
     <span class="meter"><i style="width:${c.santons / nSec("santons", l) * 100}%"></i></span>
@@ -779,9 +729,8 @@ function renderList() {
   $("l-badge").textContent = edit ? "Vous gérez" : "Lecture seule";
   $("l-badge").className = "badge" + (edit ? " edit" : "");
   $("l-settings").hidden = !canManage(l.id);
-  $("photo-btn").hidden = !edit;
   $("l-add").hidden = PUBLIC || !isMember(l.famille_id);
-  renderProgress(); renderStatus(); renderGrid();
+  renderCover(); renderProgress(); renderStatus(); renderGrid();
 }
 function renderGrid() {
   const l = curList(), q = norm(ui.q).trim().split(/\s+/).filter(Boolean);
@@ -953,11 +902,7 @@ dlgSettings.addEventListener("click", async e => {
 });
 dlgSettings.addEventListener("close", () => { confirmDelete = false; });
 
-/* ================= Photo de la crèche ================= */
-const dlgPhoto = $("dlg-photo");
-let photo = null, foundIds = [];
-const canAI = () => !!CFG.reconnaissance;
-function photoStep(n) { $("ph-pick").hidden = n !== 1; $("ph-step2").hidden = n !== 2; $("ph-step3").hidden = n !== 3; }
+/* ================= Photo de la crèche installée ================= */
 function loadImage(src) { return new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = src; }); }
 async function shrink(file, max, q) {
   const url = URL.createObjectURL(file);
@@ -969,92 +914,48 @@ async function shrink(file, max, q) {
     return await new Promise(res => c.toBlob(res, "image/jpeg", q));
   } finally { URL.revokeObjectURL(url); }
 }
-async function photoChoisie(e) {
+const newName = () => (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2)).replace(/[^0-9a-z-]/gi, "");
+const PICK_CAM = '<svg width="18" height="18" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 6.5h3l1.5-2h5L14 6.5h3v9H3z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="10" cy="11" r="3" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>';
+const PICK_ROLL = '<svg width="18" height="18" viewBox="0 0 20 20" aria-hidden="true"><rect x="3" y="4" width="14" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M4 14l4-4 3 3 2-2 3 3" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="13" cy="8" r="1.3" fill="currentColor"/></svg>';
+function renderCover() {
+  const l = curList(), url = photoUrl(l.photo), edit = !PUBLIC && canManage(l.id), el = $("cover");
+  const picks = (cam, roll) => `<label class="pick${url ? "" : " main"}">${PICK_CAM} ${cam}<input type="file" id="cover-cam" accept="image/*" capture="environment"></label>
+    <label class="pick">${PICK_ROLL} ${roll}<input type="file" id="cover-roll" accept="image/*"></label>`;
+  if (url) {
+    el.className = "cover";
+    el.innerHTML = `<img id="cover-img" src="${esc(url)}" alt="Photo de ${esc(l.nom)} installée">
+      ${edit ? `<div class="cover-acts">${picks("Nouvelle photo", "Pellicule")}<button class="btn" type="button" id="cover-del">Retirer</button></div>` : ""}`;
+  } else if (edit) {
+    el.className = "cover empty";
+    el.innerHTML = `<p>Une fois la crèche installée, prenez-la en photo : elle s'affichera ici en grand, pour toute la famille et sur la page publique.</p>
+      <div class="picks">${picks("Prendre une photo", "Pellicule")}</div>`;
+  } else { el.className = ""; el.innerHTML = ""; }
+}
+async function coverChoisie(e) {
   const f = e.target.files && e.target.files[0]; e.target.value = ""; if (!f) return;
-  let blob = null; try { blob = await shrink(f, 1600, .85); } catch (err) { blob = null; }
-  if (!blob) return toast("Cette image ne s'ouvre pas. Essayez une photo JPEG.");
-  if (photo) URL.revokeObjectURL(photo.url);
-  photo = { blob, url: URL.createObjectURL(blob) };
-  showPhotoStep2();
+  const l = curList(); if (!l || !canManage(l.id)) return;
+  let blob = null; try { blob = await shrink(f, 2000, .86); } catch (err) { blob = null; }
+  if (!blob) return toast("Cette image ne s'ouvre pas : essayez une photo JPEG.");
+  $("cover").classList.add("busy"); toast("Envoi de la photo…");
+  const path = `${l.famille_id}/${newName()}.jpg`, old = l.photo;
+  const up = await sb.storage.from("photos").upload(path, blob, { contentType: "image/jpeg", upsert: false });
+  if (up.error) { $("cover").classList.remove("busy"); return toast(/Bucket not found/i.test(up.error.message || "") ? frErr(up.error) : "La photo n'a pas pu être envoyée : " + frErr(up.error)); }
+  const { error } = await sb.from("listes").update({ photo: path }).eq("id", l.id);
+  if (error) { await sb.storage.from("photos").remove([path]); $("cover").classList.remove("busy"); return toast(frErr(error)); }
+  if (old) sb.storage.from("photos").remove([old]).catch(() => {});  // celle d'un autre gérant reste : sans effet
+  l.photo = path; renderCover(); if (ui.view === "list") window.scrollTo({ top: 0 });
+  toast("Photo de la crèche enregistrée.");
 }
-$("ph-file").addEventListener("change", photoChoisie);
-$("ph-file2").addEventListener("change", photoChoisie);
-function showPhotoStep2() {
-  $("ph-shot").src = photo.url; $("ph-ai").hidden = !canAI(); $("ph-ai").disabled = false;
-  $("ph-msg").textContent = canAI()
-    ? "Claude peut repérer sur la photo les modèles du catalogue de cet onglet, puis vous validez. Ou gardez la photo à l'écran et cochez à la main."
-    : "Gardez la photo à l'écran au-dessus du catalogue et cochez ✓ ce que vous y voyez.";
-  photoStep(2);
-}
-$("ph-other").addEventListener("click", () => photoStep(1));
-function pinPhoto() {
-  dlgPhoto.close(); $("pin-img").src = photo.url; $("pin").hidden = false; $("pin").classList.remove("big"); $("pin-size").textContent = "Agrandir";
-  if (ui.status !== "all") { ui.status = "all"; renderStatus(); renderGrid(); }
-  window.scrollTo({ top: 0 });
-}
-$("ph-manual").addEventListener("click", pinPhoto);
-$("ph-manual2").addEventListener("click", pinPhoto);
-$("pin-close").addEventListener("click", () => { $("pin").hidden = true; });
-function togglePin() { const big = $("pin").classList.toggle("big"); $("pin-size").textContent = big ? "Réduire" : "Agrandir"; }
-$("pin-size").addEventListener("click", togglePin);
-$("pin-img").addEventListener("click", togglePin);
-const toB64 = blob => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(",")[1]); r.onerror = rej; r.readAsDataURL(blob); });
-async function referenceSheets(items, count) {
-  const per = Math.ceil(items.length / count), cols = Math.min(12, Math.ceil(Math.sqrt(per * 1.33)));
-  const cw = 120, ch = 160, sheets = {}, out = [];
-  for (let s = 0; s * per < items.length; s++) {
-    const chunk = items.slice(s * per, (s + 1) * per), rows = Math.ceil(chunk.length / cols);
-    const c = document.createElement("canvas"); c.width = cols * cw; c.height = rows * ch;
-    const g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, c.width, c.height);
-    for (let k = 0; k < chunk.length; k++) {
-      const it = chunk[k], n = s * per + k + 1, [sh, i] = it.sp, key = String(sh).padStart(2, "0");
-      sheets[key] = sheets[key] || await loadImage(`sprites/planche-${key}.webp?v=${SP.v || ""}`);
-      const x = (k % cols) * cw, y = Math.floor(k / cols) * ch;
-      g.drawImage(sheets[key], (i % SP.cols) * SP.cellW, Math.floor(i / SP.cols) * SP.cellH, SP.cellW, SP.cellH, x, y, cw, ch);
-      g.strokeStyle = "#ccc"; g.strokeRect(x + .5, y + .5, cw - 1, ch - 1);
-      g.fillStyle = "#000"; g.fillRect(x + 2, y + 2, 36, 20);
-      g.fillStyle = "#fff"; g.font = "bold 15px sans-serif"; g.textBaseline = "top"; g.fillText(String(n), x + 5, y + 4);
-    }
-    out.push(await new Promise(res => c.toBlob(res, "image/jpeg", 0.8)));
-  }
-  return out;
-}
-$("ph-ai").addEventListener("click", async () => {
-  const btn = $("ph-ai"); btn.disabled = true;
-  const items = ITEMS.filter(it => inTab(it) && it.sp);
-  $("ph-msg").innerHTML = `<span class="row"><span class="spin" aria-hidden="true"></span> Claude compare la photo aux ${items.length} modèles du catalogue, une minute environ…</span>`;
-  try {
-    const refs = await referenceSheets(items, 6);
-    const body = { photo: await toB64(photo.blob), planches: await Promise.all(refs.map(toB64)), liste: items.map((it, k) => `${k + 1} = ${it.short}`).join("\n") };
-    const { data, error } = await sb.functions.invoke("reconnaitre", { body });
-    if (error) throw error;
-    const seen = new Map();
-    for (const r of Array.isArray(data && data.trouves) ? data.trouves : []) { const it = items[Number(r && r.n) - 1]; if (it) seen.set(it.id, !!seen.get(it.id) || !!r.sur); }
-    foundIds = [...seen.entries()];
-    showFound();
-  } catch (e) {
-    $("ph-msg").textContent = "La reconnaissance n'a pas abouti. Réessayez, ou pointez à la main.";
-    btn.disabled = false;
-  }
-});
-function showFound() {
-  const l = curList(), fresh = foundIds.filter(([id]) => statut(l, id) !== "own"), already = foundIds.length - fresh.length;
-  $("ph-found-msg").textContent = !foundIds.length ? "Claude n'a reconnu aucun modèle du catalogue. Essayez une photo plus nette et plus proche, ou pointez à la main."
-    : `Claude a repéré ${foundIds.length} modèle${foundIds.length > 1 ? "s" : ""}${already ? `, dont ${already} déjà coché${already > 1 ? "s" : ""}` : ""}. Décochez ce qui n'est pas dans la crèche, puis ajoutez.`;
-  $("ph-found").innerHTML = fresh.map(([id, sure]) => { const it = BY_ID.get(id);
-    return `<label><input type="checkbox" value="${id}"${sure ? " checked" : ""}><div class="ph" style="${spriteStyle(it)};cursor:pointer"></div>${sure ? "" : '<span class="doubt">À vérifier</span>'}<div class="nm">${esc(it.short)}</div></label>`; }).join("");
-  updateApply(); photoStep(3);
-}
-function updateApply() { const n = $("ph-found").querySelectorAll("input:checked").length; $("ph-apply").textContent = n ? `Ajouter ${n} à « ${curList().nom} »` : "Rien à ajouter"; $("ph-apply").disabled = !n; }
-$("ph-found").addEventListener("change", updateApply);
-$("ph-apply").addEventListener("click", async () => {
-  const l = curList(); if (!canEdit(l.id)) return;
-  const ids = [...$("ph-found").querySelectorAll("input:checked")].map(i => +i.value);
-  const rows = ids.map(id => ({ liste_id: l.id, santon_id: id, statut: "own" }));
-  const { error } = await sb.from("liste_items").upsert(rows, { onConflict: "liste_id,santon_id" });
+$("cover").addEventListener("change", e => { if (e.target.id === "cover-cam" || e.target.id === "cover-roll") coverChoisie(e); });
+$("cover").addEventListener("click", async e => {
+  if (e.target.id === "cover-img") { $("cover").classList.toggle("full"); return; }
+  const t = e.target.closest("#cover-del"); if (!t) return;
+  if (t.dataset.sure !== "1") { t.dataset.sure = "1"; t.textContent = "Confirmer"; return; }
+  const l = curList(), old = l.photo;
+  const { error } = await sb.from("listes").update({ photo: null }).eq("id", l.id);
   if (error) return toast(frErr(error));
-  for (const id of ids) l.items.set(id, { liste_id: l.id, santon_id: id, statut: "own", modifie_par: me.id, updated_at: new Date().toISOString() });
-  renderList(); toast(`${ids.length} ajouté${ids.length > 1 ? "s" : ""}.`); pinPhoto();
+  if (old) sb.storage.from("photos").remove([old]).catch(() => {});
+  l.photo = null; renderCover(); toast("Photo retirée.");
 });
 
 /* ================= Événements ================= */
@@ -1106,7 +1007,6 @@ document.addEventListener("click", async e => {
 $("back").addEventListener("click", () => go("home"));
 $("l-settings").addEventListener("click", async () => { try { await loadAll(); } catch (e) { /* on garde l'état connu */ } if (curList()) openSettings(); });
 $("l-copy").addEventListener("click", () => copyText(wishText(curList()), "Liste d'envies copiée."));
-$("photo-btn").addEventListener("click", () => { if (photo) showPhotoStep2(); else photoStep(1); dlgPhoto.showModal(); });
 $("me-btn").addEventListener("click", () => { $("me-nom").value = nameOf(me.id); $("me-mail").textContent = me.email || ""; $("dlg-me").showModal(); });
 $("me-form").addEventListener("submit", async e => {
   e.preventDefault();
@@ -1166,8 +1066,7 @@ $("add-form").addEventListener("submit", async e => {
   $("add-go").disabled = true; $("add-err").hidden = true;
   let photo = null;
   if (addPhoto) {
-    const id = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2)).replace(/[^0-9a-z-]/gi, "");
-    photo = `${l.famille_id}/${id}.jpg`;
+    photo = `${l.famille_id}/${newName()}.jpg`;
     const up = await sb.storage.from("photos").upload(photo, addPhoto, { contentType: "image/jpeg", upsert: false });
     if (up.error) return fail(/Bucket not found/i.test(up.error.message || "") ? frErr(up.error) : "La photo n'a pas pu être envoyée : " + frErr(up.error));
   }
@@ -1199,7 +1098,7 @@ async function publicView() {
   }
   me = { id: "__public__" };
   setCustom(data.modeles, true);
-  st.listes = new Map([[data.id, { id: data.id, famille_id: null, nom: data.nom,
+  st.listes = new Map([[data.id, { id: data.id, famille_id: null, nom: data.nom, photo: data.photo || null,
     items: new Map((data.items || []).map(r => [r.santon_id, Object.assign({ liste_id: data.id }, r)])) }]]);
   st.gerants = (data.gerants || []).map(g => ({ liste_id: data.id, user_id: g.id }));
   st.profils = new Map((data.gerants || []).map(g => [g.id, { id: g.id, nom: g.nom }]));

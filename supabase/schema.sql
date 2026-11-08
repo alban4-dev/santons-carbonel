@@ -55,7 +55,8 @@ create table if not exists public.listes (
   famille_id uuid not null references public.familles (id) on delete cascade,
   nom text not null check (char_length(nom) between 1 and 60),
   cree_par uuid not null references auth.users (id) on delete cascade,
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  photo text check (char_length(photo) <= 300)  -- photo de la crèche installée (stockage « photos »)
 );
 
 create table if not exists public.liste_gerants (
@@ -392,6 +393,8 @@ create policy modeles_retirer on public.modeles_famille for delete to authentica
 
 grant select, insert, update, delete on public.modeles_famille to authenticated;
 grant usage on sequence public.modeles_famille_id_seq to authenticated;
+revoke all on public.modeles_famille from anon;
+revoke all on sequence public.modeles_famille_id_seq from anon;
 
 -- un modèle retiré disparaît aussi des crèches de la famille
 create or replace function public.modele_retire() returns trigger
@@ -415,6 +418,7 @@ language sql stable security definer set search_path = public as $$
   select json_build_object(
     'id', l.id,
     'nom', l.nom,
+    'photo', l.photo,
     'gerants', coalesce((select json_agg(json_build_object('id', g.user_id, 'nom', coalesce(p.nom, '')))
                          from liste_gerants g
                          join membres m on m.user_id = g.user_id and m.famille_id = l.famille_id

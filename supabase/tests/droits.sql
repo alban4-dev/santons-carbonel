@@ -151,3 +151,21 @@ select set_config('request.jwt.claim.sub', :'papa', false); set role authenticat
 delete from modeles_famille;
 reset role;
 select 'T87 retiré du catalogue : décoché partout', (select count(*) from liste_items where santon_id >= 1000000) = 0;
+
+-- PHOTO DE LA CRÈCHE INSTALLÉE
+select set_config('request.jwt.claim.sub', :'papa', false); set role authenticated;
+update listes set photo = :'fam' || '/creche-lea.jpg' where id = :'lea';
+reset role;
+select 'T90 papa (gérant) met la photo de Léa', photo like '%/creche-lea.jpg' from listes where id = :'lea';
+select set_config('request.jwt.claim.sub', :'maman', false); set role authenticated;
+update listes set photo = 'x/y.jpg' where id = :'tom';
+select 'T91 maman voit la photo de Léa', photo like '%/creche-lea.jpg' from listes where id = :'lea';
+reset role;
+select 'T92 maman (pas gérante de Tom) ne change pas sa photo', photo is null from listes where id = :'tom';
+select set_config('request.jwt.claim.sub', :'inconnu', false); set role authenticated;
+update listes set photo = null;
+reset role;
+select 'T93 inconnu ne retire pas la photo', photo is not null from listes where id = :'lea';
+set role anon;
+select 'T94 page publique : la photo de la crèche', (voir_liste(:'vcode2')->>'photo') like '%/creche-lea.jpg';
+reset role;

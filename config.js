@@ -4,5 +4,4 @@
 window.SANTONS_CONFIG = {
   supabaseUrl: "https://eqpkjatedrdvejvrdegc.supabase.co",
   supabaseKey: "sb_publishable_dRuHe2phVkzBOhtdgl670Q_0Oh1Gprv",  // clé publique (publishable)
-  reconnaissance: false,  // true une fois la fonction « reconnaitre » déployée (voir README)
 };

@@ -32,12 +32,11 @@ async function signup(p, nom, mail) {
   await papa.locator('.card .ic.o').nth(0).click(); await papa.locator('.card .ic.o').nth(1).click(); await papa.locator('.card .ic.w').nth(4).click();
   await papa.waitForTimeout(500);
   log('items en base:', sqlv("select count(*) from liste_items"), '| prog', await papa.textContent('#prog-txt'));
-  // photo + reconnaissance (fausse)
-  await papa.click('#photo-btn'); await papa.setInputFiles('#ph-file', S + 'creche.jpg'); await papa.waitForTimeout(400);
-  await papa.click('#ph-ai'); await papa.waitForSelector('#ph-step3:not([hidden])', { timeout: 15000 });
-  log('reco:', await papa.textContent('#ph-found-msg'), '| envoi:', require('fs').readFileSync(S + 'derniere_reconnaissance.json', 'utf8').slice(0, 90));
-  await papa.click('#ph-apply'); await papa.waitForTimeout(600);
-  log('après photo:', sqlv("select count(*) from liste_items where statut='own'"));
+  // photo de la crèche installée
+  log('papa : invitation photo', await papa.isVisible('#cover.empty'));
+  await papa.setInputFiles('#cover-roll', S + 'creche.jpg'); await papa.waitForTimeout(1200);
+  log('photo en base:', sqlv("select photo from listes where nom='Crèche de Léa'").replace(/[0-9a-f-]{36}/g, '…'),
+      '| affichée:', await papa.evaluate(() => { const i = document.querySelector('#cover-img'); return !!i && i.complete && i.naturalWidth > 0; }));
   await papa.screenshot({ path: S + 'e-list.png' });
   // réglages : lien visiteur
   await papa.click('#l-settings'); await papa.waitForTimeout(300);
@@ -52,7 +51,8 @@ async function signup(p, nom, mail) {
   await signup(maman, 'Maman', 'maman@x.fr');
   log('maman accueil:', (await maman.textContent('#view-home')).replace(/\s+/g, ' ').slice(0, 160));
   await maman.click('.lcard[data-list]'); await maman.waitForTimeout(400);
-  log('maman badge:', await maman.textContent('#l-badge'), '| boutons ✓ actifs:', await maman.locator('.card .ic.o:not([disabled])').count());
+  log('maman badge:', await maman.textContent('#l-badge'), '| boutons ✓ actifs:', await maman.locator('.card .ic.o:not([disabled])').count(),
+      '| photo vue', await maman.locator('#cover-img').count(), '| peut la changer', await maman.locator('#cover-cam').count());
   // Papa ajoute Maman gérante
   await papa.click('#l-settings'); await papa.waitForTimeout(300);
   const mamanId = sqlv("select id from auth.users where email='maman@x.fr'");
@@ -69,7 +69,7 @@ async function signup(p, nom, mail) {
   log('mamie sans compte : écran connexion ?', await mamie.isVisible('#scr-auth'), '| crèche :', await mamie.textContent('#l-name'),
       '|', await mamie.textContent('#l-who'), '|', await mamie.textContent('#l-badge'));
   log('mamie : ✓ actifs', await mamie.locator('.card .ic.o:not([disabled])').count(), '| cochés visibles', await mamie.locator('.card.own').count(),
-      '| réglages', await mamie.isVisible('#l-settings'), '| photo', await mamie.isVisible('#photo-btn'), '| espace famille', await mamie.isVisible('#famille-link'));
+      '| réglages', await mamie.isVisible('#l-settings'), '| photo crèche', await mamie.evaluate(() => { const i = document.querySelector('#cover-img'); return !!i && i.naturalWidth > 0; }), '| boutons photo', await mamie.locator('#cover-cam').count(), '| espace famille', await mamie.isVisible('#famille-link'));
   await mamie.screenshot({ path: S + 'e-mamie.png' });
   // lien changé : l'ancien ne marche plus
   await papa.click('#l-settings'); await papa.waitForTimeout(300); await papa.click('#new-visit'); await papa.waitForTimeout(500);
@@ -80,6 +80,7 @@ async function signup(p, nom, mail) {
   // ---- Papa : accueil avec activité
   await papa.click('#back'); await papa.reload(); await papa.waitForTimeout(800);
   await papa.screenshot({ path: S + 'e-home.png', fullPage: true });
+  log('papa : vignette sur la carte', await papa.locator('.lcard .lthumb').count());
   log('papa activité:', (await papa.textContent('.feed')).replace(/\s+/g, ' ').slice(0, 200));
   await b.close();
 })().catch(e => { console.error('ECHEC', e); process.exit(1); });

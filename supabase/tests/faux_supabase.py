@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Faux Supabase pour tester l'appli sans compte : sert site/ et imite les
-quelques routes Auth / REST / RPC / Functions qu'elle utilise, en exécutant
+quelques routes Auth / REST / RPC / Storage qu'elle utilise, en exécutant
 les requêtes sur un vrai PostgreSQL local avec le rôle « authenticated » et
 l'identité de l'utilisateur (donc avec les vraies règles RLS de schema.sql).
 
@@ -120,7 +120,7 @@ class H(http.server.SimpleHTTPRequestHandler):
         u = urlparse(self.path)
         if u.path == "/config.js":
             js = (f'window.SANTONS_CONFIG = {{ supabaseUrl: "http://localhost:{PORT}", '
-                  f'supabaseKey: "cle-de-test", reconnaissance: true }};').encode()
+                  f'supabaseKey: "cle-de-test" }};').encode()
             self.send_response(200)
             self.send_header("Content-Type", "application/javascript")
             self.end_headers()
@@ -215,14 +215,6 @@ class H(http.server.SimpleHTTPRequestHandler):
             return self.send(200, rows[0]["r"])
         if u.path.startswith("/rest/v1/"):
             return self.rest("POST", u)
-        if u.path == "/functions/v1/reconnaitre":
-            b = self.body()
-            ok = isinstance(b.get("photo"), str) and isinstance(b.get("planches"), list) and 1 <= len(b["planches"]) <= 6
-            if not uid_from(self.headers) or not ok:
-                return self.send(400, {"error": "requête invalide"})
-            (Path(os.environ.get("SCRATCH", "/tmp")) / "derniere_reconnaissance.json").write_text(
-                json.dumps({"planches": len(b["planches"]), "photo": len(b["photo"]), "liste": b.get("liste", "")[:200]}))
-            return self.send(200, {"trouves": [{"n": 1, "sur": True}, {"n": 3, "sur": False}, {"n": 5, "sur": True}]})
         self.send(404, {})
 
     def do_PATCH(self):
