@@ -403,7 +403,7 @@ for (const it of ITEMS) {
   it.old = it.col.includes("ancien");
 }
 const SECTIONS = ["santons", "decor", "santons_n3", "santons_escoffier", "escoffier", "autres"];
-const CAT_MENU = { santons: "Carbonel N°2 · Santons", decor: "Carbonel N°2 · Bâtiments et décors", santons_n3: "Carbonel N°3 · Santons et bâtiments",
+const CAT_MENU = { santons: "Carbonel N°2 · Santons", decor: "Carbonel N°2 · Bâtiments et décors", santons_n3: "N°3 · 9 cm (Carbonel, bâtiments Escoffier)",
   santons_escoffier: "Escoffier 7 cm · Santons", escoffier: "Escoffier 7 cm · Bâtiments", autres: "Artisans sans marques" };
 const CAT_COURT = { santons: "santons N°2", decor: "décors N°2", santons_n3: "N°3", santons_escoffier: "santons Escoffier", escoffier: "bâtiments Escoffier", autres: "artisans" };
 const CAT_DEFAUT = ["santons", "decor", "santons_escoffier", "escoffier", "autres"];  // tout sauf Carbonel N°3
@@ -858,8 +858,12 @@ function renderGrid() {
   const hit = it => statusOf(it, ui.status, l) && q.every(w => it._s.includes(w));
   const tous = ITEMS.filter(it => inTab(it) && hit(it));
   // les modèles d'un autre catalogue (accessoires « N°2 & N°3 ») viennent après ceux du catalogue, avec leur rubrique
-  const chez = it => it.section === ui.tab, fin = it => it.old || it.custom;  // anciens et ajouts : en dernier
-  const list = tous.filter(it => chez(it) && !fin(it)).concat(tous.filter(it => !chez(it)), tous.filter(it => chez(it) && fin(it)));
+  // ordre des rubriques : celui des modèles du catalogue ; ceux d'un autre catalogue (« N°2 & N°3 », arbres…)
+  // rejoignent leur rubrique ; anciens modèles et ajouts de la famille en dernier
+  const chez = it => it.section === ui.tab, fin = it => chez(it) && (it.old || it.custom), ordre = new Map();
+  for (const it of tous) if (chez(it) && !fin(it) && !ordre.has(groupOf(it))) ordre.set(groupOf(it), ordre.size);
+  const rang = it => fin(it) ? 1e6 : ordre.has(groupOf(it)) ? ordre.get(groupOf(it)) : 5e5;
+  const list = tous.map((it, k) => [it, k]).sort((a, b) => rang(a[0]) - rang(b[0]) || a[1] - b[1]).map(x => x[0]);
   let html = "", grp = null;
   if (q.length) {  // pendant une recherche : ce qu'elle trouve dans les autres onglets
     const autres = catsOf(l).filter(t => t !== ui.tab).map(t => [t, ITEMS.filter(it => dans(it, t) && visibleFor(it, l) && hit(it)).length]).filter(x => x[1]);

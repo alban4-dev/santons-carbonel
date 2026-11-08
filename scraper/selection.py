@@ -57,12 +57,21 @@ SANTONS_ESC_ORDRE = ["Nativité", "Personnages", "Animaux"]
 ESCOFFIER_TAILLE = re.compile(r"Collection (2|5|9) ?cm|^Santon", re.I)
 
 
+def toutes_tailles(it):
+    """Décor Carbonel vendu sans taille (arbres en 9 à 22 cm, rochers, port, foin…) :
+    il va avec les N°2 comme avec les N°3. Pas les arbres de 6 cm (Puces, N°1)."""
+    return (it.get("size") == 99 and bool(set(it["cat"]) & DECOR_CATS)
+            and not re.search(r"\b6 ?cm|Puce|N°[01]\b|100 x 50", it["name"]))
+
+
 def section(it):
     if it.get("noPhoto") or PACK.search(it["name"]):
         return None
     if it.get("marque") == "escoffier":
         if it.get("type") == "santon":
             return "santons_escoffier" if re.search(r"Santon Collection 7 ?cm$", it.get("gamme") or "") else None
+        if re.search(r"Collection 9 ?cm", it.get("gamme") or ""):
+            return "santons_n3"  # bâtiments Escoffier à l'échelle des N°3 Carbonel
         if ESCOFFIER_TAILLE.search(it.get("gamme") or ""):
             return None
         return "escoffier" if set(it.get("groupes", [])) & ESCOFFIER_RETENUS else None
@@ -72,7 +81,7 @@ def section(it):
         return "santons_n3" if 10 not in it["cat"] else None  # santons et bâtiments N°3, sans pièces détachées
     if set(it["cat"]) & DECOR_CATS:
         n2 = it["size"] == 2 or "N°2" in it["name"]
-        return "decor" if n2 else None
+        return "decor" if n2 or toutes_tailles(it) else None
     if it["id"] in CATALOGUE_N2 or "ancien" in it.get("col", []):  # gamme du catalogue, anciens modèles
         return "santons"
     if it["size"] == 2 and (it.get("pied") == "vert" or it["id"] in SANS_SOCLE):
@@ -88,7 +97,7 @@ GROUPE_PRIORITE = ["Façades", "Crèches et étables", "Puits, fontaines et pont
 def aussi(it):
     """Autres rubriques où un modèle apparaît aussi : les accessoires « N°2 & N°3 »
     (fleurs, lavande) servent aux deux tailles."""
-    if it.get("section") == "decor" and re.search(r"N°2 (&|et) N°3", it["name"]):
+    if it.get("section") == "decor" and (re.search(r"N°2 (&|et) N°3", it["name"]) or toutes_tailles(it)):
         return ["santons_n3"]
     return None
 
@@ -96,6 +105,8 @@ def aussi(it):
 def groupe(it):
     """Groupe d'affichage d'un modèle Escoffier : pour un santon, Nativité /
     Personnages / Animaux d'après son nom ; pour un bâtiment, voir groupe_decor."""
+    if it.get("section") == "santons_n3":
+        return "Bâtiments Escoffier 9 cm"
     if it.get("type") == "santon":
         nom = it["name"]
         return "Nativité" if NATIVITE_ESC.search(nom) else "Animaux" if ANIMAL_ESC.search(nom) else "Personnages"

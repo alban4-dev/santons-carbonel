@@ -2287,7 +2287,12 @@
    "type": "decor",
    "marque": "escoffier",
    "cat": [],
-   "size": null
+   "size": null,
+   "section": "santons_n3",
+   "sp": [
+    11,
+    54
+   ]
   },
   {
    "id": 100264,
@@ -3004,7 +3009,12 @@
    "type": "decor",
    "marque": "escoffier",
    "cat": [],
-   "size": null
+   "size": null,
+   "section": "santons_n3",
+   "sp": [
+    11,
+    53
+   ]
   },
   {
    "id": 100312,
