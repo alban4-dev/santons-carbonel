@@ -137,9 +137,10 @@ a { color: var(--accent); }
 .cover.busy { opacity: .6; pointer-events: none; }
 .lthumb { display: block; margin: -14px -14px 2px; aspect-ratio: 16 / 7; background: var(--surface-2) center / cover no-repeat; }
 /* recherche au clavier (téléphone) : la barre remonte sous l'en-tête, les onglets s'effacent */
-body.searching .grid { min-height: 100dvh; }
-@media (max-width: 760px) { body.searching .tabs { display: none; } }
-.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 8px; padding-bottom: 40px; }
+body.typing .grid { min-height: 100dvh; }
+@media (max-width: 760px) { body.kbd .tabs { display: none; } }
+.also { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: .88rem; color: var(--muted); padding-top: 6px; }
+.grid { align-content: start; display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 8px; padding-bottom: 40px; }
 @media (max-width: 440px) { .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; } }
 .sec { grid-column: 1 / -1; display: flex; align-items: baseline; gap: 10px; padding: 14px 2px 2px; }
 .sec h2 { font-size: 1.15rem; }
@@ -198,7 +199,7 @@ dialog::backdrop { background: rgba(20, 14, 26, .55); }
 .pick:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
 .totop { position: fixed; right: 14px; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); z-index: 40; width: 50px; height: 50px; border-radius: 50%;
   border: 0; display: grid; place-items: center; background: var(--accent); color: var(--accent-ink); box-shadow: var(--shadow); }
-body.searching .totop { display: none; }
+body.kbd .totop { display: none; }
 .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); z-index: 50; background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 999px; font-weight: 700; max-width: calc(100vw - 32px); box-shadow: var(--shadow); }
 .foot { padding-block: 8px 36px; font-size: .78rem; color: var(--muted); border-top: 1px solid var(--line); }
 </style>
@@ -746,14 +747,19 @@ function renderList() {
 }
 function renderGrid() {
   const l = curList(), q = norm(ui.q).trim().split(/\s+/).filter(Boolean);
-  const list = ITEMS.filter(it => inTab(it) && statusOf(it, ui.status, l) && q.every(w => it._s.includes(w)));
+  const hit = it => statusOf(it, ui.status, l) && q.every(w => it._s.includes(w));
+  const list = ITEMS.filter(it => inTab(it) && hit(it));
   let html = "", grp = null;
+  if (q.length) {  // pendant une recherche : ce qu'elle trouve dans les autres onglets
+    const autres = SECTIONS.filter(t => t !== ui.tab).map(t => [t, ITEMS.filter(it => it.section === t && visibleFor(it, l) && hit(it)).length]).filter(x => x[1]);
+    if (autres.length) html += `<div class="also">Aussi dans :${autres.map(([t, n]) => `<button class="chip" type="button" data-tab="${t}">${esc(SEC_LABEL[t])}<span class="n">${n}</span></button>`).join("")}</div>`;
+  }
   for (const it of list) {
     const g = groupOf(it);
     if (g !== grp) { grp = g; html += `<div class="sec"><h2>${esc(g)}</h2><span data-sec="${esc(g)}"></span></div>`; }
     html += cardHTML(it);
   }
-  if (!list.length) html = `<div class="empty">${ui.status === "own" ? "Rien de coché pour l'instant." : ui.status === "wish" ? "Pas encore d'envie dans cet onglet." : ui.status === "new" ? "Pas de nouveauté dans cet onglet cette année." : "Rien ne correspond."}</div>`;
+  if (!list.length) html += `<div class="empty">${ui.status === "own" ? "Rien de coché pour l'instant." : ui.status === "wish" ? "Pas encore d'envie dans cet onglet." : ui.status === "new" ? "Pas de nouveauté dans cet onglet cette année." : "Rien ne correspond."}</div>`;
   $("grid").innerHTML = html;
   renderSectionCounts();
 }
@@ -990,7 +996,7 @@ document.addEventListener("click", async e => {
   if (d.list) { e.preventDefault(); go("list", d.list); return; }
   if (d.act) { toggle(d.act, +d.id); return; }
   if (d.open) { openItem(d.open); return; }
-  if (d.tab) { ui.tab = d.tab; ui.q = ""; $("q").value = ""; renderProgress(); renderStatus(); renderGrid(); return; }
+  if (d.tab) { ui.tab = d.tab; renderProgress(); renderStatus(); renderGrid(); return; }
   if (d.status) { ui.status = d.status; renderStatus(); renderGrid(); return; }
   if (d.newlist) { $("new-form").dataset.famille = d.newlist; $("new-nom").value = "Crèche de "; $("dlg-new").showModal(); return; }
   if (d.invite) {
@@ -1044,19 +1050,35 @@ $("family-form").addEventListener("submit", async e => {
 });
 let qTimer = null;
 $("q").addEventListener("input", e => { clearTimeout(qTimer); qTimer = setTimeout(() => { ui.q = e.target.value; renderGrid(); }, 120); });
-/* Au clavier, la barre de recherche remonte juste sous l'en-tête : les résultats restent visibles au-dessus du clavier */
+/* Au clavier, la barre de recherche remonte juste sous l'en-tête et, sur téléphone, les onglets
+   s'effacent — seulement tant que le clavier est vraiment ouvert (sur Android, le bouton retour
+   ferme le clavier sans quitter la barre de recherche). */
+const qIn = $("q");
+let vvMax = window.visualViewport ? window.visualViewport.height : 0;
+function clavierOuvert() {
+  const vv = window.visualViewport; if (!vv) return document.activeElement === qIn;
+  vvMax = Math.max(vvMax, vv.height);
+  return document.activeElement === qIn && vv.height < vvMax - 120;
+}
+function majClavier() {
+  const on = clavierOuvert();
+  if (document.body.classList.contains("kbd") !== on) { document.body.classList.toggle("kbd", on); measureTop(); if (on) searchToTop(); }
+}
 function searchToTop() {
-  if (!document.body.classList.contains("searching")) return;
+  if (document.activeElement !== qIn) return;
   measureTop();
-  const box = $("q").closest(".search"), top = box.getBoundingClientRect().top + window.scrollY - $("top").offsetHeight - 8;
+  const top = qIn.closest(".search").getBoundingClientRect().top + window.scrollY - $("top").offsetHeight - 8;
   window.scrollTo({ top: Math.max(0, top) });
 }
-$("q").addEventListener("focus", () => {
-  document.body.classList.add("searching");
-  searchToTop(); setTimeout(searchToTop, 120); setTimeout(searchToTop, 420);  // après l'ouverture du clavier
+qIn.addEventListener("focus", () => {
+  document.body.classList.add("typing");
+  searchToTop();
+  for (const t of [150, 450]) setTimeout(() => { majClavier(); searchToTop(); }, t);  // après l'ouverture du clavier
 });
-$("q").addEventListener("blur", () => { document.body.classList.remove("searching"); measureTop(); });
-$("q").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); $("q").blur(); } });  // « Rechercher » ferme le clavier
+qIn.addEventListener("blur", () => { document.body.classList.remove("typing", "kbd"); measureTop(); });
+qIn.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); qIn.blur(); } });  // « Rechercher » ferme le clavier
+if (window.visualViewport) window.visualViewport.addEventListener("resize", majClavier);
+window.addEventListener("orientationchange", () => { vvMax = 0; });
 /* Remonter en haut en un clic */
 const totop = $("totop");
 function majTotop() { totop.hidden = window.scrollY < 700; }
@@ -1065,7 +1087,6 @@ totop.addEventListener("click", () => {
   const doux = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   window.scrollTo({ top: 0, behavior: doux ? "smooth" : "auto" });
 });
-if (window.visualViewport) window.visualViewport.addEventListener("resize", () => { if (document.activeElement === $("q")) searchToTop(); });
 for (const d of document.querySelectorAll("dialog")) d.addEventListener("click", e => { if (e.target === d) d.close(); });
 
 /* ================= Ajouter un santon ancien ================= */
