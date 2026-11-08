@@ -18,7 +18,8 @@ comme un petit réseau social familial :
 Dans chaque crèche : ✓ je l'ai (avec le nombre d'exemplaires dans la fiche :
 2 moutons identiques…), ♡ envie, quatre onglets, une grande **photo
 de la crèche installée** (mise par ses gérants, en tête de la crèche, sur
-l'accueil et sur la page publique), liste d'envies à copier pour les cadeaux, et **« + Santon
+l'accueil et sur la page publique), un bouton **Partager** qui envoie le lien de la crèche (lecture seule, sans
+compte, envies comprises), et **« + Santon
 ancien »** pour les modèles qu'aucun catalogue ne montre (crèches commencées
 il y a 30 ans) : nom, marque, note, et jusqu'à trois photos (face, dos,
 côté), que tout membre de la famille peut compléter ou changer dans sa fiche. Le modèle entre
@@ -91,15 +92,16 @@ statique (par exemple Netlify Drop).
 2. **Inviter dans la famille** copie le lien à envoyer (WhatsApp, SMS…). Chacun
    crée son compte en l'ouvrant et devient membre.
 3. **+ Nouvelle crèche** : « Crèche de Léa ». Dans la crèche, **Réglages** :
-   cocher l'autre parent comme gérant, copier le **lien public** pour un
-   proche qui doit seulement regarder (il n'a pas de compte à créer).
+   cocher l'autre parent parmi les **administrateurs de la crèche**.
+   **Partager** envoie le lien de la crèche à un proche qui doit seulement
+   regarder (il n'a pas de compte à créer).
 
 ## Qui peut faire quoi
 
 | | Voir les crèches | Cocher | Réglages d'une crèche | Inviter |
 |---|---|---|---|---|
-| Membre | toutes celles de la famille | celles dont il est gérant | celles dont il est gérant | lien de la famille |
-| Admin de la famille (le créateur) | toutes | celles dont il est gérant | toutes, et retirer un membre | lien de la famille |
+| Membre | toutes celles de la famille | celles dont il est administrateur | celles dont il est administrateur | lien de la famille |
+| Admin de la famille (le créateur) | toutes | celles dont il est administrateur | toutes, et retirer un membre | lien de la famille |
 | Personne avec le lien public d'une crèche (sans compte) | cette crèche seulement | non | non | non |
 
 Ces règles sont vérifiées par la base de données elle-même (Row Level Security

@@ -155,6 +155,7 @@ body.typing .grid { min-height: 100dvh; }
 .ajout { position: absolute; right: 5px; bottom: 34px; font-size: .6rem; font-weight: 700; text-transform: uppercase; background: #1f6f8b; color: #fff; padding: 1px 6px; border-radius: 999px; pointer-events: none; }
 .ph.vide { display: grid; place-items: center; font-family: var(--f-display); font-size: 2.6rem; color: #8a7f95; background-size: contain !important; }
 .ph.photo { background-size: contain; background-position: center; }
+.share-btn { display: inline-flex; align-items: center; gap: 6px; }
 .add-btn { border: 1.5px dashed var(--accent); color: var(--accent); background: var(--surface); }
 .gal { display: grid; gap: 8px; align-content: start; min-width: 0; }
 @media (max-width: 520px) { .item .gal { max-width: 280px; margin-inline: auto; width: 100%; } }
@@ -286,8 +287,8 @@ body.kbd .totop { display: none; }
       <span class="who" id="l-who"></span>
       <span class="badge" id="l-badge"></span>
       <span class="row" style="margin-left:auto">
+        <button class="btn sm primary share-btn" type="button" id="l-share" hidden><svg width="15" height="15" viewBox="0 0 20 20" aria-hidden="true"><circle cx="15" cy="4.5" r="2.3" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="5" cy="10" r="2.3" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="15" cy="15.5" r="2.3" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M7 9l6-3.4M7 11l6 3.4" stroke="currentColor" stroke-width="1.7"/></svg> Partager</button>
         <button class="btn sm add-btn" type="button" id="l-add" hidden>+ Santon ancien</button>
-        <button class="btn sm" type="button" id="l-copy">Copier les envies</button>
         <button class="btn sm" type="button" id="l-settings" hidden>Réglages</button>
       </span>
     </div>
@@ -346,7 +347,7 @@ body.kbd .totop { display: none; }
 <dialog id="dlg-new" aria-labelledby="new-title">
   <form class="dlg" id="new-form">
     <div class="dlg-head"><h2 id="new-title">Nouvelle crèche</h2><button class="x" type="button" data-close aria-label="Fermer">✕</button></div>
-    <p class="help">Une liste par personne : vous en serez gérant, et vous pourrez ajouter d'autres gérants (l'autre parent, le parrain…).</p>
+    <p class="help">Une crèche par personne : vous en serez administrateur, et vous pourrez en ajouter d'autres dans ses réglages (l'autre parent, le parrain…).</p>
     <div class="field"><label class="label" for="new-nom">Nom</label><input id="new-nom" maxlength="60" required value="Crèche de "></div>
     <div class="row"><button class="btn primary" type="submit">Créer</button></div>
   </form>
@@ -666,7 +667,7 @@ function listCard(l) {
   return `<button class="lcard" type="button" data-list="${l.id}">
     ${ph ? `<span class="lthumb" style="background-image:url('${esc(ph)}')" role="img" aria-label="Photo de ${esc(l.nom)}"></span>` : ""}
     <span class="row" style="justify-content:space-between"><h3>${esc(l.nom)}</h3>${edit ? '<span class="badge edit">Vous gérez</span>' : '<span class="badge">Lecture seule</span>'}</span>
-    <span class="who">${g.length ? "Gérée par " + esc(g.map(nameOf).join(", ")) : "Sans gérant"}</span>
+    <span class="who">${g.length ? "Administrée par " + esc(g.map(nameOf).join(", ")) : "Sans administrateur"}</span>
     <span class="meter"><i style="width:${c.santons / nSec("santons", l) * 100}%"></i></span>
     <span class="nums"><span><b>${c.santons}</b> / ${nSec("santons", l)} santons</span><span><b>${c.santons_escoffier}</b> santons Escoffier</span><span><b>${c.escoffier}</b> bâtiments Escoffier</span><span><b>${c.decor}</b> décors Carbonel</span><span><b>${c.w}</b> envies</span></span>
   </button>`;
@@ -696,7 +697,7 @@ function renderHome() {
       <div class="cols">
         <div class="panel"><h3>Membres <span class="muted" style="font-family:var(--f-body);font-size:.9rem">${mems.length}</span></h3>
           <div class="people">${mems.map(m => `<div class="person">${avatarHTML(m.user_id)}<span class="pn">${esc(nameOf(m.user_id))}${m.user_id === me.id ? " (vous)" : ""}</span>${m.role === "admin" ? '<span class="badge">admin</span>' : ""}${isAdmin(f.id) && m.user_id !== me.id ? `<button class="btn sm danger" type="button" data-kick="${f.id}|${m.user_id}">Retirer</button>` : ""}</div>`).join("")}</div>
-          <p class="help">Le lien « Inviter dans la famille » fait de la personne un membre : elle voit toutes les crèches et peut créer les siennes. Pour quelqu'un qui doit seulement regarder une crèche, envoyez son lien public (dans la crèche, « Réglages ») : pas besoin de compte.</p>
+          <p class="help">Le lien « Inviter dans la famille » fait de la personne un membre : elle voit toutes les crèches et peut créer les siennes. Pour quelqu'un qui doit seulement regarder une crèche, envoyez-lui la crèche avec le bouton « Partager » : pas besoin de compte.</p>
         </div>
         <div class="panel"><h3>Activité</h3>${feedHTML(lists.map(l => l.id))}</div>
       </div>
@@ -765,10 +766,11 @@ function cardHTML(it) {
 function renderList() {
   const l = curList(), g = gerantsOf(l.id), edit = canEdit(l.id);
   $("l-name").textContent = l.nom;
-  $("l-who").textContent = g.length ? "Gérée par " + g.map(nameOf).join(", ") : "Sans gérant";
+  $("l-who").textContent = g.length ? "Administrée par " + g.map(nameOf).join(", ") : "Sans administrateur";
   $("l-badge").textContent = edit ? "Vous gérez" : "Lecture seule";
   $("l-badge").className = "badge" + (edit ? " edit" : "");
   $("l-settings").hidden = !canManage(l.id);
+  $("l-share").hidden = PUBLIC || !canManage(l.id);
   $("l-add").hidden = PUBLIC || !isMember(l.famille_id);
   renderCover(); renderProgress(); renderStatus(); renderGrid();
 }
@@ -942,14 +944,14 @@ function openSettings() {
     <div class="dlg-head"><h2 id="set-title">Réglages : ${esc(l.nom)}</h2><button class="x" type="button" data-close aria-label="Fermer">✕</button></div>
     <form class="row" id="rename-form"><div class="field" style="flex:1 1 200px"><label class="label" for="set-nom">Nom</label><input id="set-nom" maxlength="60" required value="${esc(l.nom)}"></div><button class="btn" type="submit" style="align-self:end">Renommer</button></form>
     <hr class="sep">
-    <span class="label">Qui peut cocher dans cette crèche</span>
+    <span class="label">Administrateurs de la crèche</span>
     <div class="checks">${mems.map(m => `<label><input type="checkbox" data-gerant="${m.user_id}"${g.includes(m.user_id) ? " checked" : ""}> ${avatarHTML(m.user_id, "sm")} ${esc(nameOf(m.user_id))}</label>`).join("")}</div>
-    <p class="help">Tous les membres de la famille voient cette crèche ; seuls ceux cochés ici la modifient.</p>
+    <p class="help">Les administrateurs cochent les santons, mettent la photo de la crèche, la partagent et changent ces réglages. Les autres membres de la famille la voient en lecture seule.</p>
     <hr class="sep">
-    <span class="label">Page publique de cette crèche</span>
-    <div class="field"><label class="label" for="visit-link">Lien à envoyer (lecture seule, sans compte)</label>
-      <div class="linkbox"><input id="visit-link" readonly value="${esc(visitLink(l.id))}"><button class="btn sm primary" type="button" id="copy-visit">Copier</button><button class="btn sm" type="button" id="new-visit">Changer</button></div></div>
-    <p class="help">Toute personne qui a ce lien voit cette crèche et ses envies, sans créer de compte et sans pouvoir la modifier. Elle ne voit ni les autres crèches ni la famille. « Changer » crée un nouveau lien et coupe l'ancien.</p>
+    <span class="label">Lien de partage</span>
+    <div class="field"><label class="label" for="visit-link">Lecture seule, sans compte (bouton « Partager » de la crèche)</label>
+      <div class="linkbox"><input id="visit-link" readonly value="${esc(visitLink(l.id))}"><button class="btn sm" type="button" id="copy-visit">Copier</button><button class="btn sm" type="button" id="new-visit">Changer</button></div></div>
+    <p class="help">Qui a ce lien voit cette crèche et ses envies, sans pouvoir la modifier ; ni les autres crèches ni la famille. « Changer » crée un nouveau lien et coupe l'ancien.</p>
     ${v.length ? `<span class="label">Anciens visiteurs avec compte</span><div class="people">${v.map(u => `<div class="person">${avatarHTML(u)}<span class="pn">${esc(nameOf(u))}</span><button class="btn sm danger" type="button" data-unvisit="${u}">Retirer</button></div>`).join("")}</div>` : ""}
     <hr class="sep">
     <div class="row">${confirmDelete ? `<button class="btn danger" type="button" id="del-yes">Supprimer définitivement « ${esc(l.nom)} »</button><button class="btn" type="button" id="del-no">Annuler</button>` : '<button class="btn danger" type="button" id="del-list">Supprimer cette crèche</button>'}</div>`;
@@ -962,7 +964,7 @@ async function copyText(text, ok, input) {
 dlgSettings.addEventListener("change", async e => {
   const cb = e.target.closest("[data-gerant]"); if (!cb) return;
   const l = curList(), uid = cb.dataset.gerant;
-  if (!cb.checked && gerantsOf(l.id).length <= 1) { cb.checked = true; toast("Il faut au moins un gérant."); return; }
+  if (!cb.checked && gerantsOf(l.id).length <= 1) { cb.checked = true; toast("Il faut au moins un administrateur."); return; }
   const res = cb.checked ? await sb.from("liste_gerants").insert({ liste_id: l.id, user_id: uid })
     : await sb.from("liste_gerants").delete().eq("liste_id", l.id).eq("user_id", uid);
   if (res.error) { cb.checked = !cb.checked; toast(frErr(res.error)); return; }
@@ -1059,17 +1061,6 @@ $("cover").addEventListener("click", async e => {
 });
 
 /* ================= Événements ================= */
-function wishText(l) {
-  const lines = [`Liste d'envies – ${l.nom}`];
-  for (const sec of SECTIONS) {
-    const its = ITEMS.filter(it => it.section === sec && visibleFor(it, l) && statut(l, it.id) === "wish");
-    if (!its.length) continue;
-    lines.push("", `${SEC_LABEL[sec]} (${its.length})`);
-    for (const it of its) lines.push("- " + it.name + (it.ref ? " [" + it.ref + "]" : "") + (it.price ? " – " + euro(it.price) : ""));
-  }
-  lines.push("", "Boutiques : https://marcelcarbonel.com et https://www.escoffier.fr");
-  return lines.join("\n");
-}
 document.addEventListener("click", async e => {
   const t = e.target.closest("button, a[data-list]");
   if (!t) return;
@@ -1116,7 +1107,20 @@ document.addEventListener("click", async e => {
 });
 $("back").addEventListener("click", () => go("home"));
 $("l-settings").addEventListener("click", async () => { try { await loadAll(); } catch (e) { /* on garde l'état connu */ } if (curList()) openSettings(); });
-$("l-copy").addEventListener("click", () => copyText(wishText(curList()), "Liste d'envies copiée."));
+$("l-share").addEventListener("click", async () => {
+  const l = curList(); if (!l) return;
+  if (!st.invListe.get(l.id)) {  // pas encore de lien : on en crée un
+    const { data, error } = await sb.rpc("nouveau_code_visite", { p_liste: l.id });
+    if (error) return toast(frErr(error));
+    st.invListe.set(l.id, data);
+  }
+  const url = visitLink(l.id), text = `Voici « ${l.nom} » : les santons, la crèche et les envies (lien en lecture seule, sans compte).`;
+  if (navigator.share) {
+    try { await navigator.share({ title: l.nom, text, url }); return; }
+    catch (e) { if (e && e.name === "AbortError") return; }
+  }
+  copyText(`${text} ${url}`, "Lien copié : collez-le dans un message.");
+});
 $("me-btn").addEventListener("click", () => { $("me-nom").value = nameOf(me.id); $("me-mail").textContent = me.email || ""; $("dlg-me").showModal(); });
 $("me-form").addEventListener("submit", async e => {
   e.preventDefault();
@@ -1131,7 +1135,7 @@ $("new-form").addEventListener("submit", async e => {
   const nom = $("new-nom").value.trim(); if (!nom || nom === "Crèche de") return;
   const { data, error } = await sb.rpc("creer_liste", { p_famille: e.target.dataset.famille, p_nom: nom });
   if (error) return toast(frErr(error));
-  $("dlg-new").close(); await loadAll(); go("list", data); toast(`« ${nom} » créée : vous en êtes gérant.`);
+  $("dlg-new").close(); await loadAll(); go("list", data); toast(`« ${nom} » créée : vous en êtes administrateur.`);
 });
 $("family-form").addEventListener("submit", async e => {
   e.preventDefault();

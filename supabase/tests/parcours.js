@@ -44,6 +44,10 @@ async function signup(p, nom, mail) {
   await papa.screenshot({ path: S + 'e-qte.png' });
   await papa.keyboard.press('Escape');
   await papa.screenshot({ path: S + 'e-list.png' });
+  // bouton Partager (presse-papiers dans le navigateur de test)
+  await papa.context().grantPermissions(['clipboard-read', 'clipboard-write'], { origin: 'http://localhost:8766' });
+  await papa.click('#l-share'); await papa.waitForTimeout(400);
+  log('partager:', (await papa.evaluate(() => navigator.clipboard.readText())).replace(/[0-9a-f]{20,}/, '…'));
   // réglages : lien visiteur
   await papa.click('#l-settings'); await papa.waitForTimeout(300);
   const visit = await papa.inputValue('#visit-link'); log('lien visite:', visit.replace(/[0-9a-f]{20,}/, '…'));
@@ -58,7 +62,7 @@ async function signup(p, nom, mail) {
   log('maman accueil:', (await maman.textContent('#view-home')).replace(/\s+/g, ' ').slice(0, 160));
   await maman.click('.lcard[data-list]'); await maman.waitForTimeout(400);
   log('maman badge:', await maman.textContent('#l-badge'), '| boutons ✓ actifs:', await maman.locator('.card .ic.o:not([disabled])').count(),
-      '| photo vue', await maman.locator('#cover-img').count(), '| peut la changer', await maman.locator('#cover-cam').count());
+      '| partager', await maman.isVisible('#l-share'), '| photo vue', await maman.locator('#cover-img').count(), '| peut la changer', await maman.locator('#cover-cam').count());
   // Papa ajoute Maman gérante
   await papa.click('#l-settings'); await papa.waitForTimeout(300);
   const mamanId = sqlv("select id from auth.users where email='maman@x.fr'");
@@ -75,7 +79,7 @@ async function signup(p, nom, mail) {
   log('mamie sans compte : écran connexion ?', await mamie.isVisible('#scr-auth'), '| crèche :', await mamie.textContent('#l-name'),
       '|', await mamie.textContent('#l-who'), '|', await mamie.textContent('#l-badge'));
   log('mamie : ✓ actifs', await mamie.locator('.card .ic.o:not([disabled])').count(), '| cochés visibles', await mamie.locator('.card.own').count(),
-      '| réglages', await mamie.isVisible('#l-settings'), '| photo crèche', await mamie.evaluate(() => { const i = document.querySelector('#cover-img'); return !!i && i.naturalWidth > 0; }), '| boutons photo', await mamie.locator('#cover-cam').count(), '| espace famille', await mamie.isVisible('#famille-link'));
+      '| réglages', await mamie.isVisible('#l-settings'), '| partager', await mamie.isVisible('#l-share'), '| photo crèche', await mamie.evaluate(() => { const i = document.querySelector('#cover-img'); return !!i && i.naturalWidth > 0; }), '| boutons photo', await mamie.locator('#cover-cam').count(), '| espace famille', await mamie.isVisible('#famille-link'));
   log('mamie : badge quantité', await mamie.locator('.card .qte').count() ? await mamie.locator('.card .qte').first().textContent() : '-');
   await mamie.screenshot({ path: S + 'e-mamie.png' });
   // lien changé : l'ancien ne marche plus
