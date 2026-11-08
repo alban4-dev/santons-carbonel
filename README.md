@@ -99,10 +99,12 @@ statique (par exemple Netlify Drop).
    **Partager** envoie le lien de la crèche à un proche qui doit seulement
    regarder (il n'a pas de compte à créer).
 
-**Onglet « Sans marque · Provence »** : les santons de Provence sans marque
-et leurs bâtiments (achetés sur un marché…), créés par la famille avec la
-marque « Sans marque », rangés en « Santons » et « Bâtiments et décors », à
-part des gammes Carbonel et Escoffier.
+**Onglet « Sans marque · Autres »** : les santons sans marque et leurs
+bâtiments (achetés sur un marché…), créés par la famille avec la marque
+« Sans marque », rangés en « Santons » et « Bâtiments et décors », à part des
+gammes Carbonel et Escoffier. Pour la blague, dans une famille dont le nom
+contient « Hugues », l'onglet s'appelle « Pauvres » (« Santons de pauvres
+sans marque »).
 
 **Les ajouts restent dans leur famille** : un santon créé dans une famille
 (santon inconnu, sans marque) n'est visible que de ses membres, et seulement
@@ -111,7 +113,9 @@ crèche, que les ajouts de la famille de cette crèche (vérifié par la base et
 par `familles.js`).
 
 **Plusieurs familles** : « + Créer une autre famille » en bas de l'accueil
-(côté du conjoint, côté de ses parents…). Chaque famille a ses crèches, ses
+(côté du conjoint, côté de ses parents…) ; quand on est dans plusieurs
+familles, un menu « Famille » en haut de l'accueil choisit celle qu'on voit
+(le téléphone s'en souvient). Chaque famille a ses crèches, ses
 membres et son lien d'invitation ; une même personne peut être dans
 plusieurs familles et les voit toutes, les autres ne voient que la leur.
 L'admin d'une famille peut la renommer.
