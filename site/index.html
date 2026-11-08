@@ -136,6 +136,9 @@ a { color: var(--accent); }
 .cover.empty p { margin: 0; color: var(--muted); font-size: .9rem; }
 .cover.busy { opacity: .6; pointer-events: none; }
 .lthumb { display: block; margin: -14px -14px 2px; aspect-ratio: 16 / 7; background: var(--surface-2) center / cover no-repeat; }
+/* recherche au clavier (téléphone) : la barre remonte sous l'en-tête, les onglets s'effacent */
+body.searching .grid { min-height: 100dvh; }
+@media (max-width: 760px) { body.searching .tabs { display: none; } }
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 8px; padding-bottom: 40px; }
 @media (max-width: 440px) { .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; } }
 .sec { grid-column: 1 / -1; display: flex; align-items: baseline; gap: 10px; padding: 14px 2px 2px; }
@@ -276,7 +279,7 @@ dialog::backdrop { background: rgba(20, 14, 26, .55); }
       </div>
       <div class="row">
         <div class="row" id="status" role="group" aria-label="Afficher"></div>
-        <label class="search"><svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M11 11l3.5 3.5" stroke="currentColor" stroke-width="1.6"/></svg><input id="q" type="search" placeholder="Chercher" aria-label="Chercher un santon" autocomplete="off"></label>
+        <label class="search"><svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M11 11l3.5 3.5" stroke="currentColor" stroke-width="1.6"/></svg><input id="q" type="search" placeholder="Chercher" aria-label="Chercher un santon" autocomplete="off" enterkeyhint="search"></label>
       </div>
     </section>
     <div class="grid" id="grid"></div>
@@ -1037,6 +1040,20 @@ $("family-form").addEventListener("submit", async e => {
 });
 let qTimer = null;
 $("q").addEventListener("input", e => { clearTimeout(qTimer); qTimer = setTimeout(() => { ui.q = e.target.value; renderGrid(); }, 120); });
+/* Au clavier, la barre de recherche remonte juste sous l'en-tête : les résultats restent visibles au-dessus du clavier */
+function searchToTop() {
+  if (!document.body.classList.contains("searching")) return;
+  measureTop();
+  const box = $("q").closest(".search"), top = box.getBoundingClientRect().top + window.scrollY - $("top").offsetHeight - 8;
+  window.scrollTo({ top: Math.max(0, top) });
+}
+$("q").addEventListener("focus", () => {
+  document.body.classList.add("searching");
+  searchToTop(); setTimeout(searchToTop, 120); setTimeout(searchToTop, 420);  // après l'ouverture du clavier
+});
+$("q").addEventListener("blur", () => { document.body.classList.remove("searching"); measureTop(); });
+$("q").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); $("q").blur(); } });  // « Rechercher » ferme le clavier
+if (window.visualViewport) window.visualViewport.addEventListener("resize", () => { if (document.activeElement === $("q")) searchToTop(); });
 for (const d of document.querySelectorAll("dialog")) d.addEventListener("click", e => { if (e.target === d) d.close(); });
 
 /* ================= Ajouter un santon ancien ================= */
