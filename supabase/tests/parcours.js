@@ -94,6 +94,15 @@ async function signup(p, nom, mail) {
   log('mamie : vignette', await mamie.textContent('.card .resa'), '| À offrir', await mamie.textContent('[data-status="gift"] .n'));
   await papa.reload(); await papa.waitForSelector('#view-list:not([hidden])'); await papa.waitForTimeout(600);
   log('papa voit:', await papa.locator('.card .resa').count() ? await papa.textContent('.card .resa') : '-');
+  // Papa (administrateur) annule, puis note que Manoun l'offre
+  await papa.locator('.card .resa').first().locator('xpath=..').locator('.ph').click(); await papa.waitForTimeout(300);
+  await papa.click('[data-annuler]'); await papa.click('[data-annuler]'); await papa.waitForTimeout(600);
+  await papa.click('[data-offrir]'); await papa.waitForTimeout(200);
+  log('papa : champ vide', (await papa.inputValue('#offre-nom')) === '', '|', await papa.getAttribute('#offre-nom', 'placeholder'));
+  await papa.fill('#offre-nom', 'Manoun'); await papa.click('#offre-form button[type=submit]'); await papa.waitForTimeout(600);
+  log('papa note pour Manoun:', sqlv("select r.nom || ' par ' || p.nom from liste_reservations r join profils p on p.id = r.reserve_par"));
+  await papa.keyboard.press('Escape');
+  log('bouton ajout:', await papa.textContent('#l-add'));
   // lien changé : l'ancien ne marche plus
   await papa.click('#l-settings'); await papa.waitForTimeout(300); await papa.click('#new-visit'); await papa.waitForTimeout(500);
   await papa.click('#dlg-settings [data-close]');

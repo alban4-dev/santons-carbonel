@@ -21,7 +21,8 @@ de la crèche installée** (mise par ses gérants, en tête de la crèche, sur
 l'accueil et sur la page publique), un bouton **Partager** qui envoie le lien de la crèche (lecture seule, sans
 compte, envies comprises), un bouton **Offrir** sur les envies (une grand-mère, la marraine… note
 qu'elle l'offre, même sans compte, pour que personne n'achète le même), et
-**« + Ajouter un santon »** pour les modèles qu'aucun catalogue ne montre (crèches commencées
+**« + Santon inconnu »** pour créer un santon qu'on a devant les yeux mais
+qu'on ne retrouve dans aucun catalogue (trop ancien…), pour les modèles qu'aucun catalogue ne montre (crèches commencées
 il y a 30 ans) : nom, marque, note, et jusqu'à trois photos (face, dos,
 côté), que tout membre de la famille peut compléter ou changer dans sa fiche. Le modèle entre
 dans le catalogue de toute la famille, dans le bon onglet, sous « Ajoutés par
@@ -108,7 +109,7 @@ statique (par exemple Netlify Drop).
 
 **Offrir** : toute personne qui voit une crèche (membre de la famille ou lien
 de partage, sans compte) peut réserver un santon de ses envies en notant son
-prénom. La réservation s'annule par la personne qui l'a faite (même téléphone
+prénom ; un administrateur peut aussi la noter pour quelqu'un. La réservation s'annule par la personne qui l'a faite (même téléphone
 ou même compte) ou par un administrateur de la crèche, et disparaît quand le
 santon est coché « J'ai ».
 
@@ -159,7 +160,7 @@ fichiers sur le disque).
 - **Autres catalogues vérifiés** : N°2 Tradition 2023 (site Carbonel), liste
   N°2 « Crèche 2022 » (publiée par une paroisse) et dépliant N°2 de 2010 : tous
   leurs modèles sont dans l'appli. Aucun catalogue plus ancien n'est en ligne ;
-  les modèles d'il y a 30 ans s'ajoutent avec « + Ajouter un santon ».
+  les modèles d'il y a 30 ans se créent avec « + Santon inconnu ».
 - **Pied vert** : en plus du catalogue, les santons N°2 de la boutique au socle
   peint en vert (lu sur chaque photo par `scraper/socle.py`), et ceux sans socle
   (Jésus et le Berceau dans leur paille, Canard nageant, Cigogne :

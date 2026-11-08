@@ -295,7 +295,7 @@ body.kbd .totop { display: none; }
       <span class="badge" id="l-badge"></span>
       <span class="row" style="margin-left:auto">
         <button class="btn sm primary share-btn" type="button" id="l-share" hidden><svg width="15" height="15" viewBox="0 0 20 20" aria-hidden="true"><circle cx="15" cy="4.5" r="2.3" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="5" cy="10" r="2.3" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="15" cy="15.5" r="2.3" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M7 9l6-3.4M7 11l6 3.4" stroke="currentColor" stroke-width="1.7"/></svg> Partager</button>
-        <button class="btn sm add-btn" type="button" id="l-add" hidden>+ Ajouter un santon</button>
+        <button class="btn sm add-btn" type="button" id="l-add" hidden>+ Santon inconnu</button>
         <button class="btn sm" type="button" id="l-settings" hidden>Réglages</button>
       </span>
     </div>
@@ -329,9 +329,9 @@ body.kbd .totop { display: none; }
 
 <dialog id="dlg-add" aria-labelledby="add-title">
   <form class="dlg" id="add-form">
-    <div class="dlg-head"><h2 id="add-title">Un santon absent de la liste</h2><button class="x" type="button" data-close aria-label="Fermer">✕</button></div>
-    <p class="help">Vous avez un santon (ou un décor) que vous ne trouvez pas dans la liste : ancien modèle, autre marque… Ajoutez-le avec sa photo : il rejoint le catalogue de toute la famille, sous « Ajoutés par la famille ».</p>
-    <div class="field"><label class="label" for="add-nom">Nom</label><input id="add-nom" maxlength="80" required placeholder="Par ex. Chasseur à la pipe (années 80)"></div>
+    <div class="dlg-head"><h2 id="add-title">Créer un santon inconnu</h2><button class="x" type="button" data-close aria-label="Fermer">✕</button></div>
+    <p class="help">Vous avez un santon devant les yeux mais vous ne le retrouvez ni dans la liste ni dans les catalogues (trop ancien, autre marque…) ? Créez-le avec sa photo et le nom que vous lui donnez : il rejoint le catalogue de toute la famille, sous « Ajoutés par la famille ».</p>
+    <div class="field"><label class="label" for="add-nom">Nom</label><input id="add-nom" maxlength="80" required placeholder="Le nom que vous lui donnez : Chasseur à la pipe…"></div>
     <div class="row">
       <div class="field" style="flex:1 1 150px"><label class="label" for="add-type">Type</label>
         <select id="add-type" class="field-sel"><option value="santon">Santon</option><option value="decor">Bâtiment ou décor</option></select></div>
@@ -820,7 +820,7 @@ function renderGrid() {
     if (g !== grp) { grp = g; html += `<div class="sec"><h2>${esc(g)}</h2><span data-sec="${esc(g)}"></span></div>`; }
     html += cardHTML(it);
   }
-  if (!list.length) html += `<div class="empty">${ui.status === "own" ? "Rien de coché pour l'instant." : ui.status === "wish" ? "Pas encore d'envie dans cet onglet." : ui.status === "new" ? "Pas de nouveauté dans cet onglet cette année." : ui.status === "gift" ? "Toutes les envies de cet onglet sont déjà réservées." : "Rien ne correspond."}${ui.q.trim() && !PUBLIC && isMember(l.famille_id) ? `<p style="margin:12px 0 0"><button class="btn add-btn" type="button" data-addq>+ Il n'y est pas : l'ajouter au catalogue</button></p>` : ""}</div>`;
+  if (!list.length) html += `<div class="empty">${ui.status === "own" ? "Rien de coché pour l'instant." : ui.status === "wish" ? "Pas encore d'envie dans cet onglet." : ui.status === "new" ? "Pas de nouveauté dans cet onglet cette année." : ui.status === "gift" ? "Toutes les envies de cet onglet sont déjà réservées." : "Rien ne correspond."}${ui.q.trim() && !PUBLIC && isMember(l.famille_id) ? `<p style="margin:12px 0 0"><button class="btn add-btn" type="button" data-addq>+ Introuvable ? Créer un santon inconnu</button></p>` : ""}</div>`;
   $("grid").innerHTML = html;
   renderSectionCounts();
 }
@@ -844,7 +844,7 @@ function renderProgress() {
 }
 function renderStatus() {
   const l = curList(), pool = ITEMS.filter(inTab);
-  $("l-add").textContent = ui.tab === "escoffier" || ui.tab === "decor" ? "+ Ajouter un décor" : "+ Ajouter un santon";
+  $("l-add").textContent = ui.tab === "escoffier" || ui.tab === "decor" ? "+ Décor inconnu" : "+ Santon inconnu";
   const opts = [["all", "Tous"], ["own", "J'ai"], ["missing", "Il manque"], ["wish", "Envies"]];
   if (pool.some(it => statut(l, it.id) === "wish")) opts.push(["gift", "À offrir"]);
   else if (ui.status === "gift") ui.status = "all";
@@ -949,16 +949,18 @@ function offreHTML(l, it) {
       ${peut ? `<div class="row"><button class="btn sm" type="button" data-annuler="${it.id}">${mienne ? "Annuler ma réservation" : "Annuler cette réservation"}</button></div>` : ""}</div>`;
   }
   if (!offreOuverte) return `<button class="btn gift" type="button" data-offrir="${it.id}">${ICON_GIFT} Offrir ce santon</button>`;
-  const nom = store.get("santons-prenom") || (!PUBLIC && me ? nameOf(me.id) : "");
-  return `<form class="offre" id="offre-form" data-id="${it.id}"><p>Indiquez votre prénom : il sera noté « réservé » pour que personne n'achète le même.</p>
-    <div class="row"><input id="offre-nom" maxlength="40" required autocomplete="given-name" placeholder="Votre prénom (Mamie, Marraine…)" value="${esc(nom === "Quelqu'un" ? "" : nom)}">
+  const admin = !PUBLIC && canEdit(l.id);  // l'administrateur note pour quelqu'un d'autre (« Manoun me l'a dit »)
+  const nom = admin ? "" : store.get("santons-prenom") || (!PUBLIC && me ? nameOf(me.id) : "");
+  return `<form class="offre" id="offre-form" data-id="${it.id}"><p>${admin ? "Qui l'offre ? Son prénom sera noté « réservé », visible de tous, pour que personne n'achète le même." : "Indiquez votre prénom : il sera noté « réservé » pour que personne n'achète le même."}</p>
+    <div class="row"><input id="offre-nom" maxlength="40" required autocomplete="${admin ? "off" : "given-name"}" placeholder="${admin ? "Prénom de qui l'offre (Manoun, Marraine…)" : "Votre prénom (Mamie, Marraine…)"}" value="${esc(nom === "Quelqu'un" ? "" : nom)}">
     <button class="btn gift" type="submit">Réserver</button></div></form>`;
 }
 async function reserver(id, nom) {
   const l = curList(), k = l.id + ":" + id;
   const { error } = await sb.rpc("reserver", { p_liste: l.id, p_code: PUBLIC ? PUBLIC_CODE : null, p_santon: id, p_nom: nom, p_jeton: jeton() });
   if (error) return toast(frErr(error));
-  store.set("santons-prenom", nom); noterResa(k, true);
+  if (PUBLIC || !canEdit(l.id)) store.set("santons-prenom", nom);
+  noterResa(k, true);
   st.resa.set(k, { liste_id: l.id, santon_id: id, nom, reserve_par: PUBLIC ? null : me.id, created_at: new Date().toISOString() });
   offreOuverte = false; openItem(id); refreshCard(id); renderStatus(); toast(`Réservé par ${nom} : merci !`);
 }
@@ -1276,7 +1278,7 @@ function openAdd() {
   $("add-marque").value = ui.tab === "escoffier" || ui.tab === "santons_escoffier" ? "Escoffier" : "Carbonel";
   $("add-own-row").hidden = !canEdit(l.id);
   $("add-own-txt").textContent = `Je l'ai dans « ${l.nom} »`;
-  $("add-title").textContent = $("add-type").value === "santon" ? "Un santon absent de la liste" : "Un décor absent de la liste";
+  $("add-title").textContent = $("add-type").value === "santon" ? "Créer un santon inconnu" : "Créer un décor inconnu";
   dlgAdd.showModal();
 }
 async function photoSanton(e) {
