@@ -1,7 +1,9 @@
 {
  "sources": [
   "https://storage.marcelcarbonel.com/catalogues/n2_tradition_2024.pdf",
-  "https://cdn.shopify.com/s/files/1/0253/1419/files/N2-2015.pdf"
+  "https://cdn.shopify.com/s/files/1/0253/1419/files/N2-2015.pdf",
+  "https://storage.marcelcarbonel.com/catalogues/n3_tradition_2024.pdf",
+  "https://cdn.shopify.com/s/files/1/0253/1419/files/N3-2015.pdf"
  ],
  "note": "Modèles des catalogues papier absents de la boutique en ligne",
  "items": [
@@ -486,6 +488,167 @@
    "sp": [
     3,
     2
+   ]
+  },
+  {
+   "id": 5101,
+   "name": "Mireille à la cruche orange N°3",
+   "ref": null,
+   "size": 3,
+   "cat": [
+    8
+   ],
+   "col": [
+    "tradition",
+    "ancien"
+   ],
+   "price": null,
+   "img": null,
+   "url": "https://marcelcarbonel.com/catalogue",
+   "source": "Catalogue N°3 Tradition 2024, page 6",
+   "pied": "vert",
+   "section": "santons_n3",
+   "sp": [
+    11,
+    16
+   ]
+  },
+  {
+   "id": 5102,
+   "name": "Femme sur l'âne N°3",
+   "ref": null,
+   "size": 3,
+   "cat": [
+    9
+   ],
+   "col": [
+    "tradition",
+    "ancien"
+   ],
+   "price": null,
+   "img": null,
+   "url": "https://marcelcarbonel.com/catalogue",
+   "source": "Catalogue N°3 Tradition 2024, page 8",
+   "pied": "vert",
+   "section": "santons_n3",
+   "sp": [
+    11,
+    19
+   ]
+  },
+  {
+   "id": 5103,
+   "name": "Femme à la chèvre marron N°3",
+   "ref": null,
+   "size": 3,
+   "cat": [
+    9
+   ],
+   "col": [
+    "tradition",
+    "ancien"
+   ],
+   "price": null,
+   "img": null,
+   "url": "https://marcelcarbonel.com/catalogue",
+   "source": "Dépliant N°3 (2009), page 2",
+   "pied": "vert",
+   "section": "santons_n3",
+   "sp": [
+    11,
+    18
+   ]
+  },
+  {
+   "id": 5104,
+   "name": "Femme à la chèvre grise N°3",
+   "ref": null,
+   "size": 3,
+   "cat": [
+    9
+   ],
+   "col": [
+    "tradition",
+    "ancien"
+   ],
+   "price": null,
+   "img": null,
+   "url": "https://marcelcarbonel.com/catalogue",
+   "source": "Dépliant N°3 (2009), page 2 (photo de la chèvre marron)",
+   "pied": "vert",
+   "section": "santons_n3",
+   "sp": [
+    11,
+    17
+   ]
+  },
+  {
+   "id": 5105,
+   "name": "Ange bleu N°3",
+   "ref": null,
+   "size": 3,
+   "cat": [
+    1
+   ],
+   "col": [
+    "tradition",
+    "ancien"
+   ],
+   "price": null,
+   "img": null,
+   "url": "https://marcelcarbonel.com/catalogue",
+   "source": "Dépliant N°3 (2009), page 1 (photo de l'ange blanc)",
+   "pied": "autre",
+   "section": "santons_n3",
+   "sp": [
+    11,
+    13
+   ]
+  },
+  {
+   "id": 5106,
+   "name": "Ange rose N°3",
+   "ref": null,
+   "size": 3,
+   "cat": [
+    1
+   ],
+   "col": [
+    "tradition",
+    "ancien"
+   ],
+   "price": null,
+   "img": null,
+   "url": "https://marcelcarbonel.com/catalogue",
+   "source": "Dépliant N°3 (2009), page 1 (photo de l'ange blanc)",
+   "pied": "autre",
+   "section": "santons_n3",
+   "sp": [
+    11,
+    14
+   ]
+  },
+  {
+   "id": 5107,
+   "name": "Chameau couché tapis jaune N°3",
+   "ref": null,
+   "size": 3,
+   "cat": [
+    1
+   ],
+   "col": [
+    "tradition",
+    "ancien"
+   ],
+   "price": null,
+   "img": null,
+   "url": "https://marcelcarbonel.com/catalogue",
+   "source": "Dépliant N°3 (2009), page 1 (photo du tapis orange)",
+   "pied": "vert",
+   "section": "santons_n3",
+   "sp": [
+    11,
+    15
    ]
   }
  ]

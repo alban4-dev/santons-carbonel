@@ -1,7 +1,7 @@
 # Santons Carbonel en famille
 
-Le catalogue des santons Marcel Carbonel **N°2 (7 cm)** et des bâtiments
-**Escoffier** (collection 7 cm), partagé
+Le catalogue des santons Marcel Carbonel **N°2 (7 cm)** et **N°3 (9 cm)**,
+des santons et bâtiments **Escoffier** (collection 7 cm), partagé
 comme un petit réseau social familial :
 
 - chaque **crèche** est une liste au nom de quelqu'un (« Crèche de Léa »,
@@ -16,7 +16,8 @@ comme un petit réseau social familial :
   « Changer » le lien coupe l'ancien.
 
 Dans chaque crèche : ✓ je l'ai (avec le nombre d'exemplaires dans la fiche :
-2 moutons identiques…), ♡ envie, quatre onglets, une grande **photo
+2 moutons identiques…), ♡ envie, un **menu « Catalogue »** (chaque crèche choisit ses catalogues dans
+ses réglages : N°2, N°3, Escoffier, artisans…), une grande **photo
 de la crèche installée** (mise par ses gérants, en tête de la crèche, sur
 l'accueil et sur la page publique), un bouton **Partager** qui envoie le lien de la crèche (lecture seule, sans
 compte, envies comprises), un bouton **Offrir** sur les envies (une grand-mère, la marraine… note
@@ -30,12 +31,17 @@ la famille », et se coche comme les autres. Les nouveautés de
 l'année (rubrique « Nouveautés » des deux boutiques) portent un badge
 « Nouveau 2026 » et ont leur filtre.
 
-| Onglet | Contenu | Nombre |
+| Catalogue (menu) | Contenu | Nombre |
 |---|---|---|
-| Santons Carbonel | Toute la gamme du catalogue papier N°2 Tradition 2024 (283 modèles, dont 20 absents de la boutique en ligne), la Colombe du dépliant N°2 de 2010, plus les autres santons N°2 au pied vert de la boutique | 303 |
-| Santons Escoffier | Collection 7 cm (l'échelle des N°2 Carbonel), classés Nativité (17), Personnages (287) et Animaux (67, dont le flamant rose) d'après leur nom ; « Nouveau 2026 » pour les créations de la saison 2026-2027 | 371 |
-| Bâtiments Escoffier | Collection 7 cm : maisons et bâtisses, façades, crèches et étables, puits, fontaines et ponts, roulottes et charrettes (76) ; accessoires : murs, escaliers, rivières, quais, pointus, champs… (53) ; arbres et buissons rangés par Escoffier dans les accessoires (24) | 153 |
-| Décors Carbonel | Bâtiments et accessoires N°2 | 82 |
+| Carbonel N°2 · Santons | Toute la gamme du catalogue papier N°2 Tradition 2024 (283 modèles, dont 20 absents de la boutique en ligne), la Colombe du dépliant N°2 de 2010, plus les autres santons N°2 au pied vert de la boutique | 303 |
+| Escoffier 7 cm · Santons | Collection 7 cm (l'échelle des N°2 Carbonel), classés Nativité (17), Personnages (287) et Animaux (67, dont le flamant rose) d'après leur nom ; « Nouveau 2026 » pour les créations de la saison 2026-2027 | 371 |
+| Escoffier 7 cm · Bâtiments | Collection 7 cm : maisons et bâtisses, façades, crèches et étables, puits, fontaines et ponts, roulottes et charrettes (76) ; accessoires : murs, escaliers, rivières, quais, pointus, champs… (53) ; arbres et buissons rangés par Escoffier dans les accessoires (24) | 153 |
+| Carbonel N°2 · Bâtiments et décors | Bâtiments et accessoires N°2 | 82 |
+| Carbonel N°3 · Santons et bâtiments | Tous les modèles N°3 (9 cm) de la boutique à l'unité, quel que soit le socle : santons, animaux, bâtiments, accessoires (sans coffrets ni pièces détachées) ; 7 anciens modèles relevés dans le catalogue N°3 2024 et le dépliant N°3 de 2009 (Mireille à la cruche orange, Femme sur l'âne, Femme à la chèvre marron et grise, Ange bleu et rose, Chameau couché tapis jaune) ; plus les 16 accessoires « N°2 & N°3 » (fleurs, lavande) | 211 + 16 |
+| Artisans sans marques | Ce que la famille ajoute elle-même | — |
+
+Par défaut une crèche montre tout sauf Carbonel N°3 ; ses administrateurs
+cochent ses catalogues dans **Réglages** (ou à sa création).
 
 ## Mise en route (une fois, environ 15 minutes)
 
@@ -72,7 +78,8 @@ le SQL Editor (`schema.sql` les contient déjà pour une nouvelle installation) 
 - `2026-11-10_photos_santons.sql` : photo de la crèche installée, et trois
   photos par santon ajouté (contient aussi `2026-11-09_photo_creche.sql`) ;
 - `2026-11-11_quantites.sql` : nombre d'exemplaires d'un santon (2 moutons…) ;
-- `2026-11-12_reservations.sql` : réservations « Offrir » sur les envies.
+- `2026-11-12_reservations.sql` : réservations « Offrir » sur les envies ;
+- `2026-11-13_catalogues.sql` : catalogues de chaque crèche, santons inconnus en N°3.
 
 ### 2. Le site : GitHub Pages
 
@@ -144,7 +151,7 @@ ses droits.
 `supabase/tests/lancer.sh` rejoue tout sans compte Supabase, sur un
 PostgreSQL 16 local :
 
-- `droits.sql` : 69 vérifications des règles d'accès (inconnu, membre, gérant,
+- `droits.sql` : 73 vérifications des règles d'accès (inconnu, membre, gérant,
   visiteur, ancien membre, anonyme, page publique, santons ajoutés, photos
   photo de la crèche, photos face, dos, côté, quantités et réservations) ;
 - `parcours.js` : dans un vrai navigateur, Papa crée la famille et la crèche
@@ -178,6 +185,11 @@ fichiers sur le disque).
   boutique (Mireille, Ravi coupé, Bastidanes, Pont-Aven, Fileuse au rouet… et
   la Colombe du dépliant N°2 de 2010, dont la photo ne fait que 36 × 18 pixels),
   photos découpées dans les PDF par `scraper/anciens.py`.
+- **Anciens N°3** : catalogues N°3 Tradition 2023 et 2024 (marcelcarbonel.com) et
+  dépliant N°3 de 2009 (chez un revendeur), comparés à la boutique nom par nom
+  puis photo par photo ; aucun catalogue N°3 plus ancien n'est en ligne. Pour
+  les couleurs annoncées sans photo, la fiche le précise (« photo de l'ange
+  blanc »).
 - **Autres catalogues vérifiés** : N°2 Tradition 2023 (site Carbonel), liste
   N°2 « Crèche 2022 » (publiée par une paroisse) et dépliant N°2 de 2010 : tous
   leurs modèles sont dans l'appli. Aucun catalogue plus ancien n'est en ligne ;

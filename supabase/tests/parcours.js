@@ -52,7 +52,16 @@ async function signup(p, nom, mail) {
   await papa.click('#l-settings'); await papa.waitForTimeout(300);
   const visit = await papa.inputValue('#visit-link'); log('lien visite:', visit.replace(/[0-9a-f]{20,}/, '…'));
   await papa.screenshot({ path: S + 'e-settings.png' });
+  // catalogues de la crèche : + Carbonel N°3, − Escoffier bâtiments
+  await papa.check('[data-cat="santons_n3"]'); await papa.waitForTimeout(500);
+  await papa.uncheck('[data-cat="escoffier"]'); await papa.waitForTimeout(500);
+  log('catalogues:', sqlv("select array_to_string(catalogues, ',') from listes where nom = 'Crèche de Léa'"));
   await papa.click('#dlg-settings [data-close]');
+  log('menu:', (await papa.locator('#cat-sel option').allTextContents()).join(' / '));
+  await papa.selectOption('#cat-sel', 'santons_n3'); await papa.waitForTimeout(400);
+  log('N°3:', await papa.locator('.card').count(), 'cartes |', (await papa.locator('.sec h2').allTextContents()).join(', '), '|', (await papa.locator('.card .nm').first().textContent()));
+  await papa.screenshot({ path: S + 'e-n3.png' });
+  await papa.selectOption('#cat-sel', 'santons'); await papa.waitForTimeout(300);
   const join = URL + '#rejoindre=' + sqlv('select code from famille_invitations');
   // ---- Maman rejoint
   const maman = await page(b, 'maman', 390, 844);
@@ -78,6 +87,7 @@ async function signup(p, nom, mail) {
   await mamie.goto(visit); await mamie.waitForSelector('#scr-app:not([hidden])', { timeout: 10000 }); await mamie.waitForTimeout(500);
   log('mamie sans compte : écran connexion ?', await mamie.isVisible('#scr-auth'), '| crèche :', await mamie.textContent('#l-name'),
       '|', await mamie.textContent('#l-who'), '|', await mamie.textContent('#l-badge'));
+  log('mamie : menu', (await mamie.locator('#cat-sel option').allTextContents()).map(t => t.split(' — ')[0]).join(' / '));
   log('mamie : filtre à l\'ouverture', await mamie.getAttribute('[data-status="wish"]', 'aria-pressed'), '| cartes', await mamie.locator('.card').count());
   await mamie.click('[data-status="all"]'); await mamie.waitForTimeout(200);
   log('mamie : ✓ actifs', await mamie.locator('.card .ic.o:not([disabled])').count(), '| cochés visibles', await mamie.locator('.card.own').count(),

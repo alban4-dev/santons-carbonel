@@ -52,18 +52,17 @@ a { color: var(--accent); }
 .avatar.lg { width: 34px; height: 34px; font-size: .95rem; }
 .avatar.ring { background: var(--surface); color: var(--c); box-shadow: inset 0 0 0 1.5px var(--c); }
 /* Les trois catalogues : gros boutons côte à côte, marque en petit, type en gros */
-.tabs { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; padding-block: 2px 10px; max-width: 1000px; }
-.tab .court { display: none; }
-@media (max-width: 480px) { .tabs { gap: 3px; } .tab { padding: 6px 1px 7px; } .tab .long { display: none; } .tab .court { display: inline; } .tab .n { font-size: .68rem; } }
-.tab { display: grid; gap: 1px; justify-items: center; text-align: center; min-width: 0;
-  border: 1.5px solid var(--line); background: var(--surface-2); border-radius: 12px; padding: 7px 4px 8px; color: var(--ink); line-height: 1.15; }
-.tab:hover { border-color: var(--accent); }
-.tab .marque { font-size: .66rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
-.tab .type { font-family: var(--f-display); font-size: clamp(.68rem, 3vw, 1.02rem); white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
-.tab .n { font-size: .75rem; color: var(--muted); font-variant-numeric: tabular-nums; }
-@media (max-width: 480px) { .tab .marque { font-size: .54rem; letter-spacing: .02em; } .tab .type { font-size: clamp(.64rem, 2.85vw, .9rem); } }
-.tab[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); box-shadow: var(--shadow); }
-.tab[aria-selected="true"] .marque, .tab[aria-selected="true"] .n { color: var(--accent-ink); opacity: .85; }
+/* Menu « Catalogue » d'une crèche (Carbonel N°2, N°3, Escoffier…) */
+.catbar { display: flex; align-items: center; gap: 10px; padding-block: 2px 10px; max-width: 880px; }
+.catbar label { font-weight: 700; font-size: .8rem; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+.catsel { position: relative; flex: 1; min-width: 0; }
+.catsel select { width: 100%; appearance: none; -webkit-appearance: none; font: 400 1.02rem var(--f-display); color: var(--accent-ink);
+  background: var(--accent); border: 0; border-radius: 12px; padding: 10px 42px 10px 14px; box-shadow: var(--shadow); text-overflow: ellipsis; }
+.catsel select:disabled { opacity: 1; }
+.catsel::after { content: ""; position: absolute; right: 16px; top: 50%; width: 9px; height: 9px; margin-top: -7px; border: solid var(--accent-ink);
+  border-width: 0 2.5px 2.5px 0; transform: rotate(45deg); pointer-events: none; }
+.catsel select:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+@media (max-width: 480px) { .catbar label { display: none; } }
 
 /* Boutons, champs */
 .btn { border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 9px 14px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; justify-content: center; text-decoration: none; color: var(--ink); }
@@ -73,7 +72,7 @@ a { color: var(--accent); }
 .btn:disabled { opacity: .5; cursor: default; }
 .field { display: grid; gap: 4px; }
 .field-sel { border: 1px solid var(--line); background: var(--bg); border-radius: 8px; padding: 9px 11px; width: 100%; min-width: 0; }
-.field input { border: 1px solid var(--line); background: var(--bg); border-radius: 8px; padding: 9px 11px; width: 100%; min-width: 0; }
+.field input:not([type=checkbox]) { border: 1px solid var(--line); background: var(--bg); border-radius: 8px; padding: 9px 11px; width: 100%; min-width: 0; }
 .chip { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 5px 11px; font-size: .88rem; white-space: nowrap; }
 .chip[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--bg); }
 .chip .n { opacity: .65; margin-left: 3px; font-size: .85em; }
@@ -138,7 +137,7 @@ a { color: var(--accent); }
 .lthumb { display: block; margin: -14px -14px 2px; aspect-ratio: 16 / 7; background: var(--surface-2) center / cover no-repeat; }
 /* recherche au clavier (téléphone) : la barre remonte sous l'en-tête, les onglets s'effacent */
 body.typing .grid { min-height: 100dvh; }
-@media (max-width: 760px) { body.kbd .tabs { display: none; } }
+@media (max-width: 760px) { body.kbd .catbar { display: none; } }
 .also { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: .88rem; color: var(--muted); padding-top: 6px; }
 .grid { align-content: start; display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 8px; padding-bottom: 40px; }
 @media (max-width: 440px) { .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; } }
@@ -282,12 +281,9 @@ body.kbd .totop { display: none; }
         <button class="me" id="me-btn" type="button" aria-haspopup="dialog"><span class="avatar" id="me-av">?</span><span class="nm" id="me-name">…</span></button>
         <a class="btn sm" id="famille-link" href="./" hidden>Espace famille</a>
       </div>
-      <div class="tabs" role="tablist" id="tabs" hidden>
-        <button class="tab" role="tab" type="button" data-tab="santons" id="tab-santons"><span class="marque">Carbonel</span><span class="type">Santons</span><span class="n"></span></button>
-        <button class="tab" role="tab" type="button" data-tab="santons_escoffier" id="tab-santons_escoffier"><span class="marque">Escoffier</span><span class="type">Santons</span><span class="n"></span></button>
-        <button class="tab" role="tab" type="button" data-tab="escoffier" id="tab-escoffier"><span class="marque">Escoffier</span><span class="type">Bâtiments</span><span class="n"></span></button>
-        <button class="tab" role="tab" type="button" data-tab="decor" id="tab-decor"><span class="marque">Carbonel</span><span class="type">Décors</span><span class="n"></span></button>
-        <button class="tab" role="tab" type="button" data-tab="autres" id="tab-autres"><span class="marque"><span class="long">Sans marque</span><span class="court">Sans marq.</span></span><span class="type">Artisans</span><span class="n"></span></button>
+      <div class="catbar" id="tabs" hidden>
+        <label for="cat-sel">Catalogue</label>
+        <div class="catsel"><select id="cat-sel" aria-label="Catalogue affiché"></select></div>
       </div>
     </div>
   </header>
@@ -363,6 +359,8 @@ body.kbd .totop { display: none; }
     <div class="dlg-head"><h2 id="new-title">Nouvelle crèche</h2><button class="x" type="button" data-close aria-label="Fermer">✕</button></div>
     <p class="help">Une crèche par personne : vous en serez administrateur, et vous pourrez en ajouter d'autres dans ses réglages (l'autre parent, le parrain…).</p>
     <div class="field"><label class="label" for="new-nom">Nom</label><input id="new-nom" maxlength="60" required value="Crèche de "></div>
+    <div class="field"><span class="label">Catalogues</span><div class="checks" id="new-cats"></div>
+      <p class="help">Ce qu'on met dans cette crèche : modifiable ensuite dans ses réglages.</p></div>
     <div class="row"><button class="btn primary" type="submit">Créer</button></div>
   </form>
 </dialog>
@@ -395,7 +393,7 @@ const sheetRows = {};
 for (const it of ITEMS) if (it.sp) sheetRows[it.sp[0]] = Math.max(sheetRows[it.sp[0]] || 0, Math.floor(it.sp[1] / SP.cols) + 1);
 const PALETTE = ["#5a3986", "#b8304f", "#2b7a4b", "#a86a12", "#1f6f8b", "#8a4fb5", "#c0562b", "#4d6b2e"];
 const norm = s => (s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
-const short = n => n.replace(/\s*N°2(?![\d/])/, "").replace(/\s+/g, " ").trim();
+const short = n => n.replace(/\s*N°2\s*(?:&|et)\s*N°3/, "").replace(/\s*N°[23](?![\d/])/, "").replace(/\s+/g, " ").trim();
 for (const it of ITEMS) {
   it.esc = it.marque === "escoffier";
   it.cat = it.cat || []; it.col = it.col || [];
@@ -403,9 +401,19 @@ for (const it of ITEMS) {
   it.short = it.esc ? it.name.replace(/\s*-\s*(Décor|7 ?CM)$/i, "").trim() : short(it.name);
   it.old = it.col.includes("ancien");
 }
-const SECTIONS = ["santons", "santons_escoffier", "escoffier", "decor", "autres"];
+const SECTIONS = ["santons", "decor", "santons_n3", "santons_escoffier", "escoffier", "autres"];
+const CAT_MENU = { santons: "Carbonel N°2 · Santons", decor: "Carbonel N°2 · Bâtiments et décors", santons_n3: "Carbonel N°3 · Santons et bâtiments",
+  santons_escoffier: "Escoffier 7 cm · Santons", escoffier: "Escoffier 7 cm · Bâtiments", autres: "Artisans sans marques" };
+const CAT_COURT = { santons: "santons N°2", decor: "décors N°2", santons_n3: "N°3", santons_escoffier: "santons Escoffier", escoffier: "bâtiments Escoffier", autres: "artisans" };
+const CAT_DEFAUT = ["santons", "decor", "santons_escoffier", "escoffier", "autres"];  // tout sauf Carbonel N°3
+/* catalogues montrés par une crèche (réglage « Catalogues de cette crèche ») */
+function catsOf(l) {
+  const c = l && Array.isArray(l.catalogues) ? SECTIONS.filter(t => l.catalogues.includes(t)) : [];
+  return c.length ? c : CAT_DEFAUT;
+}
+const dans = (it, t) => it.section === t || (!!it.aussi && it.aussi.includes(t));  // « N°2 & N°3 » : dans les deux
 const ANNEE = (DATA.scrapedAt || "").slice(0, 4) || String(new Date().getFullYear());
-const SEC_LABEL = { santons: "Santons Carbonel", santons_escoffier: "Santons Escoffier", escoffier: "Bâtiments et accessoires Escoffier", decor: "Décors Carbonel", autres: "Artisans sans marques" };
+const SEC_LABEL = { santons: "Santons Carbonel", santons_escoffier: "Santons Escoffier", escoffier: "Bâtiments et accessoires Escoffier", decor: "Décors Carbonel", autres: "Artisans sans marques", santons_n3: "Carbonel N°3" };
 /* Modèles ajoutés par la famille (table modeles_famille) : ils rejoignent ITEMS */
 const PHOTO_OK = /^[0-9a-f-]{36}\/[0-9a-z-]{8,64}\.(jpg|jpeg|png|webp)$/i;
 const photoUrl = path => PHOTO_OK.test(path || "") ? `${(CFG.supabaseUrl || "").replace(/\/$/, "")}/storage/v1/object/public/photos/${path}` : "";
@@ -428,7 +436,7 @@ function setCustom(rows, publicMode) {
   }
 }
 const visibleFor = (it, l) => !it.custom || !l || it.famille === l.famille_id;
-const nSec = (t, l) => ITEMS.filter(i => i.section === t && visibleFor(i, l)).length;
+const nSec = (t, l) => ITEMS.filter(i => dans(i, t) && visibleFor(i, l)).length;
 const euro = n => n == null ? "" : n.toLocaleString("fr-FR", { style: "currency", currency: "EUR" });
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const $ = id => document.getElementById(id);
@@ -477,6 +485,7 @@ const curList = () => st.listes.get(ui.listId);
 /* ================= Messages d'erreur ================= */
 function frErr(e) {
   const m = String((e && (e.message || e.error_description || e.msg)) || e || "");
+  if (/catalogues|section_check/i.test(m)) return "La base de données n'est pas encore à jour : il faut exécuter la mise à jour SQL dans Supabase (fichier supabase/migrations/2026-11-13_catalogues.sql).";
   if (/reserv/i.test(m) && /function|schema cache|does not exist/i.test(m)) return "La base de données n'est pas encore à jour : il faut exécuter la mise à jour SQL dans Supabase (fichier supabase/migrations/2026-11-12_reservations.sql).";
   if (/déjà réservé/i.test(m)) return "Quelqu'un vient de le réserver : rechargez la page.";
   if (/pas dans les envies/i.test(m)) return "Ce santon n'est plus dans les envies.";
@@ -592,7 +601,8 @@ async function loadAll() {
   const q = (t, c) => sb.from(t).select(c).then(r => { if (r.error) throw r.error; return r.data; });
   const [fam, mem, prof, lst, ger, vis, invL, invF, resas, modeles, items] = await Promise.all([
     q("familles", "id,nom"), q("membres", "famille_id,user_id,role"), q("profils", "id,nom"),
-    q("listes", "id,famille_id,nom,cree_par,created_at,photo").catch(() => q("listes", "id,famille_id,nom,cree_par,created_at")),
+    q("listes", "id,famille_id,nom,cree_par,created_at,photo,catalogues")
+      .catch(() => q("listes", "id,famille_id,nom,cree_par,created_at,photo")).catch(() => q("listes", "id,famille_id,nom,cree_par,created_at")),
     q("liste_gerants", "liste_id,user_id"),
     q("liste_visiteurs", "liste_id,user_id"), q("liste_invitations", "liste_id,code"), q("famille_invitations", "famille_id,code"),
     q("liste_reservations", "liste_id,santon_id,nom,reserve_par,created_at").catch(() => []),
@@ -686,11 +696,11 @@ function render() {
 function measureTop() { document.documentElement.style.setProperty("--top-h", $("top").offsetHeight + "px"); }
 window.addEventListener("resize", measureTop);
 function renderFoot() {
-  $("foot").innerHTML = `Santons Marcel Carbonel taille N°2 (7 cm), à l'unité : toute la gamme du catalogue N°2 Tradition 2024 et les modèles au pied vert de <a href="https://marcelcarbonel.com" target="_blank" rel="noopener">marcelcarbonel.com</a> ; bâtiments et accessoires Escoffier de la collection 7 cm d'après <a href="https://www.escoffier.fr" target="_blank" rel="noopener">escoffier.fr</a>. Photos © Ateliers Marcel Carbonel et Santons Escoffier.`;
+  $("foot").innerHTML = `Santons Marcel Carbonel N°2 (7 cm) et N°3 (9 cm), à l'unité : toute la gamme du catalogue N°2 Tradition 2024, les modèles N°2 au pied vert et tous les N°3 de <a href="https://marcelcarbonel.com" target="_blank" rel="noopener">marcelcarbonel.com</a> ; bâtiments et accessoires Escoffier de la collection 7 cm d'après <a href="https://www.escoffier.fr" target="_blank" rel="noopener">escoffier.fr</a>. Photos © Ateliers Marcel Carbonel et Santons Escoffier.`;
 }
 const avatarHTML = (uid, cls = "") => `<span class="avatar ${cls}" style="--c:${hashColor(uid)}">${esc(initial(nameOf(uid)))}</span>`;
 function counts(l) {
-  const c = { santons: 0, santons_escoffier: 0, escoffier: 0, decor: 0, autres: 0, w: 0 };
+  const c = { santons: 0, decor: 0, santons_n3: 0, santons_escoffier: 0, escoffier: 0, autres: 0, w: 0 };
   for (const [id, r] of l.items) { const it = BY_ID.get(id); if (!it) continue; if (r.statut === "own") c[it.section]++; else c.w++; }
   return c;
 }
@@ -699,14 +709,14 @@ function visitLink(l) { const c = st.invListe.get(l); return c ? location.origin
 
 /* ================= Accueil ================= */
 function listCard(l) {
-  const c = counts(l), g = gerantsOf(l.id), edit = canEdit(l.id);
+  const c = counts(l), g = gerantsOf(l.id), edit = canEdit(l.id), cats = catsOf(l);
   const ph = photoUrl(l.photo);
   return `<button class="lcard" type="button" data-list="${l.id}">
     ${ph ? `<span class="lthumb" style="background-image:url('${esc(ph)}')" role="img" aria-label="Photo de ${esc(l.nom)}"></span>` : ""}
     <span class="row" style="justify-content:space-between"><h3>${esc(l.nom)}</h3>${edit ? '<span class="badge edit">Vous gérez</span>' : '<span class="badge">Lecture seule</span>'}</span>
     <span class="who">${g.length ? "Administrée par " + esc(g.map(nameOf).join(", ")) : "Sans administrateur"}</span>
-    <span class="meter"><i style="width:${c.santons / nSec("santons", l) * 100}%"></i></span>
-    <span class="nums"><span><b>${c.santons}</b> / ${nSec("santons", l)} santons</span><span><b>${c.santons_escoffier}</b> santons Escoffier</span><span><b>${c.escoffier}</b> bâtiments Escoffier</span><span><b>${c.decor}</b> décors Carbonel</span>${c.autres ? `<span><b>${c.autres}</b> autres marques</span>` : ""}<span><b>${c.w}</b> envies</span></span>
+    <span class="meter"><i style="width:${c[cats[0]] / (nSec(cats[0], l) || 1) * 100}%"></i></span>
+    <span class="nums">${cats.map((t, k) => `<span><b>${c[t]}</b>${k ? "" : " / " + nSec(t, l)} ${CAT_COURT[t]}</span>`).join("")}<span><b>${c.w}</b> envies</span></span>
   </button>`;
 }
 function feedHTML(listIds) {
@@ -778,7 +788,7 @@ function spriteStyle(it) {
   const x = SP.cols > 1 ? c / (SP.cols - 1) * 100 : 0, y = rows > 1 ? r / (rows - 1) * 100 : 0;
   return `background-image:url(sprites/planche-${String(s).padStart(2, "0")}.webp?v=${SP.v || ""});background-size:${SP.cols * 100}% ${rows * 100}%;background-position:${x}% ${y}%`;
 }
-const inTab = it => it.section === ui.tab && visibleFor(it, curList());
+const inTab = it => dans(it, ui.tab) && visibleFor(it, curList());
 const ICON_GIFT = '<svg width="12" height="12" viewBox="0 0 20 20" aria-hidden="true"><rect x="3" y="8" width="14" height="9" rx="1" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M2 5.5h16v3H2zM10 5.5V17M10 5.5C8 2 5 2.5 5.5 4.5 6 6 10 5.5 10 5.5zm0 0c2-3.5 5-3 4.5-1S10 5.5 10 5.5z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>';
 const statut = (l, id) => { const r = l.items.get(id); return r ? r.statut : null; };
 const quantite = (l, id) => { const r = l.items.get(id); return r && r.statut === "own" ? Math.max(1, r.quantite || 1) : 0; };
@@ -816,6 +826,7 @@ function cardHTML(it) {
 }
 function renderList() {
   const l = curList(), g = gerantsOf(l.id), edit = canEdit(l.id);
+  if (!catsOf(l).includes(ui.tab)) { ui.tab = catsOf(l)[0]; if (ui.status === "new") ui.status = "all"; }
   $("l-name").textContent = l.nom;
   $("l-who").textContent = g.length ? "Administrée par " + g.map(nameOf).join(", ") : "Sans administrateur";
   $("l-badge").textContent = edit ? "Vous gérez" : "Lecture seule";
@@ -831,10 +842,13 @@ function renderList() {
 function renderGrid() {
   const l = curList(), q = norm(ui.q).trim().split(/\s+/).filter(Boolean);
   const hit = it => statusOf(it, ui.status, l) && q.every(w => it._s.includes(w));
-  const list = ITEMS.filter(it => inTab(it) && hit(it));
+  const tous = ITEMS.filter(it => inTab(it) && hit(it));
+  // les modèles d'un autre catalogue (accessoires « N°2 & N°3 ») viennent après ceux du catalogue, avec leur rubrique
+  const chez = it => it.section === ui.tab, fin = it => it.old || it.custom;  // anciens et ajouts : en dernier
+  const list = tous.filter(it => chez(it) && !fin(it)).concat(tous.filter(it => !chez(it)), tous.filter(it => chez(it) && fin(it)));
   let html = "", grp = null;
   if (q.length) {  // pendant une recherche : ce qu'elle trouve dans les autres onglets
-    const autres = SECTIONS.filter(t => t !== ui.tab).map(t => [t, ITEMS.filter(it => it.section === t && visibleFor(it, l) && hit(it)).length]).filter(x => x[1]);
+    const autres = catsOf(l).filter(t => t !== ui.tab).map(t => [t, ITEMS.filter(it => dans(it, t) && visibleFor(it, l) && hit(it)).length]).filter(x => x[1]);
     if (autres.length) html += `<div class="also">Aussi dans :${autres.map(([t, n]) => `<button class="chip" type="button" data-tab="${t}">${esc(SEC_LABEL[t])}<span class="n">${n}</span></button>`).join("")}</div>`;
   }
   for (const it of list) {
@@ -859,11 +873,12 @@ function renderProgress() {
   const pieces = pool.reduce((t, i) => t + quantite(l, i.id), 0);
   $("prog-txt").innerHTML = `<b>${n}</b> / ${pool.length}${pieces > n ? ` · ${pieces} pièces` : ""}${w ? ` · <b>${w}</b> envie${w > 1 ? "s" : ""}` : ""}`;
   $("prog-bar").style.width = (pool.length ? n / pool.length * 100 : 0) + "%";
-  for (const t of SECTIONS) {
-    const b = $("tab-" + t), n = ITEMS.filter(i => i.section === t && visibleFor(i, l) && statut(l, i.id) === "own").length;
-    b.setAttribute("aria-selected", String(ui.tab === t));
-    b.querySelector(".n").textContent = `${n} / ${nSec(t, l)}`;
-  }
+  const cats = catsOf(l), sel = $("cat-sel");
+  sel.innerHTML = cats.map(t => {
+    const n = ITEMS.filter(i => dans(i, t) && visibleFor(i, l) && statut(l, i.id) === "own").length;
+    return `<option value="${t}"${t === ui.tab ? " selected" : ""}>${esc(CAT_MENU[t])} — ${n} / ${nSec(t, l)}</option>`;
+  }).join("");
+  sel.disabled = cats.length < 2;
 }
 function renderStatus() {
   const l = curList(), pool = ITEMS.filter(inTab);
@@ -1047,6 +1062,10 @@ function openSettings() {
     <div class="checks">${mems.map(m => `<label><input type="checkbox" data-gerant="${m.user_id}"${g.includes(m.user_id) ? " checked" : ""}> ${avatarHTML(m.user_id, "sm")} ${esc(nameOf(m.user_id))}</label>`).join("")}</div>
     <p class="help">Les administrateurs cochent les santons, mettent la photo de la crèche, la partagent et changent ces réglages. Les autres membres de la famille la voient en lecture seule.</p>
     <hr class="sep">
+    <span class="label">Catalogues de cette crèche</span>
+    <div class="checks">${SECTIONS.map(t => `<label><input type="checkbox" data-cat="${t}"${catsOf(l).includes(t) ? " checked" : ""}> ${esc(CAT_MENU[t])}</label>`).join("")}</div>
+    <p class="help">Seuls les catalogues cochés apparaissent dans le menu de la crèche, pour toute la famille et sur le lien partagé. Ce qui est déjà coché « J'ai » est gardé.</p>
+    <hr class="sep">
     <span class="label">Lien de partage</span>
     <div class="field"><label class="label" for="visit-link">Lecture seule, sans compte (bouton « Partager » de la crèche)</label>
       <div class="linkbox"><input id="visit-link" readonly value="${esc(visitLink(l.id))}"><button class="btn sm" type="button" id="copy-visit">Copier</button><button class="btn sm" type="button" id="new-visit">Changer</button></div></div>
@@ -1061,6 +1080,16 @@ async function copyText(text, ok, input) {
   catch (e) { if (input) { input.focus(); input.select(); } toast("Sélectionné : copiez avec Ctrl+C ou un appui long."); }
 }
 dlgSettings.addEventListener("change", async e => {
+  const cat = e.target.closest("[data-cat]");
+  if (cat) {
+    const l = curList(), avant = l.catalogues;
+    const cats = [...dlgSettings.querySelectorAll("[data-cat]")].filter(x => x.checked).map(x => x.dataset.cat);
+    if (!cats.length) { cat.checked = true; toast("Il faut au moins un catalogue."); return; }
+    l.catalogues = cats; render();
+    const { error } = await sb.from("listes").update({ catalogues: cats }).eq("id", l.id);
+    if (error) { l.catalogues = avant; cat.checked = !cat.checked; render(); toast(frErr(error)); }
+    return;
+  }
   const cb = e.target.closest("[data-gerant]"); if (!cb) return;
   const l = curList(), uid = cb.dataset.gerant;
   if (!cb.checked && gerantsOf(l.id).length <= 1) { cb.checked = true; toast("Il faut au moins un administrateur."); return; }
@@ -1187,7 +1216,11 @@ document.addEventListener("click", async e => {
   if (d.open) { openItem(d.open); return; }
   if (d.tab) { ui.tab = d.tab; renderProgress(); renderStatus(); renderGrid(); return; }
   if (d.status) { ui.status = d.status; renderStatus(); renderGrid(); return; }
-  if (d.newlist) { $("new-form").dataset.famille = d.newlist; $("new-nom").value = "Crèche de "; $("dlg-new").showModal(); return; }
+  if (d.newlist) {
+    $("new-form").dataset.famille = d.newlist; $("new-nom").value = "Crèche de ";
+    $("new-cats").innerHTML = SECTIONS.map(t => `<label><input type="checkbox" value="${t}"${CAT_DEFAUT.includes(t) ? " checked" : ""}> ${esc(CAT_MENU[t])}</label>`).join("");
+    $("dlg-new").showModal(); return;
+  }
   if (d.invite) {
     const link = joinLink(d.invite);
     const f = st.familles.get(d.invite);
@@ -1241,9 +1274,14 @@ $("me-out").addEventListener("click", async () => { $("dlg-me").close(); await s
 $("new-form").addEventListener("submit", async e => {
   e.preventDefault();
   const nom = $("new-nom").value.trim(); if (!nom || nom === "Crèche de") return;
+  const cats = [...$("new-cats").querySelectorAll("input:checked")].map(x => x.value);
+  if (!cats.length) return toast("Choisissez au moins un catalogue.");
   const { data, error } = await sb.rpc("creer_liste", { p_famille: e.target.dataset.famille, p_nom: nom });
   if (error) return toast(frErr(error));
-  $("dlg-new").close(); await loadAll(); go("list", data); toast(`« ${nom} » créée : vous en êtes administrateur.`);
+  const defaut = cats.length === CAT_DEFAUT.length && CAT_DEFAUT.every(t => cats.includes(t));
+  const r = defaut ? {} : await sb.from("listes").update({ catalogues: cats }).eq("id", data);
+  $("dlg-new").close(); await loadAll(); go("list", data);
+  toast(r.error ? frErr(r.error) : `« ${nom} » créée : vous en êtes administrateur.`);
 });
 function ouvrirFamille(id) {  // id : renommer cette famille ; null : en créer une
   const f = id && st.familles.get(id), premiere = !id && ![...st.familles.values()].some(x => isMember(x.id));
@@ -1254,6 +1292,11 @@ function ouvrirFamille(id) {  // id : renommer cette famille ; null : en créer 
   $("fam-go").textContent = f ? "Renommer" : "Créer";
   $("dlg-family").showModal();
 }
+$("cat-sel").addEventListener("change", e => {
+  ui.tab = e.target.value; renderProgress(); renderStatus(); renderGrid();
+  const top = $("grid").getBoundingClientRect().top + window.scrollY - $("top").offsetHeight - 120;
+  if (window.scrollY > top) window.scrollTo({ top: Math.max(0, top) });
+});
 $("view-home").addEventListener("change", e => {
   if (e.target.id !== "fam-sel") return;
   if (e.target.value === "__new") { const f = familleChoisie([...st.familles.values()].filter(x => isMember(x.id))); e.target.value = f ? f.id : ""; ouvrirFamille(null); return; }
@@ -1323,6 +1366,7 @@ function openAdd() {
   $("add-preview").hidden = true; $("add-err").hidden = true;
   $("add-type").value = ui.tab === "santons" || ui.tab === "santons_escoffier" || ui.tab === "autres" ? "santon" : "decor";
   $("add-marque").value = ui.tab === "escoffier" || ui.tab === "santons_escoffier" ? "Escoffier" : ui.tab === "autres" ? "Autre" : "Carbonel";
+  if (ui.tab === "santons_n3") $("add-type").value = "santon";
   $("add-own-row").hidden = !canEdit(l.id);
   $("add-own-txt").textContent = `Je l'ai dans « ${l.nom} »`;
   const autre = ui.tab === "autres";
@@ -1346,7 +1390,8 @@ $("add-form").addEventListener("submit", async e => {
   const l = curList(), nom = $("add-nom").value.trim().slice(0, 80);
   if (!l || !nom) return;
   const marque = $("add-marque").value, type = $("add-type").value;
-  const section = type === "santon" ? (marque === "Escoffier" ? "santons_escoffier" : "santons") : marque === "Escoffier" ? "escoffier" : "decor";
+  const n3 = ui.tab === "santons_n3" && marque === "Carbonel";  // dans le catalogue N°3 : un modèle N°3
+  const section = n3 ? "santons_n3" : type === "santon" ? (marque === "Escoffier" ? "santons_escoffier" : "santons") : marque === "Escoffier" ? "escoffier" : "decor";
   const fail = m => { $("add-err").textContent = m; $("add-err").hidden = false; $("add-go").disabled = false; };
   $("add-go").disabled = true; $("add-err").hidden = true;
   let photo = null;
@@ -1384,7 +1429,7 @@ async function publicView() {
   }
   me = { id: "__public__" };
   setCustom(data.modeles, true);
-  st.listes = new Map([[data.id, { id: data.id, famille_id: null, nom: data.nom, photo: data.photo || null,
+  st.listes = new Map([[data.id, { id: data.id, famille_id: null, nom: data.nom, photo: data.photo || null, catalogues: data.catalogues || null,
     items: new Map((data.items || []).map(r => [r.santon_id, Object.assign({ liste_id: data.id }, r)])) }]]);
   st.gerants = (data.gerants || []).map(g => ({ liste_id: data.id, user_id: g.id }));
   st.profils = new Map((data.gerants || []).map(g => [g.id, { id: g.id, nom: g.nom }]));
@@ -1394,7 +1439,7 @@ async function publicView() {
   if (!publicVu) {  // première ouverture du lien : directement sur les envies, dans le premier onglet qui en a
     publicVu = true;
     const l = st.listes.get(data.id), envie = it => statut(l, it.id) === "wish" && visibleFor(it, l);
-    const t = SECTIONS.find(t => ITEMS.some(it => it.section === t && envie(it)));
+    const t = catsOf(l).find(t => ITEMS.some(it => dans(it, t) && envie(it)));
     if (t) { ui.tab = t; ui.status = "wish"; }
   }
   screen("scr-app"); render();

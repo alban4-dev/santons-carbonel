@@ -19,11 +19,12 @@ if escoffier.exists():  # bâtiments Escoffier (collection 7 cm)
 # l'appli ne montre que la sélection (N°2 pied vert + bâtiments N°2), dans l'ordre des planches
 import sys
 sys.path.insert(0, str(ROOT / "scraper"))
-from selection import groupe, sort_key  # noqa: E402
-keep = ("id", "name", "ref", "cat", "col", "price", "img", "url", "source", "sp", "section", "marque", "groupe", "nouveau", "creation")
+from selection import aussi, groupe, sort_key  # noqa: E402
+keep = ("id", "name", "ref", "cat", "col", "price", "img", "url", "source", "sp", "section", "aussi", "marque", "groupe", "nouveau", "creation")
 for it in data["items"]:
     if it.get("marque") == "escoffier":
         it["groupe"] = groupe(it)
+    it["aussi"] = aussi(it)
     # nouveautés de l'année : rubrique « Nouveautés » des deux boutiques
     if "nouveaute" in it.get("col", []) or it.get("nouveaute"):
         it["nouveau"] = True

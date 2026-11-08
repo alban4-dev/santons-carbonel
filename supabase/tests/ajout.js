@@ -64,18 +64,18 @@ const sqlv = q => execSync(`psql -h /tmp -p 54329 -U postgres -d app -tA -c "${q
   await papa.click('[data-unmodel]'); await papa.click('[data-unmodel]'); await papa.waitForTimeout(1000);
   console.log('après retrait :', sqlv('select count(*) from modeles_famille'), sqlv('select count(*) from liste_items where santon_id >= 1000000'), '| vignettes famille :', await papa.locator('.card .ajout').count());
   // onglet « Autres » : un bâtiment d'artisan acheté sur un marché
-  await papa.click('#tab-autres'); await papa.waitForTimeout(300);
+  await papa.selectOption('#cat-sel', 'autres'); await papa.waitForTimeout(300);
   console.log('autres, vide :', (await papa.textContent('#grid')).replace(/\s+/g, ' ').trim().slice(0, 70), '| bouton', await papa.textContent('#l-add'));
   await papa.click('[data-addautre]'); await papa.waitForTimeout(200);
   console.log('dialogue :', await papa.textContent('#add-title'), '| marque', await papa.inputValue('#add-marque'));
   await papa.fill('#add-nom', 'Moulin du marché de Noël'); await papa.selectOption('#add-type', 'decor'); await papa.fill('#add-note', 'artisan de Lourmarin, 2019');
   await papa.click('#add-go'); await papa.waitForTimeout(1000);
   console.log('autres :', sqlv("select nom||' '||marque||' '||section from modeles_famille where marque = 'Autre'"),
-    '| onglet actif', await papa.getAttribute('#tab-autres', 'aria-selected'), '| rubrique', (await papa.locator('.sec h2').allTextContents()).join(', '),
-    '| compteur', await papa.textContent('#tab-autres .n'));
-  await papa.click('#tab-decor'); await papa.waitForTimeout(200);
+    '| catalogue', await papa.inputValue('#cat-sel'), '| rubrique', (await papa.locator('.sec h2').allTextContents()).join(', '),
+    '| menu', await papa.$eval('#cat-sel', e => e.selectedOptions[0].textContent));
+  await papa.selectOption('#cat-sel', 'decor'); await papa.waitForTimeout(200);
   console.log('pas dans Décors Carbonel :', await papa.locator('.card .ajout').count() === 0);
-  await papa.click('#tab-autres'); await papa.waitForTimeout(200);
+  await papa.selectOption('#cat-sel', 'autres'); await papa.waitForTimeout(200);
   await papa.screenshot({ path: S + 'aj-autres.png' });
   console.log('erreurs:', errs); await b.close();
 })();

@@ -13,7 +13,7 @@ const sqlv = q => execSync(`psql -h /tmp -p 54329 -U postgres -d app -tA -c "${q
   const vue = async p => ({ famille: (await p.locator('.fam-head h2').allTextContents()).join(' + '), menu: await p.locator('#fam-sel').count() ? (await p.locator('#fam-sel option').allTextContents()).join(' / ') : '-', creches: (await p.locator('.lcard[data-list] h3').allTextContents()).join(', ') });
   const choisir = async (p, nom) => { if (await p.locator('#fam-sel').count()) { const v = await p.$$eval('#fam-sel option', (os, n) => (os.find(o => o.textContent.includes(n)) || {}).value, nom); await p.selectOption('#fam-sel', v); await p.waitForTimeout(300); } };
   const ouvre = async (p, famille, creche) => { await p.goto(URL); await p.waitForSelector('#view-home:not([hidden])'); await p.waitForTimeout(500); await choisir(p, famille); await p.click(`.lcard[data-list]:has-text("${creche}")`); await p.waitForTimeout(500); };
-  const cherche = async (p, tab, q) => { await p.click('#tab-' + tab); await p.fill('#q', q); await p.waitForTimeout(400); const n = await p.locator('.card').count(); await p.fill('#q', ''); await p.waitForTimeout(200); return n; };
+  const cherche = async (p, tab, q) => { await p.selectOption('#cat-sel', tab); await p.fill('#q', q); await p.waitForTimeout(400); const n = await p.locator('.card').count(); await p.fill('#q', ''); await p.waitForTimeout(200); return n; };
 
   const alban = await mk(390, 844);
   await alban.goto(URL); await alban.waitForSelector('#scr-auth:not([hidden])'); await signup(alban, 'Alban', 'alban@f.fr');
@@ -44,14 +44,14 @@ const sqlv = q => execSync(`psql -h /tmp -p 54329 -U postgres -d app -tA -c "${q
 
   // Ajouts séparés par famille, et nom de l'onglet « sans marque »
   await ouvre(alban, 'Hugues', 'Crèche de Lucie');
-  console.log('onglet :', (await alban.textContent('#tab-autres .type')), '| rubrique', await alban.evaluate(() => document.querySelector('#tab-autres').textContent.replace(/\s+/g, ' ').trim()));
-  await alban.click('#tab-autres'); await alban.click('[data-addautre]');
+  console.log('menu :', (await alban.locator('#cat-sel option').allTextContents()).join(' / '));
+  await alban.selectOption('#cat-sel', 'autres'); await alban.click('[data-addautre]');
   console.log('dialogue :', await alban.textContent('#add-title'), '|', await alban.$eval('#add-marque', e => e.selectedOptions[0].textContent));
   await alban.fill('#add-nom', 'Berger artisan'); await alban.click('#add-go'); await alban.waitForTimeout(900);
   console.log('rubrique :', (await alban.locator('.sec h2').allTextContents()).join(', '));
   await alban.screenshot({ path: S + 'fam-pauvres.png' });
   await ouvre(tonton, 'Bavière', 'Crèche du beau-frère');
-  await tonton.click('#tab-autres'); await tonton.click('[data-addautre]');
+  await tonton.selectOption('#cat-sel', 'autres'); await tonton.click('[data-addautre]');
   await tonton.fill('#add-nom', 'Moulin Bavière'); await tonton.selectOption('#add-type', 'decor'); await tonton.click('#add-go'); await tonton.waitForTimeout(900);
   console.log('tonton, sa crèche : Berger artisan', await cherche(tonton, 'autres', 'Berger artisan'), '| Moulin Bavière', await cherche(tonton, 'autres', 'Moulin Bavière'));
   await ouvre(doro, 'Hugues', 'Crèche de Lucie');

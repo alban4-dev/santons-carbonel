@@ -10,7 +10,11 @@
   7 cm (maisons, façades, crèches et étables, puits, fontaines, ponts,
   roulottes, et la rubrique « Accessoires » : murs, escaliers, rivières,
   quais, arbres…).
-Pas de coffrets ni de lots, pas de pièces sans photo, pas d'autres tailles.
+- section "santons_n3" : les santons Carbonel N°3 (9 cm) à l'unité, quel que
+  soit le socle, et les bâtiments et accessoires N°3, pour les crèches montées
+  en taille 3 (chaque crèche choisit ses catalogues dans l'appli).
+Pas de coffrets ni de lots, pas de pièces détachées, pas de pièces sans photo,
+pas d'autres tailles.
 """
 import json
 import re
@@ -64,6 +68,8 @@ def section(it):
         return "escoffier" if set(it.get("groupes", [])) & ESCOFFIER_RETENUS else None
     if 13 in it["cat"] or it["name"].startswith("Pastel"):
         return None
+    if it["size"] == 3 or (re.search(r"N°3\b", it["name"]) and "N°2" not in it["name"]):
+        return "santons_n3" if 10 not in it["cat"] else None  # santons et bâtiments N°3, sans pièces détachées
     if set(it["cat"]) & DECOR_CATS:
         n2 = it["size"] == 2 or "N°2" in it["name"]
         return "decor" if n2 else None
@@ -77,6 +83,14 @@ def section(it):
 GROUPE_PRIORITE = ["Façades", "Crèches et étables", "Puits, fontaines et ponts",
                    "Roulottes et charrettes", "Maisons et bâtisses",
                    "Arbres et végétation", "Accessoires"]
+
+
+def aussi(it):
+    """Autres rubriques où un modèle apparaît aussi : les accessoires « N°2 & N°3 »
+    (fleurs, lavande) servent aux deux tailles."""
+    if it.get("section") == "decor" and re.search(r"N°2 (&|et) N°3", it["name"]):
+        return ["santons_n3"]
+    return None
 
 
 def groupe(it):
@@ -102,7 +116,12 @@ def sort_key(it):
         return (1, False, SANTONS_ESC_ORDRE.index(groupe(it)), name)
     if sec == "escoffier":
         return (2, False, ESCOFFIER_GROUPES.index(groupe(it)) if groupe(it) in ESCOFFIER_GROUPES else 99, name)
+    # l'appli range les sujets prestiges et hors série avec les sujets spéciaux (9) : même place
+    cats = [9 if c in (12, 7) else c for c in it["cat"]]
+    if sec == "santons_n3":  # santons d'abord, puis bâtiments et accessoires
+        order = SANTON_ORDER + DECOR_ORDER
+        return (4, "ancien" in it.get("col", []), next((order.index(c) for c in cats if c in order), 99), name)
     order = SANTON_ORDER if sec == "santons" else DECOR_ORDER
-    cat = next((order.index(c) for c in it["cat"] if c in order), 99)
+    cat = next((order.index(c) for c in cats if c in order), 99)
     ancien = "ancien" in it.get("col", [])
     return (0 if sec == "santons" else 3, ancien, cat, name)

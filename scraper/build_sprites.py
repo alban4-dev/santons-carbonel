@@ -9,7 +9,7 @@ et ajoute à chaque santon :
   "pied" : la couleur de son socle lue sur la photo ("vert" ou "autre"),
            pour les personnages, animaux et coffrets (pas pour les décors) ;
   "noPhoto": true quand le site n'affiche que son logo à la place de la photo ;
-  "section": "santons", "decor" ou "escoffier" pour ce que montre l'appli
+  "section" : la rubrique de l'appli (voir selection.py)
              (voir selection.py).
 Seule cette sélection est mise en planches.
 Les vignettes téléchargées restent en cache dans ./cache/ (non versionné),
@@ -181,7 +181,7 @@ def main():
         ESCOFFIER.write_text(json.dumps(escoffier, ensure_ascii=False, indent=1))
     count = collections.Counter(it["section"] for it in ordered)
     print(f"{count["santons"]} santons Carbonel N°2, {count["santons_escoffier"]} santons Escoffier 7 cm, {count["decor"]} bâtiments et accessoires N°2, "
-          f"{count["escoffier"]} bâtiments et accessoires Escoffier")
+          f"{count["escoffier"]} bâtiments et accessoires Escoffier, {count["santons_n3"]} santons et bâtiments Carbonel N°3")
 
 
 if __name__ == "__main__":

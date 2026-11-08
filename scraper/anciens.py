@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Modèles N°2 des catalogues papier absents de la boutique en ligne.
+"""Modèles N°2 et N°3 des catalogues papier absents de la boutique en ligne.
 
 Le catalogue « N°2 Collection Tradition » (édition 2024, PDF sur
 marcelcarbonel.com/catalogue) montre des santons que la boutique en ligne ne
@@ -23,13 +23,16 @@ HERE = Path(__file__).resolve().parent
 SOURCES = {
     "2024": ("https://storage.marcelcarbonel.com/catalogues/n2_tradition_2024.pdf", "Catalogue N°2 Tradition 2024"),
     "2010": ("https://cdn.shopify.com/s/files/1/0253/1419/files/N2-2015.pdf", "Dépliant N°2 (2010)"),
+    "n3-2024": ("https://storage.marcelcarbonel.com/catalogues/n3_tradition_2024.pdf", "Catalogue N°3 Tradition 2024"),
+    "n3-2009": ("https://cdn.shopify.com/s/files/1/0253/1419/files/N3-2015.pdf", "Dépliant N°3 (2009)"),
 }
 PDF_URL = SOURCES["2024"][0]
 
 # id, nom affiché, catégorie (voir scrape.CATEGORIES), page du PDF,
 # libellé exact dans le PDF (texte vertical à droite de la photo),
 # ou cadre de la photo en points PDF quand le libellé déborde dessus,
-# et en option la source (clé de SOURCES, "2024" par défaut).
+# et en option la source (clé de SOURCES, "2024" par défaut) et une précision sur la photo.
+# La taille se lit dans le nom (« N°3 » : taille 3, sinon N°2).
 MODELES = [
     (5001, "Mireille à la cruche jaune N°2", 8, 6, "Mireille à la cruche jaune", None),
     (5002, "Mireille à la cruche orange N°2", 8, 6, "Mireille à la cruche orange", None),
@@ -53,6 +56,18 @@ MODELES = [
     (5020, "Fileuse au rouet N°2", 9, 9, None, (300, 141, 372, 229)),  # fileuse + rouet : deux images
     # dépliant N°2 de 2010 : la colombe blanche, photo minuscule (36 × 18 px) sur fond jaune
     (5021, "Colombe N°2", 4, 2, None, (986, 546, 1016, 563), "2010"),
+    # --- N°3 : catalogues 2023-2024 et dépliant de 2009 comparés à la boutique, nom par nom et
+    # photo par photo (Femme aux rubans, Danseuse « révérence », Danseuse marseillaise, Danseur
+    # provençal « cravate, foulard », Vincent le vannier, Homme aux savons : mêmes figurines que
+    # la boutique sous un autre nom). Restent :
+    (5101, "Mireille à la cruche orange N°3", 8, 6, "Mireille à la cruche orange", None, "n3-2024"),
+    (5102, "Femme sur l'âne N°3", 9, 8, "Femme sur l’âne", None, "n3-2024"),
+    (5103, "Femme à la chèvre marron N°3", 9, 2, None, (671, 68, 758, 163), "n3-2009"),
+    # couleurs annoncées par le dépliant de 2009 sans photo à elles : celle d'une autre couleur
+    (5104, "Femme à la chèvre grise N°3", 9, 2, None, (671, 68, 758, 163), "n3-2009", "photo de la chèvre marron"),
+    (5105, "Ange bleu N°3", 1, 1, None, (886, 72, 949, 164), "n3-2009", "photo de l'ange blanc"),
+    (5106, "Ange rose N°3", 1, 1, None, (886, 72, 949, 164), "n3-2009", "photo de l'ange blanc"),
+    (5107, "Chameau couché tapis jaune N°3", 1, 1, None, (1094, 69, 1233, 165), "n3-2009", "photo du tapis orange"),
 ]
 
 
@@ -113,6 +128,7 @@ def main():
     try:
         for pid, name, cat, page_no, label, box, *rest in MODELES:
             src = rest[0] if rest else "2024"
+            note = rest[1] if len(rest) > 1 else None
             page = pdfs[src].pages[page_no - 1]
             img = page.crop(box or find_box(page, label)).to_image(resolution=300).original.convert("RGB")
             # cadre trouvé d'après le libellé : on écarte les bouts d'images voisines ;
@@ -123,10 +139,10 @@ def main():
                 img = img.resize((170, round(img.height * k)), Image.LANCZOS)
             img.save(out_dir / f"{pid}.png")
             items.append({
-                "id": pid, "name": name, "ref": None, "size": 2, "cat": [cat],
+                "id": pid, "name": name, "ref": None, "size": 3 if "N°3" in name else 2, "cat": [cat],
                 "col": ["tradition", "ancien"], "price": None, "img": None,
                 "url": "https://marcelcarbonel.com/catalogue",
-                "source": f"{SOURCES[src][1]}, page {page_no}",
+                "source": f"{SOURCES[src][1]}, page {page_no}" + (f" ({note})" if note else ""),
             })
             print(f"{pid} {name}")
     finally:

@@ -255,3 +255,22 @@ select set_config('request.jwt.claim.sub', :'papa', false); set role authenticat
 update liste_items set statut = 'own' where liste_id = :'lea' and santon_id = 702;
 reset role;
 select 'T118 cadeau recu (coche J''ai) : reservation liberee', count(*) = 0 from liste_reservations;
+
+-- CATALOGUES D'UNE CRÈCHE
+select set_config('request.jwt.claim.sub', :'papa', false); set role authenticated;
+update listes set catalogues = array['santons_n3', 'autres'] where id = :'lea';
+update listes set catalogues = array['santons', 'inconnu'] where id = :'lea';
+update listes set catalogues = array[]::text[] where id = :'lea';
+reset role;
+select 'T120 papa choisit N°3 + artisans ; catalogue inconnu ou vide refuse', array_to_string(catalogues, ',') = 'santons_n3,autres' from listes where id = :'lea';
+select set_config('request.jwt.claim.sub', :'inconnu', false); set role authenticated;
+update listes set catalogues = array['santons'];
+reset role;
+select 'T121 inconnu ne change pas les catalogues', array_to_string(catalogues, ',') = 'santons_n3,autres' from listes where id = :'lea';
+select set_config('request.jwt.claim.sub', '', false); set role anon;
+select 'T122 page publique : les catalogues', (voir_liste(:'vcode2')->'catalogues'->>0) = 'santons_n3';
+reset role;
+select set_config('request.jwt.claim.sub', :'papa', false); set role authenticated;
+insert into modeles_famille (famille_id, nom, section) values (:'fam', 'Berger N3 inconnu', 'santons_n3');
+reset role;
+select 'T123 santon inconnu en N°3', count(*) = 1 from modeles_famille where section = 'santons_n3';

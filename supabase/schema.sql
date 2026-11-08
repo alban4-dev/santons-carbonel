@@ -56,7 +56,10 @@ create table if not exists public.listes (
   nom text not null check (char_length(nom) between 1 and 60),
   cree_par uuid not null references auth.users (id) on delete cascade,
   created_at timestamptz not null default now(),
-  photo text check (char_length(photo) <= 300)  -- photo de la crèche installée (stockage « photos »)
+  photo text check (char_length(photo) <= 300),  -- photo de la crèche installée (stockage « photos »)
+  -- catalogues montrés (null = par défaut : tous sauf Carbonel N°3)
+  catalogues text[] check (catalogues is null or (cardinality(catalogues) between 1 and 10
+    and catalogues <@ array['santons', 'decor', 'santons_n3', 'santons_escoffier', 'escoffier', 'autres']))
 );
 
 create table if not exists public.liste_gerants (
@@ -375,7 +378,7 @@ create index if not exists modeles_famille_famille on public.modeles_famille (fa
 -- onglet de l'appli : santons Carbonel, santons Escoffier, bâtiments Escoffier, décors Carbonel
 alter table public.modeles_famille drop constraint if exists modeles_famille_section_check;
 alter table public.modeles_famille add constraint modeles_famille_section_check
-  check (section in ('santons', 'santons_escoffier', 'escoffier', 'decor'));
+  check (section in ('santons', 'santons_n3', 'santons_escoffier', 'escoffier', 'decor'));
 
 alter table public.modeles_famille enable row level security;
 drop policy if exists modeles_lire on public.modeles_famille;
@@ -510,6 +513,7 @@ language sql stable security definer set search_path = public as $$
     'id', l.id,
     'nom', l.nom,
     'photo', l.photo,
+    'catalogues', l.catalogues,
     'gerants', coalesce((select json_agg(json_build_object('id', g.user_id, 'nom', coalesce(p.nom, '')))
                          from liste_gerants g
                          join membres m on m.user_id = g.user_id and m.famille_id = l.famille_id
