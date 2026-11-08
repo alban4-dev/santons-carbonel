@@ -196,6 +196,12 @@ dialog::backdrop { background: rgba(20, 14, 26, .55); }
 .item dl { display: grid; grid-template-columns: auto 1fr; gap: 3px 12px; margin: 0; font-size: .9rem; }
 .item dt { color: var(--muted); }
 .item dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.qte { position: absolute; left: 40px; top: 9px; font-size: .72rem; font-weight: 800; background: #2b7a4b; color: #fff; padding: 2px 7px; border-radius: 999px; pointer-events: none; font-variant-numeric: tabular-nums; }
+.qty { display: flex; align-items: center; gap: 10px; }
+.qty .label { flex: 1; }
+.qty button { width: 40px; height: 40px; border-radius: 50%; border: 1.5px solid var(--line); background: var(--surface); font-size: 1.3rem; font-weight: 700; line-height: 1; }
+.qty button:disabled { opacity: .4; cursor: default; }
+.qty b { min-width: 2ch; text-align: center; font-size: 1.15rem; font-variant-numeric: tabular-nums; }
 .duo { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .tg { border: 1px solid var(--line); border-radius: 8px; background: var(--surface); padding: 9px; font-weight: 700; color: var(--muted); }
 .tg.o[aria-pressed="true"] { background: var(--owned); border-color: var(--owned); color: var(--surface); }
@@ -442,6 +448,7 @@ const curList = () => st.listes.get(ui.listId);
 /* ================= Messages d'erreur ================= */
 function frErr(e) {
   const m = String((e && (e.message || e.error_description || e.msg)) || e || "");
+  if (/quantite/i.test(m)) return "La base de données n'est pas encore à jour : il faut exécuter la mise à jour SQL dans Supabase (fichier supabase/migrations/2026-11-11_quantites.sql).";
   if (/photo/i.test(m) && /listes|modeles_famille|schema cache/i.test(m)) return "La base de données n'est pas encore à jour : il faut exécuter la mise à jour SQL dans Supabase (fichier supabase/migrations/2026-11-10_photos_santons.sql).";
   if (/Bucket not found|schema cache|modeles_famille|voir_liste/i.test(m)) return "La base de données n'est pas encore à jour : il faut exécuter la mise à jour SQL dans Supabase (fichier supabase/migrations/2026-11-08b_santons_ajoutes.sql).";
   if (/Invalid login credentials/i.test(m)) return "E-mail ou mot de passe incorrect.";
@@ -555,7 +562,8 @@ async function loadAll() {
     q("liste_visiteurs", "liste_id,user_id"), q("liste_invitations", "liste_id,code"), q("famille_invitations", "famille_id,code"),
     q("modeles_famille", "id,famille_id,nom,marque,section,note,photo,photos,ajoute_par,created_at")
       .catch(() => q("modeles_famille", "id,famille_id,nom,marque,section,note,photo,ajoute_par,created_at")).catch(() => []),
-    fetchAll("liste_items", "liste_id,santon_id,statut,modifie_par,updated_at"),
+    fetchAll("liste_items", "liste_id,santon_id,statut,quantite,modifie_par,updated_at")
+      .catch(() => fetchAll("liste_items", "liste_id,santon_id,statut,modifie_par,updated_at")),
   ]);
   setCustom(modeles, false);
   st.familles = new Map(fam.map(f => [f.id, f]));
@@ -723,6 +731,7 @@ function spriteStyle(it) {
 }
 const inTab = it => it.section === ui.tab && visibleFor(it, curList());
 const statut = (l, id) => { const r = l.items.get(id); return r ? r.statut : null; };
+const quantite = (l, id) => { const r = l.items.get(id); return r && r.statut === "own" ? Math.max(1, r.quantite || 1) : 0; };
 function statusOf(it, s, l) {
   if (s === "all") return true;
   if (s === "own") return statut(l, it.id) === "own";
@@ -745,6 +754,7 @@ function cardHTML(it) {
     <button class="ph${it.custom ? (it.photo ? " photo" : " vide") : ""}" type="button" data-open="${it.id}" style="${spriteStyle(it)}" aria-label="${esc(it.name)} : fiche">${it.custom && !it.photo ? esc(initial(it.name)) : ""}</button>
     <button class="ic o" type="button" data-act="own" data-id="${it.id}" aria-pressed="${own}" aria-label="J'ai : ${esc(it.short)}"${ro}>${ICON.own}</button>
     ${own ? "" : `<button class="ic w" type="button" data-act="wish" data-id="${it.id}" aria-pressed="${wish}" aria-label="Envie : ${esc(it.short)}"${ro}>${ICON.wish}</button>`}
+    ${quantite(l, it.id) > 1 ? `<span class="qte" aria-label="${quantite(l, it.id)} exemplaires">×${quantite(l, it.id)}</span>` : ""}
     ${it.old ? '<span class="old">Ancien</span>' : ""}
     ${it.custom ? '<span class="ajout">Famille</span>' : ""}
     ${it.nouveau ? `<span class="nouv">Nouveau ${ANNEE}</span>` : ""}
@@ -789,7 +799,8 @@ function refreshCard(id) { const el = document.querySelector(`[data-card="${id}"
 function renderProgress() {
   const l = curList(), pool = ITEMS.filter(inTab);
   const n = pool.filter(i => statut(l, i.id) === "own").length, w = pool.filter(i => statut(l, i.id) === "wish").length;
-  $("prog-txt").innerHTML = `<b>${n}</b> / ${pool.length}${w ? ` · <b>${w}</b> envie${w > 1 ? "s" : ""}` : ""}`;
+  const pieces = pool.reduce((t, i) => t + quantite(l, i.id), 0);
+  $("prog-txt").innerHTML = `<b>${n}</b> / ${pool.length}${pieces > n ? ` · ${pieces} pièces` : ""}${w ? ` · <b>${w}</b> envie${w > 1 ? "s" : ""}` : ""}`;
   $("prog-bar").style.width = (pool.length ? n / pool.length * 100 : 0) + "%";
   for (const t of SECTIONS) {
     const b = $("tab-" + t), n = ITEMS.filter(i => i.section === t && visibleFor(i, l) && statut(l, i.id) === "own").length;
@@ -820,6 +831,15 @@ async function setStatut(l, id, value) {
     return false;
   }
   return true;
+}
+async function changerQuantite(id, delta) {
+  const l = curList(); if (!l || !canEdit(l.id)) return;
+  const r = l.items.get(id); if (!r || r.statut !== "own") return;
+  const avant = Math.max(1, r.quantite || 1), apres = Math.min(99, Math.max(1, avant + delta));
+  if (apres === avant) return;
+  r.quantite = apres; refreshCard(id); renderProgress(); if (dlgItem.open) openItem(id);
+  const { error } = await sb.from("liste_items").update({ quantite: apres }).eq("liste_id", l.id).eq("santon_id", id);
+  if (error) { r.quantite = avant; refreshCard(id); renderProgress(); if (dlgItem.open) openItem(id); toast(frErr(error)); }
 }
 async function toggle(kind, id) {
   const l = curList(); if (!l || !canEdit(l.id)) { toast("Cette crèche est en lecture seule pour vous."); return; }
@@ -897,6 +917,10 @@ function openItem(id) {
           <button class="tg o" type="button" data-act="own" data-id="${it.id}" aria-pressed="${s === "own"}"${ro}>✓ J'ai</button>
           <button class="tg w" type="button" data-act="wish" data-id="${it.id}" aria-pressed="${s === "wish"}"${ro || (s === "own" ? " disabled" : "")}>♡ Envie</button>
         </div>
+        ${s === "own" && (!ro || quantite(l, it.id) > 1) ? `<div class="qty"><span class="label">Combien en avez-vous ?</span>
+          ${ro ? "" : `<button type="button" data-qty="-1" data-id="${it.id}" aria-label="Un de moins"${quantite(l, it.id) <= 1 ? " disabled" : ""}>−</button>`}
+          <b aria-live="polite">${quantite(l, it.id)}</b>
+          ${ro ? "" : `<button type="button" data-qty="1" data-id="${it.id}" aria-label="Un de plus"${quantite(l, it.id) >= 99 ? " disabled" : ""}>+</button>`}</div>` : ""}
         ${fam.length ? `<div style="display:grid;gap:6px"><span class="label">Dans les autres crèches</span>${fam.map(([o, x]) => `<div class="row"><span class="avatar sm${x === "own" ? "" : " ring"}" style="--c:${hashColor(o.id)}"></span><span><b>${esc(o.nom)}</b> : ${x === "own" ? "l'a" : "envie"}</span></div>`).join("")}</div>` : ""}
         ${it.url ? `<a class="btn" href="${esc(it.url)}" target="_blank" rel="noopener">${it.esc ? "Voir sur escoffier.fr ↗" : it.source ? "Catalogues Carbonel ↗" : "Voir sur marcelcarbonel.com ↗"}</a>` : ""}
         ${it.custom && !PUBLIC && (it.ajoutePar === me.id || isAdmin(it.famille)) ? `<button class="btn danger" type="button" data-unmodel="${it.id}">Retirer du catalogue de la famille</button>` : ""}
@@ -1062,6 +1086,7 @@ document.addEventListener("click", async e => {
   }
   if (d.list) { e.preventDefault(); go("list", d.list); return; }
   if (d.act) { toggle(d.act, +d.id); return; }
+  if (d.qty) { changerQuantite(+d.id, +d.qty); return; }
   if (d.open) { openItem(d.open); return; }
   if (d.tab) { ui.tab = d.tab; renderProgress(); renderStatus(); renderGrid(); return; }
   if (d.status) { ui.status = d.status; renderStatus(); renderGrid(); return; }

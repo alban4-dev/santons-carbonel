@@ -81,6 +81,7 @@ create table if not exists public.liste_items (
   liste_id uuid not null references public.listes (id) on delete cascade,
   santon_id integer not null check (santon_id > 0),
   statut text not null check (statut in ('own', 'wish')),
+  quantite smallint not null default 1 check (quantite between 1 and 99),  -- 2 moutons identiques…
   modifie_par uuid references auth.users (id) on delete set null,
   updated_at timestamptz not null default now(),
   primary key (liste_id, santon_id)
@@ -427,7 +428,7 @@ language sql stable security definer set search_path = public as $$
                          left join profils p on p.id = g.user_id
                          where g.liste_id = l.id), '[]'::json),
     'items', coalesce((select json_agg(json_build_object('santon_id', i.santon_id, 'statut', i.statut,
-                                                         'updated_at', i.updated_at))
+                                                         'quantite', i.quantite, 'updated_at', i.updated_at))
                        from liste_items i where i.liste_id = l.id), '[]'::json),
     'modeles', coalesce((select json_agg(json_build_object('id', f.id, 'nom', f.nom, 'marque', f.marque,
                                                            'section', f.section, 'note', f.note, 'photo', f.photo,

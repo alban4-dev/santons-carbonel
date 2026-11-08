@@ -15,7 +15,8 @@ comme un petit réseau social familial :
   compte**, qui ne montre que cette crèche (pour un oncle, une marraine…).
   « Changer » le lien coupe l'ancien.
 
-Dans chaque crèche : ✓ je l'ai, ♡ envie, quatre onglets, une grande **photo
+Dans chaque crèche : ✓ je l'ai (avec le nombre d'exemplaires dans la fiche :
+2 moutons identiques…), ♡ envie, quatre onglets, une grande **photo
 de la crèche installée** (mise par ses gérants, en tête de la crèche, sur
 l'accueil et sur la page publique), liste d'envies à copier pour les cadeaux, et **« + Santon
 ancien »** pour les modèles qu'aucun catalogue ne montre (crèches commencées
@@ -66,7 +67,8 @@ le SQL Editor (`schema.sql` les contient déjà pour une nouvelle installation) 
   « photos » pour leurs photos, et page publique d'une crèche (contient aussi
   `2026-11-08_page_publique.sql`, qu'il n'est donc pas utile de lancer) ;
 - `2026-11-10_photos_santons.sql` : photo de la crèche installée, et trois
-  photos par santon ajouté (contient aussi `2026-11-09_photo_creche.sql`).
+  photos par santon ajouté (contient aussi `2026-11-09_photo_creche.sql`) ;
+- `2026-11-11_quantites.sql` : nombre d'exemplaires d'un santon (2 moutons…).
 
 ### 2. Le site : GitHub Pages
 
@@ -112,9 +114,9 @@ ses droits.
 `supabase/tests/lancer.sh` rejoue tout sans compte Supabase, sur un
 PostgreSQL 16 local :
 
-- `droits.sql` : 56 vérifications des règles d'accès (inconnu, membre, gérant,
+- `droits.sql` : 60 vérifications des règles d'accès (inconnu, membre, gérant,
   visiteur, ancien membre, anonyme, page publique, santons ajoutés, photos
-  photo de la crèche et photos face, dos, côté) ;
+  photo de la crèche, photos face, dos, côté, et quantités) ;
 - `parcours.js` : dans un vrai navigateur, Papa crée la famille et la crèche
   de Léa, coche, met la photo de la crèche ; Maman arrive par le lien d'invitation, est
   en lecture seule, puis devient gérante ; Mamie ouvre le lien public sans

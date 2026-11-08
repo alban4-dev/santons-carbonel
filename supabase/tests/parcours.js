@@ -37,6 +37,12 @@ async function signup(p, nom, mail) {
   await papa.setInputFiles('#cover-roll', S + 'creche.jpg'); await papa.waitForTimeout(1200);
   log('photo en base:', sqlv("select photo from listes where nom='Crèche de Léa'").replace(/[0-9a-f-]{36}/g, '…'),
       '| affichée:', await papa.evaluate(() => { const i = document.querySelector('#cover-img'); return !!i && i.complete && i.naturalWidth > 0; }));
+  // quantité : deux de plus sur le premier coché
+  await papa.locator('.card.own .ph').first().click(); await papa.waitForTimeout(300);
+  await papa.click('#item-body [data-qty="1"]'); await papa.waitForTimeout(400); await papa.click('#item-body [data-qty="1"]'); await papa.waitForTimeout(600);
+  log('quantité:', sqlv("select max(quantite) from liste_items"), '| fiche', await papa.textContent('.qty b'), '| badge', await papa.locator('.card .qte').first().textContent(), '| prog', await papa.textContent('#prog-txt'));
+  await papa.screenshot({ path: S + 'e-qte.png' });
+  await papa.keyboard.press('Escape');
   await papa.screenshot({ path: S + 'e-list.png' });
   // réglages : lien visiteur
   await papa.click('#l-settings'); await papa.waitForTimeout(300);
@@ -70,6 +76,7 @@ async function signup(p, nom, mail) {
       '|', await mamie.textContent('#l-who'), '|', await mamie.textContent('#l-badge'));
   log('mamie : ✓ actifs', await mamie.locator('.card .ic.o:not([disabled])').count(), '| cochés visibles', await mamie.locator('.card.own').count(),
       '| réglages', await mamie.isVisible('#l-settings'), '| photo crèche', await mamie.evaluate(() => { const i = document.querySelector('#cover-img'); return !!i && i.naturalWidth > 0; }), '| boutons photo', await mamie.locator('#cover-cam').count(), '| espace famille', await mamie.isVisible('#famille-link'));
+  log('mamie : badge quantité', await mamie.locator('.card .qte').count() ? await mamie.locator('.card .qte').first().textContent() : '-');
   await mamie.screenshot({ path: S + 'e-mamie.png' });
   // lien changé : l'ancien ne marche plus
   await papa.click('#l-settings'); await papa.waitForTimeout(300); await papa.click('#new-visit'); await papa.waitForTimeout(500);

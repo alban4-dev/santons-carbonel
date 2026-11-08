@@ -194,3 +194,19 @@ reset role;
 set role anon;
 select 'T98 page publique : face et dos', (voir_liste(:'vcode2')->'modeles'->0->'photos'->>1) like '%/dos.jpg';
 reset role;
+
+-- QUANTITÉS (2 moutons identiques…)
+select set_config('request.jwt.claim.sub', :'papa', false); set role authenticated;
+update liste_items set quantite = 3 where liste_id = :'lea' and santon_id = 544;
+update liste_items set quantite = 0 where liste_id = :'lea' and santon_id = 544;
+update liste_items set quantite = 100 where liste_id = :'lea' and santon_id = 544;
+reset role;
+select 'T100 papa (gerant) en met 3, ni 0 ni 100', quantite = 3 from liste_items where liste_id = :'lea' and santon_id = 544;
+select 'T101 nouvelle coche : 1 par defaut', bool_and(quantite = 1) from liste_items where santon_id <> 544;
+select set_config('request.jwt.claim.sub', :'inconnu', false); set role authenticated;
+update liste_items set quantite = 9;
+reset role;
+select 'T102 inconnu ne change pas la quantite', quantite = 3 from liste_items where liste_id = :'lea' and santon_id = 544;
+set role anon;
+select 'T103 page publique : la quantite', (select (x->>'quantite')::int from json_array_elements(voir_liste(:'vcode2')->'items') x where (x->>'santon_id')::int = 544) = 3;
+reset role;
