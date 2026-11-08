@@ -399,11 +399,11 @@ for (const it of ITEMS) {
   it.esc = it.marque === "escoffier";
   it.cat = it.cat || []; it.col = it.col || [];
   it._s = norm(it.name + " " + (it.ref || "") + (it.esc ? " escoffier" : ""));
-  it.short = it.esc ? it.name.replace(/\s*-\s*(Décor|7 ?CM)$/i, "").trim() : short(it.name);
+  it.short = it.esc ? it.name.replace(/\s*-\s*(Décor|[79] ?CM)$/i, "").trim() : short(it.name);
   it.old = it.col.includes("ancien");
 }
 const SECTIONS = ["santons", "decor", "santons_n3", "santons_escoffier", "escoffier", "autres"];
-const CAT_MENU = { santons: "Carbonel N°2 · Santons", decor: "Carbonel N°2 · Bâtiments et décors", santons_n3: "N°3 · 9 cm (Carbonel, bâtiments Escoffier)",
+const CAT_MENU = { santons: "Carbonel N°2 · Santons", decor: "Carbonel N°2 · Bâtiments et décors", santons_n3: "N°3 · 9 cm (Carbonel, Escoffier)",
   santons_escoffier: "Escoffier 7 cm · Santons", escoffier: "Escoffier 7 cm · Bâtiments", autres: "Artisans sans marques" };
 const CAT_COURT = { santons: "santons N°2", decor: "décors N°2", santons_n3: "N°3", santons_escoffier: "santons Escoffier", escoffier: "bâtiments Escoffier", autres: "artisans" };
 const CAT_DEFAUT = ["santons", "decor", "santons_escoffier", "escoffier", "autres"];  // tout sauf Carbonel N°3

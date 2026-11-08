@@ -1,7 +1,7 @@
 # Santons Carbonel en famille
 
 Le catalogue des santons Marcel Carbonel **N°2 (7 cm)** et **N°3 (9 cm)**,
-des santons et bâtiments **Escoffier** (collection 7 cm), partagé
+des santons et bâtiments **Escoffier** (collections 7 cm et 9 cm), partagé
 comme un petit réseau social familial :
 
 - chaque **crèche** est une liste au nom de quelqu'un (« Crèche de Léa »,
@@ -37,7 +37,7 @@ l'année (rubrique « Nouveautés » des deux boutiques) portent un badge
 | Escoffier 7 cm · Santons | Collection 7 cm (l'échelle des N°2 Carbonel), classés Nativité (17), Personnages (287) et Animaux (67, dont le flamant rose) d'après leur nom ; « Nouveau 2026 » pour les créations de la saison 2026-2027 | 371 |
 | Escoffier 7 cm · Bâtiments | Collection 7 cm : maisons et bâtisses, façades, crèches et étables, puits, fontaines et ponts, roulottes et charrettes (76) ; accessoires : murs, escaliers, rivières, quais, pointus, champs… (53) ; arbres et buissons rangés par Escoffier dans les accessoires (24) | 153 |
 | Carbonel N°2 · Bâtiments et décors | Bâtiments et accessoires N°2, plus les décors vendus sans taille qui vont aux N°2 comme aux N°3 : arbres de 9 à 22 cm, rochers, botte de foin, port (quai, barque, phare de Cassis…) | 122 |
-| N°3 · 9 cm (Carbonel, bâtiments Escoffier) | Tous les modèles N°3 (9 cm) de la boutique Carbonel à l'unité, quel que soit le socle : santons, animaux, bâtiments, accessoires (sans coffrets ni pièces détachées) ; 7 anciens modèles relevés dans le catalogue N°3 2024 et le dépliant N°3 de 2009 ; les 2 bâtiments Escoffier de la collection 9 cm (Puits Lascours, Crèche Cassis : les seuls de cette collection) ; et, en commun avec les N°2, les accessoires « N°2 & N°3 » et les décors Carbonel sans taille | 269 |
+| N°3 · 9 cm (Carbonel, Escoffier) | Tous les modèles N°3 (9 cm) de la boutique Carbonel à l'unité, quel que soit le socle : santons, animaux, bâtiments, accessoires (sans coffrets ni pièces détachées) ; 7 anciens modèles relevés dans le catalogue N°3 2024 et le dépliant N°3 de 2009 ; les 98 santons Escoffier de la collection 9 cm (Nativité, Personnages, Animaux) et ses 2 bâtiments (Puits Lascours, Crèche Cassis) ; et, en commun avec les N°2, les accessoires « N°2 & N°3 » et les décors Carbonel sans taille | 311 + 56 |
 | Artisans sans marques | Ce que la famille ajoute elle-même | — |
 
 Par défaut une crèche montre tout sauf Carbonel N°3 ; ses administrateurs

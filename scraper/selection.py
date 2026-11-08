@@ -69,6 +69,8 @@ def section(it):
         return None
     if it.get("marque") == "escoffier":
         if it.get("type") == "santon":
+            if re.search(r"Santon Collection 9 ?cm$", it.get("gamme") or ""):
+                return "santons_n3"  # santons Escoffier à l'échelle des N°3 Carbonel
             return "santons_escoffier" if re.search(r"Santon Collection 7 ?cm$", it.get("gamme") or "") else None
         if re.search(r"Collection 9 ?cm", it.get("gamme") or ""):
             return "santons_n3"  # bâtiments Escoffier à l'échelle des N°3 Carbonel
@@ -105,11 +107,12 @@ def aussi(it):
 def groupe(it):
     """Groupe d'affichage d'un modèle Escoffier : pour un santon, Nativité /
     Personnages / Animaux d'après son nom ; pour un bâtiment, voir groupe_decor."""
-    if it.get("section") == "santons_n3":
-        return "Bâtiments Escoffier 9 cm"
     if it.get("type") == "santon":
         nom = it["name"]
-        return "Nativité" if NATIVITE_ESC.search(nom) else "Animaux" if ANIMAL_ESC.search(nom) else "Personnages"
+        g = "Nativité" if NATIVITE_ESC.search(nom) else "Animaux" if ANIMAL_ESC.search(nom) else "Personnages"
+        return f"Escoffier 9 cm · {g}" if it.get("section") == "santons_n3" else g
+    if it.get("section") == "santons_n3":
+        return "Bâtiments Escoffier 9 cm"
     return groupe_decor(it)
 
 
@@ -129,6 +132,10 @@ def sort_key(it):
         return (2, False, ESCOFFIER_GROUPES.index(groupe(it)) if groupe(it) in ESCOFFIER_GROUPES else 99, name)
     # l'appli range les sujets prestiges et hors série avec les sujets spéciaux (9) : même place
     cats = [9 if c in (12, 7) else c for c in it["cat"]]
+    if sec == "santons_n3" and it.get("marque") == "escoffier":  # après les Carbonel : santons, puis bâtiments
+        santon = it.get("type") == "santon"
+        g = groupe(it).split(" · ")[-1]
+        return (5, False, (SANTONS_ESC_ORDRE.index(g) if santon else 9), name)
     if sec == "santons_n3":  # santons d'abord, puis bâtiments et accessoires
         order = SANTON_ORDER + DECOR_ORDER
         return (4, "ancien" in it.get("col", []), next((order.index(c) for c in cats if c in order), 99), name)
