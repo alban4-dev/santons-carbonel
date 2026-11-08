@@ -15,7 +15,7 @@ comme un petit réseau social familial :
   compte**, qui ne montre que cette crèche (pour un oncle, une marraine…).
   « Changer » le lien coupe l'ancien.
 
-Dans chaque crèche : ✓ je l'ai, ♡ envie, trois onglets, photo de la crèche
+Dans chaque crèche : ✓ je l'ai, ♡ envie, quatre onglets, photo de la crèche
 pour pointer, liste d'envies à copier pour les cadeaux, et **« + Santon
 ancien »** pour les modèles qu'aucun catalogue ne montre (crèches commencées
 il y a 30 ans) : nom, marque, note, photo prise au téléphone. Le modèle entre
@@ -27,7 +27,8 @@ l'année (rubrique « Nouveautés » des deux boutiques) portent un badge
 | Onglet | Contenu | Nombre |
 |---|---|---|
 | Santons Carbonel | Toute la gamme du catalogue papier N°2 Tradition 2024 (283 modèles, dont 20 absents de la boutique en ligne), la Colombe du dépliant N°2 de 2010, plus les autres santons N°2 au pied vert de la boutique | 303 |
-| Escoffier | Collection 7 cm : maisons et bâtisses, façades, crèches et étables, puits, fontaines et ponts, roulottes et charrettes (76) ; accessoires : murs, escaliers, rivières, quais, pointus, champs… (53) ; arbres et buissons rangés par Escoffier dans les accessoires (24) | 153 |
+| Santons Escoffier | Collection 7 cm (l'échelle des N°2 Carbonel), classés Nativité (17), Personnages (287) et Animaux (67, dont le flamant rose) d'après leur nom ; « Nouveau 2026 » pour les créations de la saison 2026-2027 | 371 |
+| Bâtiments Escoffier | Collection 7 cm : maisons et bâtisses, façades, crèches et étables, puits, fontaines et ponts, roulottes et charrettes (76) ; accessoires : murs, escaliers, rivières, quais, pointus, champs… (53) ; arbres et buissons rangés par Escoffier dans les accessoires (24) | 153 |
 | Décors Carbonel | Bâtiments et accessoires N°2 | 82 |
 
 ## Mise en route (une fois, environ 15 minutes)
@@ -174,6 +175,11 @@ reconnaissance est remplacée par une réponse fixe.
   santons N°2, et ceux sans gamme indiquée (moulins, églises, phare…). Les
   autres tailles (2, 5, 9 cm) et les arbres absents de la rubrique
   « Accessoires » sont écartés.
+- **Santons Escoffier** : la « Collection 7 cm » d'escoffier.fr (371 santons
+  peints ; la version « brut » n'est pas retenue), relevée par
+  `scraper/escoffier.py` avec l'année de création de chaque modèle (filtre du
+  site). Le site ne les classe pas : Nativité / Animaux / Personnages est
+  déduit du nom dans `scraper/selection.py`.
 - **Sélection** : `scraper/selection.py` (gamme du catalogue N°2 et N°2 pied vert, à l'unité ; bâtiments
   et accessoires Carbonel N°2 ; bâtiments et accessoires Escoffier 7 cm ; ni coffrets, ni
   lots, ni Pastel).
@@ -185,7 +191,7 @@ cd scraper
 python3 scrape.py          # relève la boutique -> data/santons.json
 python3 anciens.py         # anciens N°2 du catalogue PDF (pdfplumber)
 python3 catalogue_n2.py    # liste de la gamme du catalogue N°2 Tradition
-python3 escoffier.py       # bâtiments Escoffier -> data/escoffier.json
+python3 escoffier.py       # bâtiments, accessoires et santons 7 cm Escoffier -> data/escoffier.json
 python3 build_sprites.py   # vignettes, pied, sélection -> site/sprites/ (Pillow)
 cd .. && python3 build.py  # site/index.html
 ```

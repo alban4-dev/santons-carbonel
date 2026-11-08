@@ -52,12 +52,13 @@ a { color: var(--accent); }
 .avatar.lg { width: 34px; height: 34px; font-size: .95rem; }
 .avatar.ring { background: var(--surface); color: var(--c); box-shadow: inset 0 0 0 1.5px var(--c); }
 /* Les trois catalogues : gros boutons côte à côte, marque en petit, type en gros */
-.tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; padding-block: 2px 10px; max-width: 720px; }
+.tabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; padding-block: 2px 10px; max-width: 880px; }
+@media (max-width: 480px) { .tabs { gap: 4px; } .tab { padding: 6px 2px 7px; } .tab .marque { font-size: .58rem; letter-spacing: .04em; } .tab .n { font-size: .68rem; } }
 .tab { display: grid; gap: 1px; justify-items: center; text-align: center; min-width: 0;
   border: 1.5px solid var(--line); background: var(--surface-2); border-radius: 12px; padding: 7px 4px 8px; color: var(--ink); line-height: 1.15; }
 .tab:hover { border-color: var(--accent); }
 .tab .marque { font-size: .66rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
-.tab .type { font-family: var(--f-display); font-size: 1.02rem; overflow-wrap: anywhere; }
+.tab .type { font-family: var(--f-display); font-size: clamp(.74rem, 3.4vw, 1.02rem); white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
 .tab .n { font-size: .75rem; color: var(--muted); font-variant-numeric: tabular-nums; }
 .tab[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); box-shadow: var(--shadow); }
 .tab[aria-selected="true"] .marque, .tab[aria-selected="true"] .n { color: var(--accent-ink); opacity: .85; }
@@ -245,6 +246,7 @@ dialog::backdrop { background: rgba(20, 14, 26, .55); }
       </div>
       <div class="tabs" role="tablist" id="tabs" hidden>
         <button class="tab" role="tab" type="button" data-tab="santons" id="tab-santons"><span class="marque">Carbonel</span><span class="type">Santons</span><span class="n"></span></button>
+        <button class="tab" role="tab" type="button" data-tab="santons_escoffier" id="tab-santons_escoffier"><span class="marque">Escoffier</span><span class="type">Santons</span><span class="n"></span></button>
         <button class="tab" role="tab" type="button" data-tab="escoffier" id="tab-escoffier"><span class="marque">Escoffier</span><span class="type">Bâtiments</span><span class="n"></span></button>
         <button class="tab" role="tab" type="button" data-tab="decor" id="tab-decor"><span class="marque">Carbonel</span><span class="type">Décors</span><span class="n"></span></button>
       </div>
@@ -397,12 +399,12 @@ for (const it of ITEMS) {
   it.esc = it.marque === "escoffier";
   it.cat = it.cat || []; it.col = it.col || [];
   it._s = norm(it.name + " " + (it.ref || "") + (it.esc ? " escoffier" : ""));
-  it.short = it.esc ? it.name.replace(/\s*-\s*Décor$/i, "").trim() : short(it.name);
+  it.short = it.esc ? it.name.replace(/\s*-\s*(Décor|7 ?CM)$/i, "").trim() : short(it.name);
   it.old = it.col.includes("ancien");
 }
-const SECTIONS = ["santons", "escoffier", "decor"];
+const SECTIONS = ["santons", "santons_escoffier", "escoffier", "decor"];
 const ANNEE = (DATA.scrapedAt || "").slice(0, 4) || String(new Date().getFullYear());
-const SEC_LABEL = { santons: "Santons Carbonel", escoffier: "Bâtiments et accessoires Escoffier", decor: "Décors Carbonel" };
+const SEC_LABEL = { santons: "Santons Carbonel", santons_escoffier: "Santons Escoffier", escoffier: "Bâtiments et accessoires Escoffier", decor: "Décors Carbonel" };
 /* Modèles ajoutés par la famille (table modeles_famille) : ils rejoignent ITEMS */
 const PHOTO_OK = /^[0-9a-f-]{36}\/[0-9a-z-]{8,64}\.(jpg|jpeg|png|webp)$/i;
 const photoUrl = path => PHOTO_OK.test(path || "") ? `${(CFG.supabaseUrl || "").replace(/\/$/, "")}/storage/v1/object/public/photos/${path}` : "";
@@ -656,7 +658,7 @@ function renderFoot() {
 }
 const avatarHTML = (uid, cls = "") => `<span class="avatar ${cls}" style="--c:${hashColor(uid)}">${esc(initial(nameOf(uid)))}</span>`;
 function counts(l) {
-  const c = { santons: 0, escoffier: 0, decor: 0, w: 0 };
+  const c = { santons: 0, santons_escoffier: 0, escoffier: 0, decor: 0, w: 0 };
   for (const [id, r] of l.items) { const it = BY_ID.get(id); if (!it) continue; if (r.statut === "own") c[it.section]++; else c.w++; }
   return c;
 }
@@ -670,7 +672,7 @@ function listCard(l) {
     <span class="row" style="justify-content:space-between"><h3>${esc(l.nom)}</h3>${edit ? '<span class="badge edit">Vous gérez</span>' : '<span class="badge">Lecture seule</span>'}</span>
     <span class="who">${g.length ? "Gérée par " + esc(g.map(nameOf).join(", ")) : "Sans gérant"}</span>
     <span class="meter"><i style="width:${c.santons / nSec("santons", l) * 100}%"></i></span>
-    <span class="nums"><span><b>${c.santons}</b> / ${nSec("santons", l)} santons</span><span><b>${c.escoffier}</b> Escoffier</span><span><b>${c.decor}</b> décors Carbonel</span><span><b>${c.w}</b> envies</span></span>
+    <span class="nums"><span><b>${c.santons}</b> / ${nSec("santons", l)} santons</span><span><b>${c.santons_escoffier}</b> santons Escoffier</span><span><b>${c.escoffier}</b> bâtiments Escoffier</span><span><b>${c.decor}</b> décors Carbonel</span><span><b>${c.w}</b> envies</span></span>
   </button>`;
 }
 function feedHTML(listIds) {
@@ -854,7 +856,7 @@ function openItem(id) {
           ${it.custom ? `<dt>Ajouté</dt><dd>${it.ajoutePar && st.profils.has(it.ajoutePar) ? "par " + esc(nameOf(it.ajoutePar)) + ", " : ""}${it.cree ? esc(new Date(it.cree).toLocaleDateString("fr-FR")) : ""}</dd>` : ""}
           <dt>Catégorie</dt><dd>${esc(groupOf(it))}</dd>
           ${it.ref ? `<dt>Référence</dt><dd>${esc(it.ref)}</dd>` : ""}
-          ${it.nouveau ? `<dt>Sortie</dt><dd>Nouveauté ${ANNEE}</dd>` : ""}
+          ${it.creation ? `<dt>Création</dt><dd>${esc(it.creation)}</dd>` : it.nouveau ? `<dt>Sortie</dt><dd>Nouveauté ${ANNEE}</dd>` : ""}
           ${it.price != null ? `<dt>Prix</dt><dd>${euro(it.price)} <span class="muted">(boutique)</span></dd>` : ""}
           ${it.source ? `<dt>Source</dt><dd>${esc(it.source)}. Plus vendu en ligne.</dd>` : ""}
         </dl>
@@ -1129,8 +1131,8 @@ function openAdd() {
   const l = curList(); if (!l || !isMember(l.famille_id)) return;
   $("add-form").reset(); addPhoto = null;
   $("add-preview").hidden = true; $("add-photo-txt").hidden = false; $("add-err").hidden = true;
-  $("add-type").value = ui.tab === "santons" ? "santon" : "decor";
-  $("add-marque").value = ui.tab === "escoffier" ? "Escoffier" : "Carbonel";
+  $("add-type").value = ui.tab === "santons" || ui.tab === "santons_escoffier" ? "santon" : "decor";
+  $("add-marque").value = ui.tab === "escoffier" || ui.tab === "santons_escoffier" ? "Escoffier" : "Carbonel";
   $("add-own-row").hidden = !canEdit(l.id);
   $("add-own-txt").textContent = `Je l'ai dans « ${l.nom} »`;
   dlgAdd.showModal();
@@ -1147,7 +1149,7 @@ $("add-form").addEventListener("submit", async e => {
   const l = curList(), nom = $("add-nom").value.trim().slice(0, 80);
   if (!l || !nom) return;
   const marque = $("add-marque").value, type = $("add-type").value;
-  const section = type === "santon" ? "santons" : marque === "Escoffier" ? "escoffier" : "decor";
+  const section = type === "santon" ? (marque === "Escoffier" ? "santons_escoffier" : "santons") : marque === "Escoffier" ? "escoffier" : "decor";
   const fail = m => { $("add-err").textContent = m; $("add-err").hidden = false; $("add-go").disabled = false; };
   $("add-go").disabled = true; $("add-err").hidden = true;
   let photo = null;

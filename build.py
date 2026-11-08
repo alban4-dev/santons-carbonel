@@ -20,7 +20,7 @@ if escoffier.exists():  # bâtiments Escoffier (collection 7 cm)
 import sys
 sys.path.insert(0, str(ROOT / "scraper"))
 from selection import groupe, sort_key  # noqa: E402
-keep = ("id", "name", "ref", "cat", "col", "price", "img", "url", "source", "sp", "section", "marque", "groupe", "nouveau")
+keep = ("id", "name", "ref", "cat", "col", "price", "img", "url", "source", "sp", "section", "marque", "groupe", "nouveau", "creation")
 for it in data["items"]:
     if it.get("marque") == "escoffier":
         it["groupe"] = groupe(it)

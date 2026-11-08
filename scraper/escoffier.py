@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Relève les décors de crèche (bâtiments) des Santons Escoffier (escoffier.fr).
+"""Relève les décors de crèche (bâtiments, accessoires) et les santons de la
+collection 7 cm des Santons Escoffier (escoffier.fr).
 
 Écrit ../data/escoffier.json : un élément par modèle (nom, photo, référence,
 prix, gamme, catégorie, lien, et "nouveaute": true pour ceux de la rubrique
@@ -18,6 +19,11 @@ import urllib.request
 from pathlib import Path
 
 BASE = "https://www.escoffier.fr/fr/decors-de-creche/"
+# santons à l'échelle des N°2 Carbonel (7 cm), peints ; la version « brut » n'est pas retenue
+SANTONS_7CM = "https://www.escoffier.fr/fr/santons-de-creche/collection-7-cm.html"
+# codes du filtre « Création » du site -> saison
+ANNEES_CREATION = {67: "2026-2027", 65: "2025-2026", 64: "2024-2025", 63: "2023-2024", 62: "2022-2023"}
+SAISON = "2026-2027"
 UA = "Mozilla/5.0 (catalogue familial de santons; usage personnel)"
 OUT = Path(__file__).resolve().parent.parent / "data" / "escoffier.json"
 ID_OFFSET = 100000
@@ -99,6 +105,33 @@ def main():
             if not found or not new:  # au-delà de la dernière page, le site renvoie la dernière
                 break
         print(f"{label:<28} {n:>4} modèles")
+    for it in items.values():
+        it["type"] = "decor"
+    # Santons de la collection 7 cm
+    n = 0
+    for p in range(1, 40):
+        found = parse(get(f"{SANTONS_7CM}?product_list_limit=36&p={p}"))
+        new = [f for f in found if f["id"] not in items]
+        for f in new:
+            items[f["id"]] = {**f, "groupes": ["Santons 7 cm"], "type": "santon"}
+        n += len(new)
+        if not found or not new:
+            break
+    print(f"{'Santons collection 7 cm':<28} {n:>4} modèles")
+    # Année de création des santons (filtre du site) : seuls ceux de la saison
+    # en cours portent le badge « Nouveau »
+    for code, annee in ANNEES_CREATION.items():
+        vus = set()
+        for p in range(1, 10):
+            found = [f for f in parse(get(f"{SANTONS_7CM}?annee_creation={code}&product_list_limit=36&p={p}"))
+                     if f["id"] not in vus]
+            if not found:
+                break
+            for f in found:
+                vus.add(f["id"])
+                if f["id"] in items:
+                    items[f["id"]]["creation"] = annee
+        print(f"  créés en {annee} : {len(vus)}")
     # Rubrique « Nouveautés » : surtout des santons, parfois un décor
     nouveaux = set()
     for p in range(1, 30):
@@ -109,16 +142,17 @@ def main():
         nouveaux |= fresh
     for i in items.values():
         i.pop("nouveaute", None)
-        if i["id"] in nouveaux:
+        # santon : la saison de création fait foi ; décor : la rubrique Nouveautés
+        if (i.get("creation") == SAISON) if i.get("type") == "santon" else (i["id"] in nouveaux):
             i["nouveaute"] = True
-    print(f"Nouveautés : {len(nouveaux)} au total, dont {sum(1 for i in items.values() if i.get('nouveaute'))} décors")
+    print(f"Nouveautés retenues : {sum(1 for i in items.values() if i.get('nouveaute'))}")
     data = {
         "source": "https://www.escoffier.fr/fr/decors-de-creche.html",
         "scrapedAt": time.strftime("%Y-%m-%d"),
         "items": sorted(items.values(), key=lambda i: i["id"]),
     }
     OUT.write_text(json.dumps(data, ensure_ascii=False, indent=1))
-    print(f"{len(items)} décors Escoffier écrits dans {OUT}")
+    print(f"{len(items)} modèles Escoffier écrits dans {OUT}")
 
 
 if __name__ == "__main__":

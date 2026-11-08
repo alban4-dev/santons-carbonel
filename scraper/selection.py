@@ -4,6 +4,8 @@
   Tradition » 2024 (quel que soit le socle), plus les santons Carbonel N°2 au
   pied vert de la boutique (personnages, animaux) ;
 - section "decor"     : les bâtiments et accessoires Carbonel N°2 (Tradition) ;
+- section "santons_escoffier" : les santons Escoffier de la collection 7 cm
+  (l'échelle des N°2 Carbonel), classés Nativité / Personnages / Animaux ;
 - section "escoffier" : les bâtiments et accessoires Escoffier de la collection
   7 cm (maisons, façades, crèches et étables, puits, fontaines, ponts,
   roulottes, et la rubrique « Accessoires » : murs, escaliers, rivières,
@@ -40,6 +42,14 @@ SANS_SOCLE = {
     354: "Canard nageant N°2",
     1484: "Cigogne N°2",
 }
+# santons Escoffier : classement d'après le nom (le site ne les range pas)
+NATIVITE_ESC = re.compile(r"^(Enfant Jésus|Vierge Marie|Vierge à l'enfant|Marie de l'avent|Marie enceinte|"
+                          r"Saint Joseph|Ange\b|Roi Mage|Pages à genoux|Chamelier|Cornac)", re.I)
+ANIMAL_ESC = re.compile(r"^(Âne|Ane|Bougre d'âne|Aigle|Brebis|Bélier|Bœuf|Canard|Chameau|Chat\b|Chaton|Cheval|"
+                        r"Chien|Chiot|Chèvre|Cigogne|Cochon|Colombe|Coq|Couple d'agneaux|Cygne|Dindon|Dromadaire|"
+                        r"Éléphant|Eléphant|Flamant|Hibou|Laie|Lapin|Loup|Mouton|Oie|Ours|Pigeon|Poule|Poussin|"
+                        r"Renard|Sanglier|Taureau|Vache)", re.I)
+SANTONS_ESC_ORDRE = ["Nativité", "Personnages", "Animaux"]
 ESCOFFIER_TAILLE = re.compile(r"Collection (2|5|9) ?cm|^Santon", re.I)
 
 
@@ -47,6 +57,8 @@ def section(it):
     if it.get("noPhoto") or PACK.search(it["name"]):
         return None
     if it.get("marque") == "escoffier":
+        if it.get("type") == "santon":
+            return "santons_escoffier" if re.search(r"Santon Collection 7 ?cm$", it.get("gamme") or "") else None
         if ESCOFFIER_TAILLE.search(it.get("gamme") or ""):
             return None
         return "escoffier" if set(it.get("groupes", [])) & ESCOFFIER_RETENUS else None
@@ -68,6 +80,15 @@ GROUPE_PRIORITE = ["Façades", "Crèches et étables", "Puits, fontaines et pont
 
 
 def groupe(it):
+    """Groupe d'affichage d'un modèle Escoffier : pour un santon, Nativité /
+    Personnages / Animaux d'après son nom ; pour un bâtiment, voir groupe_decor."""
+    if it.get("type") == "santon":
+        nom = it["name"]
+        return "Nativité" if NATIVITE_ESC.search(nom) else "Animaux" if ANIMAL_ESC.search(nom) else "Personnages"
+    return groupe_decor(it)
+
+
+def groupe_decor(it):
     """Groupe d'affichage d'un bâtiment Escoffier. Une façade est aussi rangée
     par Escoffier dans « Maisons et bâtisses » : la rubrique la plus précise gagne."""
     return next((g for g in GROUPE_PRIORITE if g in it.get("groupes", [])), "Autres")
@@ -77,9 +98,11 @@ def sort_key(it):
     sec = it.get("section")
     name = unicodedata.normalize("NFD", it["name"].lower())
     name = "".join(c for c in name if unicodedata.category(c) != "Mn")
+    if sec == "santons_escoffier":
+        return (1, False, SANTONS_ESC_ORDRE.index(groupe(it)), name)
     if sec == "escoffier":
         return (2, False, ESCOFFIER_GROUPES.index(groupe(it)) if groupe(it) in ESCOFFIER_GROUPES else 99, name)
     order = SANTON_ORDER if sec == "santons" else DECOR_ORDER
     cat = next((order.index(c) for c in it["cat"] if c in order), 99)
     ancien = "ancien" in it.get("col", [])
-    return (0 if sec == "santons" else 1, ancien, cat, name)
+    return (0 if sec == "santons" else 3, ancien, cat, name)
