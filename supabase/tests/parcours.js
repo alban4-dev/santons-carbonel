@@ -82,6 +82,18 @@ async function signup(p, nom, mail) {
       '| réglages', await mamie.isVisible('#l-settings'), '| partager', await mamie.isVisible('#l-share'), '| photo crèche', await mamie.evaluate(() => { const i = document.querySelector('#cover-img'); return !!i && i.naturalWidth > 0; }), '| boutons photo', await mamie.locator('#cover-cam').count(), '| espace famille', await mamie.isVisible('#famille-link'));
   log('mamie : badge quantité', await mamie.locator('.card .qte').count() ? await mamie.locator('.card .qte').first().textContent() : '-');
   await mamie.screenshot({ path: S + 'e-mamie.png' });
+  // Mamie offre un santon de la liste d'envies (sans compte)
+  await mamie.click('[data-status="gift"]'); await mamie.waitForTimeout(200);
+  await mamie.locator('.card .ph').first().click(); await mamie.waitForTimeout(300);
+  await mamie.click('[data-offrir]'); await mamie.waitForTimeout(200);
+  await mamie.fill('#offre-nom', 'Mamie'); await mamie.click('#offre-form button[type=submit]'); await mamie.waitForTimeout(700);
+  log('mamie offre:', sqlv("select nom || ' ' || coalesce(reserve_par::text, 'sans compte') from liste_reservations"),
+      '| fiche', (await mamie.textContent('.offre')).replace(/\s+/g, ' ').trim().slice(0, 60), '| annuler', await mamie.locator('[data-annuler]').count());
+  await mamie.screenshot({ path: S + 'e-offre.png' });
+  await mamie.keyboard.press('Escape'); await mamie.click('[data-status="wish"]'); await mamie.waitForTimeout(200);
+  log('mamie : vignette', await mamie.textContent('.card .resa'), '| À offrir', await mamie.textContent('[data-status="gift"] .n'));
+  await papa.reload(); await papa.waitForSelector('#view-list:not([hidden])'); await papa.waitForTimeout(600);
+  log('papa voit:', await papa.locator('.card .resa').count() ? await papa.textContent('.card .resa') : '-');
   // lien changé : l'ancien ne marche plus
   await papa.click('#l-settings'); await papa.waitForTimeout(300); await papa.click('#new-visit'); await papa.waitForTimeout(500);
   await papa.click('#dlg-settings [data-close]');

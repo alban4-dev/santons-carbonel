@@ -19,8 +19,9 @@ Dans chaque crèche : ✓ je l'ai (avec le nombre d'exemplaires dans la fiche :
 2 moutons identiques…), ♡ envie, quatre onglets, une grande **photo
 de la crèche installée** (mise par ses gérants, en tête de la crèche, sur
 l'accueil et sur la page publique), un bouton **Partager** qui envoie le lien de la crèche (lecture seule, sans
-compte, envies comprises), et **« + Santon
-ancien »** pour les modèles qu'aucun catalogue ne montre (crèches commencées
+compte, envies comprises), un bouton **Offrir** sur les envies (une grand-mère, la marraine… note
+qu'elle l'offre, même sans compte, pour que personne n'achète le même), et
+**« + Ajouter un santon »** pour les modèles qu'aucun catalogue ne montre (crèches commencées
 il y a 30 ans) : nom, marque, note, et jusqu'à trois photos (face, dos,
 côté), que tout membre de la famille peut compléter ou changer dans sa fiche. Le modèle entre
 dans le catalogue de toute la famille, dans le bon onglet, sous « Ajoutés par
@@ -69,7 +70,8 @@ le SQL Editor (`schema.sql` les contient déjà pour une nouvelle installation) 
   `2026-11-08_page_publique.sql`, qu'il n'est donc pas utile de lancer) ;
 - `2026-11-10_photos_santons.sql` : photo de la crèche installée, et trois
   photos par santon ajouté (contient aussi `2026-11-09_photo_creche.sql`) ;
-- `2026-11-11_quantites.sql` : nombre d'exemplaires d'un santon (2 moutons…).
+- `2026-11-11_quantites.sql` : nombre d'exemplaires d'un santon (2 moutons…) ;
+- `2026-11-12_reservations.sql` : réservations « Offrir » sur les envies.
 
 ### 2. Le site : GitHub Pages
 
@@ -104,6 +106,12 @@ statique (par exemple Netlify Drop).
 | Admin de la famille (le créateur) | toutes | celles dont il est administrateur | toutes, et retirer un membre | lien de la famille |
 | Personne avec le lien public d'une crèche (sans compte) | cette crèche seulement | non | non | non |
 
+**Offrir** : toute personne qui voit une crèche (membre de la famille ou lien
+de partage, sans compte) peut réserver un santon de ses envies en notant son
+prénom. La réservation s'annule par la personne qui l'a faite (même téléphone
+ou même compte) ou par un administrateur de la crèche, et disparaît quand le
+santon est coché « J'ai ».
+
 Ces règles sont vérifiées par la base de données elle-même (Row Level Security
 dans `schema.sql`), pas seulement par l'affichage. Sans compte, la seule chose
 accessible est la fonction `voir_liste`, qui renvoie une crèche (nom, prénoms
@@ -116,9 +124,9 @@ ses droits.
 `supabase/tests/lancer.sh` rejoue tout sans compte Supabase, sur un
 PostgreSQL 16 local :
 
-- `droits.sql` : 60 vérifications des règles d'accès (inconnu, membre, gérant,
+- `droits.sql` : 69 vérifications des règles d'accès (inconnu, membre, gérant,
   visiteur, ancien membre, anonyme, page publique, santons ajoutés, photos
-  photo de la crèche, photos face, dos, côté, et quantités) ;
+  photo de la crèche, photos face, dos, côté, quantités et réservations) ;
 - `parcours.js` : dans un vrai navigateur, Papa crée la famille et la crèche
   de Léa, coche, met la photo de la crèche ; Maman arrive par le lien d'invitation, est
   en lecture seule, puis devient gérante ; Mamie ouvre le lien public sans
@@ -151,7 +159,7 @@ fichiers sur le disque).
 - **Autres catalogues vérifiés** : N°2 Tradition 2023 (site Carbonel), liste
   N°2 « Crèche 2022 » (publiée par une paroisse) et dépliant N°2 de 2010 : tous
   leurs modèles sont dans l'appli. Aucun catalogue plus ancien n'est en ligne ;
-  les modèles d'il y a 30 ans s'ajoutent avec « + Santon ancien ».
+  les modèles d'il y a 30 ans s'ajoutent avec « + Ajouter un santon ».
 - **Pied vert** : en plus du catalogue, les santons N°2 de la boutique au socle
   peint en vert (lu sur chaque photo par `scraper/socle.py`), et ceux sans socle
   (Jésus et le Berceau dans leur paille, Canard nageant, Cigogne :

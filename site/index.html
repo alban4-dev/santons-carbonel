@@ -208,6 +208,13 @@ dialog::backdrop { background: rgba(20, 14, 26, .55); }
 .qty button { width: 40px; height: 40px; border-radius: 50%; border: 1.5px solid var(--line); background: var(--surface); font-size: 1.3rem; font-weight: 700; line-height: 1; }
 .qty button:disabled { opacity: .4; cursor: default; }
 .qty b { min-width: 2ch; text-align: center; font-size: 1.15rem; font-variant-numeric: tabular-nums; }
+.resa { display: flex; align-items: center; gap: 4px; margin: -2px 6px 6px; padding: 2px 6px; border-radius: 6px; background: #fdf0d8; color: #7a4b12; font-size: .7rem; font-weight: 700; min-width: 0; }
+.resa span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.offre { display: grid; gap: 8px; padding: 12px; border-radius: 12px; background: #fdf0d8; color: #4a2f0b; }
+.offre p { margin: 0; font-size: .9rem; }
+.offre .row { gap: 6px; }
+.offre input { flex: 1 1 140px; min-width: 0; border: 1px solid #e3c99a; border-radius: 8px; padding: 9px 10px; background: #fff; color: #241c2c; }
+.btn.gift { background: #b8741a; border-color: #b8741a; color: #fff; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
 .duo { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .tg { border: 1px solid var(--line); border-radius: 8px; background: var(--surface); padding: 9px; font-weight: 700; color: var(--muted); }
 .tg.o[aria-pressed="true"] { background: var(--owned); border-color: var(--owned); color: var(--surface); }
@@ -293,10 +300,11 @@ body.kbd .totop { display: none; }
       <span class="badge" id="l-badge"></span>
       <span class="row" style="margin-left:auto">
         <button class="btn sm primary share-btn" type="button" id="l-share" hidden><svg width="15" height="15" viewBox="0 0 20 20" aria-hidden="true"><circle cx="15" cy="4.5" r="2.3" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="5" cy="10" r="2.3" fill="none" stroke="currentColor" stroke-width="1.7"/><circle cx="15" cy="15.5" r="2.3" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M7 9l6-3.4M7 11l6 3.4" stroke="currentColor" stroke-width="1.7"/></svg> Partager</button>
-        <button class="btn sm add-btn" type="button" id="l-add" hidden>+ Santon ancien</button>
+        <button class="btn sm add-btn" type="button" id="l-add" hidden>+ Ajouter un santon</button>
         <button class="btn sm" type="button" id="l-settings" hidden>Réglages</button>
       </span>
     </div>
+    <p class="help" id="l-hint" hidden></p>
     <div id="cover"></div>
     <section class="tools" aria-label="Outils">
       <div class="progress">
@@ -326,9 +334,9 @@ body.kbd .totop { display: none; }
 
 <dialog id="dlg-add" aria-labelledby="add-title">
   <form class="dlg" id="add-form">
-    <div class="dlg-head"><h2 id="add-title">Ajouter un santon ancien</h2><button class="x" type="button" data-close aria-label="Fermer">✕</button></div>
-    <p class="help">Pour un modèle qu'aucun catalogue ne montre : il rejoint le catalogue de toute la famille, dans le bon onglet, sous « Ajoutés par la famille ».</p>
-    <div class="field"><label class="label" for="add-nom">Nom</label><input id="add-nom" maxlength="80" required placeholder="Par ex. Berger à l'agneau (1994)"></div>
+    <div class="dlg-head"><h2 id="add-title">Un santon absent de la liste</h2><button class="x" type="button" data-close aria-label="Fermer">✕</button></div>
+    <p class="help">Vous avez un santon (ou un décor) que vous ne trouvez pas dans la liste : ancien modèle, autre marque… Ajoutez-le avec sa photo : il rejoint le catalogue de toute la famille, sous « Ajoutés par la famille ».</p>
+    <div class="field"><label class="label" for="add-nom">Nom</label><input id="add-nom" maxlength="80" required placeholder="Par ex. Chasseur à la pipe (années 80)"></div>
     <div class="row">
       <div class="field" style="flex:1 1 150px"><label class="label" for="add-type">Type</label>
         <select id="add-type" class="field-sel"><option value="santon">Santon</option><option value="decor">Bâtiment ou décor</option></select></div>
@@ -440,7 +448,17 @@ function ago(iso) {
 /* ================= État ================= */
 const CFG = window.SANTONS_CONFIG || {};
 let sb = null, me = null;           // client Supabase, utilisateur connecté
-const st = { familles: new Map(), membres: [], profils: new Map(), listes: new Map(), gerants: [], visiteurs: [], invListe: new Map(), invFamille: new Map() };
+const st = { familles: new Map(), membres: [], profils: new Map(), listes: new Map(), gerants: [], visiteurs: [], invListe: new Map(), invFamille: new Map(), resa: new Map() };
+/* Réservations « Offrir » : un jeton secret par navigateur permet d'annuler la sienne, même sans compte */
+const store = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* ignore */ } } };
+function jeton() {
+  let j = store.get("santons-jeton");
+  if (!j || j.length < 16) { j = Array.from(crypto.getRandomValues(new Uint8Array(16)), b => b.toString(16).padStart(2, "0")).join(""); store.set("santons-jeton", j); }
+  return j;
+}
+const mesResas = () => { try { return new Set(JSON.parse(store.get("santons-resas") || "[]")); } catch (e) { return new Set(); } };
+function noterResa(k, on) { const m = mesResas(); if (on) m.add(k); else m.delete(k); store.set("santons-resas", JSON.stringify([...m].slice(-200))); }
+const resaOf = (l, id) => st.resa.get(l.id + ":" + id) || null;
 const ui = { view: "home", listId: null, tab: "santons", status: "all", q: "" };
 const nameOf = id => (st.profils.get(id) || {}).nom || "Quelqu'un";
 const isMember = f => st.membres.some(m => m.famille_id === f && m.user_id === me.id);
@@ -454,6 +472,11 @@ const curList = () => st.listes.get(ui.listId);
 /* ================= Messages d'erreur ================= */
 function frErr(e) {
   const m = String((e && (e.message || e.error_description || e.msg)) || e || "");
+  if (/reserv/i.test(m) && /function|schema cache|does not exist/i.test(m)) return "La base de données n'est pas encore à jour : il faut exécuter la mise à jour SQL dans Supabase (fichier supabase/migrations/2026-11-12_reservations.sql).";
+  if (/déjà réservé/i.test(m)) return "Quelqu'un vient de le réserver : rechargez la page.";
+  if (/pas dans les envies/i.test(m)) return "Ce santon n'est plus dans les envies.";
+  if (/réservation d'une autre personne/i.test(m)) return "Seule la personne qui l'a réservé (ou un administrateur de la crèche) peut annuler.";
+  if (/crèche introuvable/i.test(m)) return "Ce lien de crèche n'est plus valable : demandez le nouveau lien.";
   if (/quantite/i.test(m)) return "La base de données n'est pas encore à jour : il faut exécuter la mise à jour SQL dans Supabase (fichier supabase/migrations/2026-11-11_quantites.sql).";
   if (/photo/i.test(m) && /listes|modeles_famille|schema cache/i.test(m)) return "La base de données n'est pas encore à jour : il faut exécuter la mise à jour SQL dans Supabase (fichier supabase/migrations/2026-11-10_photos_santons.sql).";
   if (/Bucket not found|schema cache|modeles_famille|voir_liste/i.test(m)) return "La base de données n'est pas encore à jour : il faut exécuter la mise à jour SQL dans Supabase (fichier supabase/migrations/2026-11-08b_santons_ajoutes.sql).";
@@ -561,17 +584,19 @@ async function fetchAll(table, cols) {
 }
 async function loadAll() {
   const q = (t, c) => sb.from(t).select(c).then(r => { if (r.error) throw r.error; return r.data; });
-  const [fam, mem, prof, lst, ger, vis, invL, invF, modeles, items] = await Promise.all([
+  const [fam, mem, prof, lst, ger, vis, invL, invF, resas, modeles, items] = await Promise.all([
     q("familles", "id,nom"), q("membres", "famille_id,user_id,role"), q("profils", "id,nom"),
     q("listes", "id,famille_id,nom,cree_par,created_at,photo").catch(() => q("listes", "id,famille_id,nom,cree_par,created_at")),
     q("liste_gerants", "liste_id,user_id"),
     q("liste_visiteurs", "liste_id,user_id"), q("liste_invitations", "liste_id,code"), q("famille_invitations", "famille_id,code"),
+    q("liste_reservations", "liste_id,santon_id,nom,reserve_par,created_at").catch(() => []),
     q("modeles_famille", "id,famille_id,nom,marque,section,note,photo,photos,ajoute_par,created_at")
       .catch(() => q("modeles_famille", "id,famille_id,nom,marque,section,note,photo,ajoute_par,created_at")).catch(() => []),
     fetchAll("liste_items", "liste_id,santon_id,statut,quantite,modifie_par,updated_at")
       .catch(() => fetchAll("liste_items", "liste_id,santon_id,statut,modifie_par,updated_at")),
   ]);
   setCustom(modeles, false);
+  st.resa = new Map(resas.map(r => [r.liste_id + ":" + r.santon_id, r]));
   st.familles = new Map(fam.map(f => [f.id, f]));
   st.membres = mem; st.gerants = ger; st.visiteurs = vis;
   st.profils = new Map(prof.map(p => [p.id, p]));
@@ -600,6 +625,7 @@ function subscribe() {
       .on("postgres_changes", { event: "*", schema: "public", table: "liste_visiteurs" }, reloadSoon)
       .on("postgres_changes", { event: "*", schema: "public", table: "membres" }, reloadSoon)
       .on("postgres_changes", { event: "*", schema: "public", table: "modeles_famille" }, reloadSoon)
+      .on("postgres_changes", { event: "*", schema: "public", table: "liste_reservations" }, reloadSoon)
       .subscribe();
   } catch (e) { /* temps réel indisponible : on recharge au retour sur la page */ }
   document.addEventListener("visibilitychange", () => { if (!document.hidden && me) reloadSoon(); });
@@ -736,6 +762,7 @@ function spriteStyle(it) {
   return `background-image:url(sprites/planche-${String(s).padStart(2, "0")}.webp?v=${SP.v || ""});background-size:${SP.cols * 100}% ${rows * 100}%;background-position:${x}% ${y}%`;
 }
 const inTab = it => it.section === ui.tab && visibleFor(it, curList());
+const ICON_GIFT = '<svg width="12" height="12" viewBox="0 0 20 20" aria-hidden="true"><rect x="3" y="8" width="14" height="9" rx="1" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M2 5.5h16v3H2zM10 5.5V17M10 5.5C8 2 5 2.5 5.5 4.5 6 6 10 5.5 10 5.5zm0 0c2-3.5 5-3 4.5-1S10 5.5 10 5.5z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>';
 const statut = (l, id) => { const r = l.items.get(id); return r ? r.statut : null; };
 const quantite = (l, id) => { const r = l.items.get(id); return r && r.statut === "own" ? Math.max(1, r.quantite || 1) : 0; };
 function statusOf(it, s, l) {
@@ -743,6 +770,7 @@ function statusOf(it, s, l) {
   if (s === "own") return statut(l, it.id) === "own";
   if (s === "missing") return statut(l, it.id) !== "own";
   if (s === "new") return !!it.nouveau;
+  if (s === "gift") return statut(l, it.id) === "wish" && !resaOf(l, it.id);
   return statut(l, it.id) === "wish";
 }
 function siblings(l) { return [...st.listes.values()].filter(x => x.id !== l.id && x.famille_id === l.famille_id); }
@@ -765,6 +793,7 @@ function cardHTML(it) {
     ${it.custom ? '<span class="ajout">Famille</span>' : ""}
     ${it.nouveau ? `<span class="nouv">Nouveau ${ANNEE}</span>` : ""}
     <div class="nm">${esc(it.short)}</div>
+    ${s === "wish" && resaOf(l, it.id) ? `<div class="resa" title="Réservé par ${esc(resaOf(l, it.id).nom)}">${ICON_GIFT}<span>${esc(resaOf(l, it.id).nom)}</span></div>` : ""}
     ${famHTML(it, l)}
   </article>`;
 }
@@ -776,6 +805,9 @@ function renderList() {
   $("l-badge").className = "badge" + (edit ? " edit" : "");
   $("l-settings").hidden = !canManage(l.id);
   $("l-share").hidden = PUBLIC || !canManage(l.id);
+  const envies = [...l.items.values()].some(r => r.statut === "wish");
+  $("l-hint").hidden = edit || !envies;
+  $("l-hint").innerHTML = `Pour offrir un santon : filtre <b>À offrir</b>, touchez le santon puis <b>Offrir ce santon</b> et notez votre prénom. Les autres verront qu'il est réservé.`;
   $("l-add").hidden = PUBLIC || !isMember(l.famille_id);
   renderCover(); renderProgress(); renderStatus(); renderGrid();
 }
@@ -793,7 +825,7 @@ function renderGrid() {
     if (g !== grp) { grp = g; html += `<div class="sec"><h2>${esc(g)}</h2><span data-sec="${esc(g)}"></span></div>`; }
     html += cardHTML(it);
   }
-  if (!list.length) html += `<div class="empty">${ui.status === "own" ? "Rien de coché pour l'instant." : ui.status === "wish" ? "Pas encore d'envie dans cet onglet." : ui.status === "new" ? "Pas de nouveauté dans cet onglet cette année." : "Rien ne correspond."}</div>`;
+  if (!list.length) html += `<div class="empty">${ui.status === "own" ? "Rien de coché pour l'instant." : ui.status === "wish" ? "Pas encore d'envie dans cet onglet." : ui.status === "new" ? "Pas de nouveauté dans cet onglet cette année." : ui.status === "gift" ? "Toutes les envies de cet onglet sont déjà réservées." : "Rien ne correspond."}${ui.q.trim() && !PUBLIC && isMember(l.famille_id) ? `<p style="margin:12px 0 0"><button class="btn add-btn" type="button" data-addq>+ Il n'y est pas : l'ajouter au catalogue</button></p>` : ""}</div>`;
   $("grid").innerHTML = html;
   renderSectionCounts();
 }
@@ -817,7 +849,10 @@ function renderProgress() {
 }
 function renderStatus() {
   const l = curList(), pool = ITEMS.filter(inTab);
+  $("l-add").textContent = ui.tab === "escoffier" || ui.tab === "decor" ? "+ Ajouter un décor" : "+ Ajouter un santon";
   const opts = [["all", "Tous"], ["own", "J'ai"], ["missing", "Il manque"], ["wish", "Envies"]];
+  if (pool.some(it => statut(l, it.id) === "wish")) opts.push(["gift", "À offrir"]);
+  else if (ui.status === "gift") ui.status = "all";
   if (pool.some(it => it.nouveau)) opts.push(["new", "Nouveautés " + ANNEE]);
   else if (ui.status === "new") ui.status = "all";
   $("status").innerHTML = opts.map(([v, t]) =>
@@ -827,6 +862,7 @@ function renderStatus() {
 /* ================= Cocher ================= */
 async function setStatut(l, id, value) {
   const before = l.items.get(id);
+  if (value !== "wish") st.resa.delete(l.id + ":" + id);  // la base fait de même
   if (value) l.items.set(id, { liste_id: l.id, santon_id: id, statut: value, modifie_par: me.id, updated_at: new Date().toISOString() });
   else l.items.delete(id);
   const res = value
@@ -861,6 +897,13 @@ async function toggle(kind, id) {
 /* ================= Fiche ================= */
 const dlgItem = $("dlg-item");
 dlgItem.addEventListener("change", photoFiche);
+dlgItem.addEventListener("submit", e => {
+  if (e.target.id !== "offre-form") return;
+  e.preventDefault();
+  const nom = $("offre-nom").value.trim().slice(0, 40); if (!nom) return;
+  reserver(+e.target.dataset.id, nom);
+});
+dlgItem.addEventListener("close", () => { offreOuverte = false; });
 const SLOTS = ["Face", "Dos", "Côté"];
 let ficheSlot = 0;
 const peutPhotos = it => it.custom && !PUBLIC && !!it.famille && isMember(it.famille);
@@ -901,6 +944,36 @@ async function photoFiche(e) {
   if (err) { sb.storage.from("photos").remove([path]).catch(() => {}); if (gal) gal.classList.remove("busy"); return toast(frErr(err)); }
   openItem(it.id); refreshCard(it.id); toast(`Photo ${SLOTS[k] === "Côté" ? "de côté" : "de " + SLOTS[k].toLowerCase()} enregistrée.`);
 }
+let offreOuverte = false;
+function offreHTML(l, it) {
+  const r = resaOf(l, it.id), k = l.id + ":" + it.id;
+  if (r) {
+    const mienne = mesResas().has(k) || (!PUBLIC && r.reserve_par === me.id);
+    const peut = mienne || (!PUBLIC && canManage(l.id));
+    return `<div class="offre"><p>${ICON_GIFT} <b>Réservé par ${esc(r.nom)}</b>${r.created_at ? ` le ${esc(new Date(r.created_at).toLocaleDateString("fr-FR"))}` : ""} : quelqu'un l'offre déjà.</p>
+      ${peut ? `<div class="row"><button class="btn sm" type="button" data-annuler="${it.id}">${mienne ? "Annuler ma réservation" : "Annuler cette réservation"}</button></div>` : ""}</div>`;
+  }
+  if (!offreOuverte) return `<button class="btn gift" type="button" data-offrir="${it.id}">${ICON_GIFT} Offrir ce santon</button>`;
+  const nom = store.get("santons-prenom") || (!PUBLIC && me ? nameOf(me.id) : "");
+  return `<form class="offre" id="offre-form" data-id="${it.id}"><p>Indiquez votre prénom : il sera noté « réservé » pour que personne n'achète le même.</p>
+    <div class="row"><input id="offre-nom" maxlength="40" required autocomplete="given-name" placeholder="Votre prénom (Mamie, Marraine…)" value="${esc(nom === "Quelqu'un" ? "" : nom)}">
+    <button class="btn gift" type="submit">Réserver</button></div></form>`;
+}
+async function reserver(id, nom) {
+  const l = curList(), k = l.id + ":" + id;
+  const { error } = await sb.rpc("reserver", { p_liste: l.id, p_code: PUBLIC ? PUBLIC_CODE : null, p_santon: id, p_nom: nom, p_jeton: jeton() });
+  if (error) return toast(frErr(error));
+  store.set("santons-prenom", nom); noterResa(k, true);
+  st.resa.set(k, { liste_id: l.id, santon_id: id, nom, reserve_par: PUBLIC ? null : me.id, created_at: new Date().toISOString() });
+  offreOuverte = false; openItem(id); refreshCard(id); renderStatus(); toast(`Réservé par ${nom} : merci !`);
+}
+async function annulerResa(id) {
+  const l = curList(), k = l.id + ":" + id;
+  const { error } = await sb.rpc("annuler_reservation", { p_liste: l.id, p_code: PUBLIC ? PUBLIC_CODE : null, p_santon: id, p_jeton: jeton() });
+  if (error) return toast(frErr(error));
+  noterResa(k, false); st.resa.delete(k);
+  openItem(id); refreshCard(id); renderStatus(); toast("Réservation annulée.");
+}
 function openItem(id) {
   const it = BY_ID.get(+id); if (!it) return;
   if (dlgItem.dataset.id !== String(it.id) || !dlgItem.open) ficheSlot = it.custom ? Math.max(0, it.photos.findIndex(Boolean)) : 0;
@@ -924,6 +997,7 @@ function openItem(id) {
           <button class="tg o" type="button" data-act="own" data-id="${it.id}" aria-pressed="${s === "own"}"${ro}>✓ J'ai</button>
           <button class="tg w" type="button" data-act="wish" data-id="${it.id}" aria-pressed="${s === "wish"}"${ro || (s === "own" ? " disabled" : "")}>♡ Envie</button>
         </div>
+        ${s === "wish" ? offreHTML(l, it) : ""}
         ${s === "own" && (!ro || quantite(l, it.id) > 1) ? `<div class="qty"><span class="label">Combien en avez-vous ?</span>
           ${ro ? "" : `<button type="button" data-qty="-1" data-id="${it.id}" aria-label="Un de moins"${quantite(l, it.id) <= 1 ? " disabled" : ""}>−</button>`}
           <b aria-live="polite">${quantite(l, it.id)}</b>
@@ -1083,6 +1157,12 @@ document.addEventListener("click", async e => {
   if (d.list) { e.preventDefault(); go("list", d.list); return; }
   if (d.act) { toggle(d.act, +d.id); return; }
   if (d.qty) { changerQuantite(+d.id, +d.qty); return; }
+  if (d.offrir) { offreOuverte = true; openItem(+d.offrir); const i = $("offre-nom"); if (i) i.focus(); return; }
+  if (d.annuler) {
+    if (t.dataset.sure !== "1") { t.dataset.sure = "1"; t.textContent = "Confirmer l'annulation"; return; }
+    annulerResa(+d.annuler); return;
+  }
+  if (d.addq !== undefined) { openAdd(); $("add-nom").value = ui.q.trim().slice(0, 80); return; }
   if (d.open) { openItem(d.open); return; }
   if (d.tab) { ui.tab = d.tab; renderProgress(); renderStatus(); renderGrid(); return; }
   if (d.status) { ui.status = d.status; renderStatus(); renderGrid(); return; }
@@ -1190,7 +1270,7 @@ totop.addEventListener("click", () => {
 });
 for (const d of document.querySelectorAll("dialog")) d.addEventListener("click", e => { if (e.target === d) d.close(); });
 
-/* ================= Ajouter un santon ancien ================= */
+/* ================= Ajouter un santon absent du catalogue ================= */
 const dlgAdd = $("dlg-add");
 let addPhoto = null;
 function openAdd() {
@@ -1201,6 +1281,7 @@ function openAdd() {
   $("add-marque").value = ui.tab === "escoffier" || ui.tab === "santons_escoffier" ? "Escoffier" : "Carbonel";
   $("add-own-row").hidden = !canEdit(l.id);
   $("add-own-txt").textContent = `Je l'ai dans « ${l.nom} »`;
+  $("add-title").textContent = $("add-type").value === "santon" ? "Un santon absent de la liste" : "Un décor absent de la liste";
   dlgAdd.showModal();
 }
 async function photoSanton(e) {
@@ -1260,6 +1341,7 @@ async function publicView() {
   st.gerants = (data.gerants || []).map(g => ({ liste_id: data.id, user_id: g.id }));
   st.profils = new Map((data.gerants || []).map(g => [g.id, { id: g.id, nom: g.nom }]));
   st.membres = []; st.visiteurs = [];
+  st.resa = new Map((data.reservations || []).map(r => [data.id + ":" + r.santon_id, Object.assign({ liste_id: data.id }, r)]));
   ui.view = "list"; ui.listId = data.id;
   screen("scr-app"); render();
 }

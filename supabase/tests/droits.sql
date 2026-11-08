@@ -210,3 +210,48 @@ select 'T102 inconnu ne change pas la quantite', quantite = 3 from liste_items w
 set role anon;
 select 'T103 page publique : la quantite', (select (x->>'quantite')::int from json_array_elements(voir_liste(:'vcode2')->'items') x where (x->>'santon_id')::int = 544) = 3;
 reset role;
+
+-- RÉSERVATIONS « OFFRIR »
+insert into liste_items (liste_id, santon_id, statut) values (:'lea', 700, 'wish'), (:'lea', 701, 'wish'), (:'lea', 702, 'wish');
+select set_config('request.jwt.claim.sub', '', false);  -- vraiment sans compte
+set role anon;
+select reserver(null, :'vcode2', 700, 'Mamie', 'jeton-de-mamie-0001');
+reset role;
+select 'T110 sans compte : Mamie reserve par le lien', nom = 'Mamie' and reserve_par is null from liste_reservations where santon_id = 700;
+set role anon;
+select reserver(null, :'vcode2', 700, 'Marraine', 'jeton-de-marraine-01');
+select reserver(null, :'vcode2', 544, 'Marraine', 'jeton-de-marraine-01');
+select reserver(null, '0123456789abcdef0123456789abcdef', 701, 'Pirate', 'jeton-du-pirate-0001');
+select reserver(:'lea', null, 701, 'Pirate', 'jeton-du-pirate-0001');
+select annuler_reservation(null, :'vcode2', 700, 'jeton-de-marraine-01');
+reset role;
+select 'T111 deja reserve, pas une envie, mauvais lien, sans lien, mauvais jeton : refuses',
+  (select count(*) from liste_reservations) = 1 and (select nom from liste_reservations where santon_id = 700) = 'Mamie';
+set role anon;
+select 'T112 page publique : la reservation (sans jeton)', (voir_liste(:'vcode2')->'reservations'->0->>'nom') = 'Mamie'
+  and (voir_liste(:'vcode2')->'reservations'->0->>'jeton') is null;
+select annuler_reservation(null, :'vcode2', 700, 'jeton-de-mamie-0001');
+reset role;
+select 'T113 Mamie annule avec son jeton', count(*) = 0 from liste_reservations;
+select set_config('request.jwt.claim.sub', :'maman', false); set role authenticated;
+select reserver(:'lea', null, 701, 'Maman', 'jeton-de-maman-00001');
+select 'T114 maman (membre, lecture) voit la reservation', count(*) = 1 from liste_reservations where santon_id = 701;
+select jeton from liste_reservations;
+reset role;
+select 'T115 maman reserve depuis son compte', reserve_par = :'maman' from liste_reservations where santon_id = 701;
+select set_config('request.jwt.claim.sub', :'inconnu', false); set role authenticated;
+select reserver(:'lea', null, 702, 'Inconnu', 'jeton-inconnu-000001');
+select annuler_reservation(:'lea', null, 701, 'jeton-inconnu-000001');
+reset role;
+select 'T116 inconnu : ni reserver ni annuler', count(*) = 1 from liste_reservations;
+select set_config('request.jwt.claim.sub', :'papa', false); set role authenticated;
+select annuler_reservation(:'lea', null, 701, 'autre-jeton-000000001');
+reset role;
+select 'T117 papa (administrateur) annule celle de maman', count(*) = 0 from liste_reservations;
+set role anon;
+select reserver(null, :'vcode2', 702, 'Mamie', 'jeton-de-mamie-0001');
+reset role;
+select set_config('request.jwt.claim.sub', :'papa', false); set role authenticated;
+update liste_items set statut = 'own' where liste_id = :'lea' and santon_id = 702;
+reset role;
+select 'T118 cadeau recu (coche J''ai) : reservation liberee', count(*) = 0 from liste_reservations;
