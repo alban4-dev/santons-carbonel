@@ -156,6 +156,21 @@ body.typing .grid { min-height: 100dvh; }
 .ph.vide { display: grid; place-items: center; font-family: var(--f-display); font-size: 2.6rem; color: #8a7f95; background-size: contain !important; }
 .ph.photo { background-size: contain; background-position: center; }
 .add-btn { border: 1.5px dashed var(--accent); color: var(--accent); background: var(--surface); }
+.gal { display: grid; gap: 8px; align-content: start; min-width: 0; }
+@media (max-width: 520px) { .item .gal { max-width: 280px; margin-inline: auto; width: 100%; } }
+.gal .pic img { max-height: 46vh; object-fit: contain; }
+.slots { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.slot { all: unset; cursor: pointer; display: grid; gap: 2px; justify-items: center; font-size: .72rem; font-weight: 600; color: var(--muted); }
+.slot i { width: 100%; aspect-ratio: 3 / 4; border-radius: 8px; border: 1.5px solid var(--line); background: var(--photo) center / cover no-repeat;
+  display: grid; place-items: center; font-style: normal; font-size: 1.4rem; color: var(--muted); }
+.slot.vide i { border-style: dashed; background: var(--surface); }
+.slot.on { color: var(--ink); }
+.slot.on i { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.slot:focus-visible i { outline: 2px solid var(--accent); outline-offset: 2px; }
+.slot-acts { display: flex; flex-wrap: wrap; gap: 6px; }
+.slot-acts .pick { flex: 1 1 110px; padding: 9px 8px; font-size: .82rem; }
+.slot-acts .btn { flex: 1 1 100%; }
+.gal.busy { opacity: .6; pointer-events: none; }
 .preview { max-height: 180px; max-width: 100%; border-radius: 10px; display: block; }
 .old { position: absolute; right: 5px; bottom: 34px; font-size: .6rem; font-weight: 700; text-transform: uppercase; background: #7a4b12; color: #fff; padding: 1px 6px; border-radius: 999px; pointer-events: none; }
 .fam { display: flex; gap: 2px; padding: 0 6px 5px; margin-top: -2px; }
@@ -309,12 +324,13 @@ body.kbd .totop { display: none; }
         <select id="add-marque" class="field-sel"><option>Carbonel</option><option>Escoffier</option><option>Autre</option></select></div>
     </div>
     <div class="field"><label class="label" for="add-note">Note (année, taille, couleur…)</label><input id="add-note" maxlength="200"></div>
-    <div class="field"><span class="label">Photo</span>
+    <div class="field"><span class="label">Photo de face</span>
       <div class="picks" id="add-picks">
         <label class="pick"><svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 6.5h3l1.5-2h5L14 6.5h3v9H3z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="10" cy="11" r="3" fill="none" stroke="currentColor" stroke-width="1.5"/></svg> Prendre une photo<input type="file" id="add-photo" accept="image/*" capture="environment"></label>
         <label class="pick"><svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><rect x="3" y="4" width="14" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M4 14l4-4 3 3 2-2 3 3" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="13" cy="8" r="1.3" fill="currentColor"/></svg> Pellicule<input type="file" id="add-photo2" accept="image/*"></label>
       </div>
-      <img class="preview" id="add-preview" alt="" hidden></div>
+      <img class="preview" id="add-preview" alt="" hidden>
+      <p class="help">Le dos et le côté s'ajoutent ensuite dans sa fiche, si vous voulez.</p></div>
     <label class="row" id="add-own-row"><input type="checkbox" id="add-own" checked> <span id="add-own-txt">Je l'ai dans cette crèche</span></label>
     <p class="err" id="add-err" hidden></p>
     <div class="row"><button class="btn primary" type="submit" id="add-go">Ajouter au catalogue</button></div>
@@ -376,8 +392,13 @@ function setCustom(rows, publicMode) {
   for (const r of rows || []) {
     if (!Number.isInteger(r.id) || BY_ID.has(r.id)) continue;
     const it = { id: r.id, name: r.nom, short: r.nom, section: SECTIONS.includes(r.section) ? r.section : "santons",
-      marqueNom: r.marque, note: r.note, photo: photoUrl(r.photo), ajoutePar: r.ajoute_par, cree: r.created_at,
+      marqueNom: r.marque, note: r.note, ajoutePar: r.ajoute_par, cree: r.created_at,
       famille: publicMode ? null : r.famille_id, custom: true, cat: [], col: [], esc: r.marque === "Escoffier" };
+    // photos = [face, dos, côté] (chemins dans le stockage) ; photo = la première présente
+    const ps = Array.isArray(r.photos) ? r.photos : [r.photo];
+    it.paths = [0, 1, 2].map(k => PHOTO_OK.test(ps[k] || "") ? ps[k] : null);
+    it.photos = it.paths.map(photoUrl);
+    it.photo = it.photos.find(Boolean) || "";
     it._s = norm(it.name + " " + (it.note || "") + " " + (r.marque || ""));
     ITEMS.push(it); BY_ID.set(it.id, it);
   }
@@ -421,7 +442,7 @@ const curList = () => st.listes.get(ui.listId);
 /* ================= Messages d'erreur ================= */
 function frErr(e) {
   const m = String((e && (e.message || e.error_description || e.msg)) || e || "");
-  if (/photo/i.test(m) && /listes|schema cache/i.test(m)) return "La base de données n'est pas encore à jour : il faut exécuter la mise à jour SQL dans Supabase (fichier supabase/migrations/2026-11-09_photo_creche.sql).";
+  if (/photo/i.test(m) && /listes|modeles_famille|schema cache/i.test(m)) return "La base de données n'est pas encore à jour : il faut exécuter la mise à jour SQL dans Supabase (fichier supabase/migrations/2026-11-10_photos_santons.sql).";
   if (/Bucket not found|schema cache|modeles_famille|voir_liste/i.test(m)) return "La base de données n'est pas encore à jour : il faut exécuter la mise à jour SQL dans Supabase (fichier supabase/migrations/2026-11-08b_santons_ajoutes.sql).";
   if (/Invalid login credentials/i.test(m)) return "E-mail ou mot de passe incorrect.";
   if (/already registered|already exists/i.test(m)) return "Un compte existe déjà avec cet e-mail : choisissez « J'ai un compte ».";
@@ -532,7 +553,8 @@ async function loadAll() {
     q("listes", "id,famille_id,nom,cree_par,created_at,photo").catch(() => q("listes", "id,famille_id,nom,cree_par,created_at")),
     q("liste_gerants", "liste_id,user_id"),
     q("liste_visiteurs", "liste_id,user_id"), q("liste_invitations", "liste_id,code"), q("famille_invitations", "famille_id,code"),
-    q("modeles_famille", "id,famille_id,nom,marque,section,note,photo,ajoute_par,created_at").catch(() => []),
+    q("modeles_famille", "id,famille_id,nom,marque,section,note,photo,photos,ajoute_par,created_at")
+      .catch(() => q("modeles_famille", "id,famille_id,nom,marque,section,note,photo,ajoute_par,created_at")).catch(() => []),
     fetchAll("liste_items", "liste_id,santon_id,statut,modifie_par,updated_at"),
   ]);
   setCustom(modeles, false);
@@ -811,19 +833,60 @@ async function toggle(kind, id) {
 
 /* ================= Fiche ================= */
 const dlgItem = $("dlg-item");
+dlgItem.addEventListener("change", photoFiche);
+const SLOTS = ["Face", "Dos", "Côté"];
+let ficheSlot = 0;
+const peutPhotos = it => it.custom && !PUBLIC && !!it.famille && isMember(it.famille);
+function galerieHTML(it) {
+  const edit = peutPhotos(it), k = ficheSlot, url = it.photos[k];
+  const main = url ? `<img src="${esc(url)}" alt="${esc(it.name)} : ${SLOTS[k].toLowerCase()}">`
+    : `<div class="ph vide" style="cursor:default">${edit ? "" : esc(initial(it.name))}</div>`;
+  const shown = [0, 1, 2].filter(j => edit || it.photos[j]);
+  const slots = edit || shown.length > 1 ? `<div class="slots">${shown.map(j => `<button class="slot${j === k ? " on" : ""}${it.photos[j] ? "" : " vide"}" type="button" data-slot="${j}" aria-pressed="${j === k}">
+      <i${it.photos[j] ? ` style="background-image:url('${esc(it.photos[j])}')"` : ""}>${it.photos[j] ? "" : "+"}</i>${SLOTS[j]}</button>`).join("")}</div>` : "";
+  const acts = edit ? `<div class="slot-acts">
+      <label class="pick${url ? "" : " main"}">${PICK_CAM} ${url ? "Reprendre" : "Photo"}<input type="file" accept="image/*" capture="environment" data-up="${k}"></label>
+      <label class="pick">${PICK_ROLL} Pellicule<input type="file" accept="image/*" data-up="${k}"></label>
+      ${url ? `<button class="btn sm" type="button" data-rmphoto="${k}">Retirer la photo ${SLOTS[k] === "Côté" ? "de côté" : "de " + SLOTS[k].toLowerCase()}</button>` : ""}
+    </div>` : "";
+  return `<div class="gal"><div class="pic">${main}</div>${slots}${acts}</div>`;
+}
+async function enregistrerPhoto(it, k, path) {
+  const paths = it.paths.slice(), old = paths[k];
+  paths[k] = path;
+  const { error } = await sb.from("modeles_famille").update({ photos: paths.some(Boolean) ? paths : null, photo: paths.find(Boolean) || null }).eq("id", it.id);
+  if (error) return error;
+  if (old) sb.storage.from("photos").remove([old]).catch(() => {});  // celle d'un autre membre reste : sans effet
+  it.paths = paths; it.photos = paths.map(photoUrl); it.photo = it.photos.find(Boolean) || "";
+  return null;
+}
+async function photoFiche(e) {
+  const inp = e.target.closest("input[data-up]"); if (!inp) return;
+  const f = inp.files && inp.files[0]; inp.value = ""; if (!f) return;
+  const it = BY_ID.get(+dlgItem.dataset.id), k = +inp.dataset.up; if (!it || !peutPhotos(it)) return;
+  let blob = null; try { blob = await shrink(f, 1200, .88); } catch (err) { blob = null; }
+  if (!blob) return toast("Cette image ne s'ouvre pas : essayez une photo JPEG.");
+  const gal = dlgItem.querySelector(".gal"); if (gal) gal.classList.add("busy");
+  const path = `${it.famille}/${newName()}.jpg`;
+  const up = await sb.storage.from("photos").upload(path, blob, { contentType: "image/jpeg", upsert: false });
+  if (up.error) { if (gal) gal.classList.remove("busy"); return toast(/Bucket not found/i.test(up.error.message || "") ? frErr(up.error) : "La photo n'a pas pu être envoyée : " + frErr(up.error)); }
+  const err = await enregistrerPhoto(it, k, path);
+  if (err) { sb.storage.from("photos").remove([path]).catch(() => {}); if (gal) gal.classList.remove("busy"); return toast(frErr(err)); }
+  openItem(it.id); refreshCard(it.id); toast(`Photo ${SLOTS[k] === "Côté" ? "de côté" : "de " + SLOTS[k].toLowerCase()} enregistrée.`);
+}
 function openItem(id) {
   const it = BY_ID.get(+id); if (!it) return;
+  if (dlgItem.dataset.id !== String(it.id) || !dlgItem.open) ficheSlot = it.custom ? Math.max(0, it.photos.findIndex(Boolean)) : 0;
   const l = curList(), s = statut(l, it.id), ro = canEdit(l.id) ? "" : " disabled";
   const fam = siblings(l).map(o => [o, statut(o, it.id)]).filter(x => x[1]);
   $("item-body").innerHTML = `
     <div class="dlg-head"><h2 id="it-name">${esc(it.name)}</h2><button class="x" type="button" data-close aria-label="Fermer">✕</button></div>
-    <div class="item"><div class="pic">${it.custom ? (it.photo ? `<img src="${esc(it.photo)}" alt="${esc(it.name)}">` : `<div class="ph vide" style="cursor:default">${esc(initial(it.name))}</div>`)
-      : it.img ? `<img src="${esc(it.img)}${it.esc ? "" : "?auto=format&w=480&h=640&fit=max"}" alt="${esc(it.name)}" data-fallback="1">` : `<div class="ph" style="${spriteStyle(it)};cursor:default"></div>`}</div>
+    <div class="item">${it.custom ? galerieHTML(it) : `<div class="pic">${it.img ? `<img src="${esc(it.img)}${it.esc ? "" : "?auto=format&w=480&h=640&fit=max"}" alt="${esc(it.name)}" data-fallback="1">` : `<div class="ph" style="${spriteStyle(it)};cursor:default"></div>`}</div>`}
       <div style="display:grid;gap:12px;align-content:start;min-width:0">
         <dl>
           <dt>Marque</dt><dd>${it.custom ? esc(it.marqueNom || "") : it.esc ? "Santons Escoffier (Aubagne)" : "Ateliers Marcel Carbonel (Marseille)"}</dd>
           ${it.custom && it.note ? `<dt>Note</dt><dd>${esc(it.note)}</dd>` : ""}
-          ${it.custom ? `<dt>Ajouté</dt><dd>${it.ajoutePar && st.profils.has(it.ajoutePar) ? "par " + esc(nameOf(it.ajoutePar)) + ", " : ""}${it.cree ? esc(new Date(it.cree).toLocaleDateString("fr-FR")) : ""}</dd>` : ""}
+          ${it.custom && (it.cree || (it.ajoutePar && st.profils.has(it.ajoutePar))) ? `<dt>Ajouté</dt><dd>${[it.ajoutePar && st.profils.has(it.ajoutePar) ? "par " + esc(nameOf(it.ajoutePar)) : "", it.cree ? esc(new Date(it.cree).toLocaleDateString("fr-FR")) : ""].filter(Boolean).join(", ")}</dd>` : ""}
           <dt>Catégorie</dt><dd>${esc(groupOf(it))}</dd>
           ${it.ref ? `<dt>Référence</dt><dd>${esc(it.ref)}</dd>` : ""}
           ${it.creation ? `<dt>Création</dt><dd>${esc(it.creation)}</dd>` : it.nouveau ? `<dt>Sortie</dt><dd>Nouveauté ${ANNEE}</dd>` : ""}
@@ -988,6 +1051,15 @@ document.addEventListener("click", async e => {
   if (!t) return;
   const d = t.dataset;
   if (d.close !== undefined) { t.closest("dialog").close(); return; }
+  if (d.slot !== undefined) { ficheSlot = +d.slot; openItem(dlgItem.dataset.id); return; }
+  if (d.rmphoto !== undefined) {
+    if (t.dataset.sure !== "1") { t.dataset.sure = "1"; t.textContent = "Confirmer : retirer cette photo"; return; }
+    const it = BY_ID.get(+dlgItem.dataset.id); if (!it || !peutPhotos(it)) return;
+    const err = await enregistrerPhoto(it, +d.rmphoto, null);
+    if (err) return toast(frErr(err));
+    openItem(it.id); refreshCard(it.id); toast("Photo retirée.");
+    return;
+  }
   if (d.list) { e.preventDefault(); go("list", d.list); return; }
   if (d.act) { toggle(d.act, +d.id); return; }
   if (d.open) { openItem(d.open); return; }
@@ -1012,7 +1084,7 @@ document.addEventListener("click", async e => {
     const it = BY_ID.get(+d.unmodel);
     const { error } = await sb.from("modeles_famille").delete().eq("id", +d.unmodel);
     if (error) return toast(frErr(error));
-    if (it && it.photo) { const path = it.photo.split("/object/public/photos/")[1]; if (path) await sb.storage.from("photos").remove([path]); }
+    if (it && it.paths) { const paths = it.paths.filter(Boolean); if (paths.length) await sb.storage.from("photos").remove(paths).catch(() => {}); }
     dlgItem.close(); await loadAll(); render(); toast("Retiré du catalogue de la famille.");
     return;
   }
@@ -1120,9 +1192,10 @@ $("add-form").addEventListener("submit", async e => {
     const up = await sb.storage.from("photos").upload(photo, addPhoto, { contentType: "image/jpeg", upsert: false });
     if (up.error) return fail(/Bucket not found/i.test(up.error.message || "") ? frErr(up.error) : "La photo n'a pas pu être envoyée : " + frErr(up.error));
   }
-  const { data, error } = await sb.from("modeles_famille")
-    .insert({ famille_id: l.famille_id, nom, marque, section, note: $("add-note").value.trim().slice(0, 200) || null, photo })
-    .select("id").single();
+  const row = { famille_id: l.famille_id, nom, marque, section, note: $("add-note").value.trim().slice(0, 200) || null, photo };
+  let { data, error } = await sb.from("modeles_famille").insert(photo ? { ...row, photos: [photo, null, null] } : row).select("id").single();
+  if (error && photo && /photos/i.test(error.message || ""))  // base pas encore mise à jour : une seule photo
+    ({ data, error } = await sb.from("modeles_famille").insert(row).select("id").single());
   if (error) return fail(frErr(error));
   if (!$("add-own-row").hidden && $("add-own").checked)
     await sb.from("liste_items").upsert({ liste_id: l.id, santon_id: data.id, statut: "own" }, { onConflict: "liste_id,santon_id" });

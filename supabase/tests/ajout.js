@@ -28,19 +28,37 @@ const sqlv = q => execSync(`psql -h /tmp -p 54329 -U postgres -d app -tA -c "${q
   console.log('fiche :', (await papa.textContent('#item-body')).replace(/\s+/g, ' ').slice(0, 220));
   const imgOk = await papa.evaluate(() => { const i = document.querySelector('#item-body img'); return i && i.complete && i.naturalWidth > 0; });
   console.log('photo de la fiche chargée :', imgOk);
+  // photo de dos, puis remplacement de la face
+  await papa.click('#item-body [data-slot="1"]'); await papa.waitForTimeout(200);
+  await papa.setInputFiles('#item-body input[data-up="1"]:not([capture])', S + 'creche.jpg'); await papa.waitForTimeout(1200);
+  const avant = sqlv("select photos[1] from modeles_famille");
+  await papa.click('#item-body [data-slot="0"]'); await papa.waitForTimeout(200);
+  await papa.setInputFiles('#item-body input[data-up="0"]:not([capture])', S + 'creche.jpg'); await papa.waitForTimeout(1200);
+  console.log('photos :', sqlv("select array_to_string(array(select coalesce(regexp_replace(x, '.*/', ''), '-') from unnest(photos) x), ' | ') from modeles_famille").replace(/[0-9a-f-]{36}/g, '…'),
+    '| face remplacée', sqlv("select photos[1] from modeles_famille") !== avant, '| vignette = face', sqlv("select photo = photos[1] from modeles_famille"),
+    '| cases', await papa.locator('#item-body .slot').count(), 'dont remplies', await papa.locator('#item-body .slot:not(.vide)').count());
   await papa.screenshot({ path: S + 'aj-fiche.png' });
   await papa.keyboard.press('Escape');
   // page publique
   await papa.click('#l-settings'); await papa.waitForTimeout(300); const visit = await papa.inputValue('#visit-link'); await papa.click('#dlg-settings [data-close]');
   const pub = await mk(390, 844); await pub.goto(visit); await pub.waitForSelector('#scr-app:not([hidden])'); await pub.waitForTimeout(500);
   await pub.click('[data-status="own"]'); await pub.waitForTimeout(200);
+  await pub.locator('.ph.photo').first().click(); await pub.waitForTimeout(300);
+  console.log('public, fiche : cases', await pub.locator('#item-body .slot').count(), '| boutons photo', await pub.locator('#item-body input[data-up]').count());
+  await pub.screenshot({ path: S + 'aj-public-fiche.png' });
+  await pub.keyboard.press('Escape');
   console.log('public, cochés :', (await pub.locator('.card .nm').allTextContents()).join(', '), '| bouton ajout :', await pub.isVisible('#l-add'));
   // Maman (membre) voit le modèle
   const join = 'http://localhost:8766/index.html#rejoindre=' + sqlv("select fi.code from famille_invitations fi join familles f on f.id = fi.famille_id join auth.users u on u.id = f.cree_par where u.email = 'p@x.fr'");
   const maman = await mk(390, 844); await maman.goto(join); await maman.waitForSelector('#scr-auth:not([hidden])'); await signup(maman, 'Maman', 'm@x.fr');
   await maman.click('.lcard[data-list]'); await maman.waitForTimeout(400);
   console.log('maman voit :', await maman.locator('.card .ajout').count(), '| bouton ajout :', await maman.isVisible('#l-add'));
+  await maman.locator('.ph.photo').first().click(); await maman.waitForTimeout(300);
+  await maman.click('#item-body [data-slot="2"]'); await maman.waitForTimeout(200);
+  await maman.setInputFiles('#item-body input[data-up="2"]:not([capture])', S + 'creche.jpg'); await maman.waitForTimeout(1200);
+  console.log('maman ajoute le côté :', sqlv("select photos[3] is not null from modeles_famille"));
   await maman.screenshot({ path: S + 'aj-maman.png' });
+  await maman.keyboard.press('Escape');
   // Papa retire
   await papa.locator('.ph.photo').first().click(); await papa.waitForTimeout(300);
   await papa.click('[data-unmodel]'); await papa.click('[data-unmodel]'); await papa.waitForTimeout(1000);

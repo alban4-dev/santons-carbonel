@@ -19,7 +19,8 @@ Dans chaque crèche : ✓ je l'ai, ♡ envie, quatre onglets, une grande **photo
 de la crèche installée** (mise par ses gérants, en tête de la crèche, sur
 l'accueil et sur la page publique), liste d'envies à copier pour les cadeaux, et **« + Santon
 ancien »** pour les modèles qu'aucun catalogue ne montre (crèches commencées
-il y a 30 ans) : nom, marque, note, photo prise au téléphone. Le modèle entre
+il y a 30 ans) : nom, marque, note, et jusqu'à trois photos (face, dos,
+côté), que tout membre de la famille peut compléter ou changer dans sa fiche. Le modèle entre
 dans le catalogue de toute la famille, dans le bon onglet, sous « Ajoutés par
 la famille », et se coche comme les autres. Les nouveautés de
 l'année (rubrique « Nouveautés » des deux boutiques) portent un badge
@@ -64,7 +65,8 @@ le SQL Editor (`schema.sql` les contient déjà pour une nouvelle installation) 
 - `2026-11-08b_santons_ajoutes.sql` : santons ajoutés par la famille, espace
   « photos » pour leurs photos, et page publique d'une crèche (contient aussi
   `2026-11-08_page_publique.sql`, qu'il n'est donc pas utile de lancer) ;
-- `2026-11-09_photo_creche.sql` : photo de la crèche installée.
+- `2026-11-10_photos_santons.sql` : photo de la crèche installée, et trois
+  photos par santon ajouté (contient aussi `2026-11-09_photo_creche.sql`).
 
 ### 2. Le site : GitHub Pages
 
@@ -110,16 +112,16 @@ ses droits.
 `supabase/tests/lancer.sh` rejoue tout sans compte Supabase, sur un
 PostgreSQL 16 local :
 
-- `droits.sql` : 51 vérifications des règles d'accès (inconnu, membre, gérant,
+- `droits.sql` : 56 vérifications des règles d'accès (inconnu, membre, gérant,
   visiteur, ancien membre, anonyme, page publique, santons ajoutés, photos
-  et photo de la crèche) ;
+  photo de la crèche et photos face, dos, côté) ;
 - `parcours.js` : dans un vrai navigateur, Papa crée la famille et la crèche
   de Léa, coche, met la photo de la crèche ; Maman arrive par le lien d'invitation, est
   en lecture seule, puis devient gérante ; Mamie ouvre le lien public sans
   compte et ne voit que la crèche de Léa ; après « Changer », l'ancien lien
   ne marche plus ;
 - `ajout.js` : Papa ajoute un santon ancien avec sa photo, coché dans la
-  crèche ; Maman le voit dans le catalogue, la page publique l'affiche ; Papa
+  crèche, puis ajoute le dos et change la face ; Maman ajoute le côté ; Maman le voit dans le catalogue, la page publique l'affiche ; Papa
   le retire et il disparaît de toutes les crèches.
 
 `faux_supabase.py` imite les routes de Supabase utilisées par l'appli et

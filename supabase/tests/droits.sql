@@ -153,6 +153,7 @@ reset role;
 select 'T87 retiré du catalogue : décoché partout', (select count(*) from liste_items where santon_id >= 1000000) = 0;
 
 -- PHOTO DE LA CRÈCHE INSTALLÉE
+insert into membres (famille_id, user_id) values (:'fam', :'maman');  -- Maman revient dans la famille
 select set_config('request.jwt.claim.sub', :'papa', false); set role authenticated;
 update listes set photo = :'fam' || '/creche-lea.jpg' where id = :'lea';
 reset role;
@@ -168,4 +169,28 @@ reset role;
 select 'T93 inconnu ne retire pas la photo', photo is not null from listes where id = :'lea';
 set role anon;
 select 'T94 page publique : la photo de la crèche', (voir_liste(:'vcode2')->>'photo') like '%/creche-lea.jpg';
+reset role;
+
+-- PHOTOS D'UN SANTON AJOUTÉ (face, dos, côté)
+select set_config('request.jwt.claim.sub', :'papa', false); set role authenticated;
+insert into modeles_famille (famille_id, nom, photo, photos)
+  values (:'fam', 'Chasseur a la pipe', :'fam' || '/face.jpg', array[:'fam' || '/face.jpg', null, null]);
+reset role;
+select id as chasseur from modeles_famille where nom = 'Chasseur a la pipe' \gset
+select set_config('request.jwt.claim.sub', :'maman', false); set role authenticated;
+update modeles_famille set photos = array[:'fam' || '/face.jpg', :'fam' || '/dos.jpg', null] where id = :chasseur;
+update modeles_famille set ajoute_par = :'maman' where id = :chasseur;
+update modeles_famille set photos = array['a', 'b', 'c', 'd'] where id = :chasseur;
+reset role;
+select 'T95 maman (membre) ajoute la photo de dos', photos[2] like '%/dos.jpg' and cardinality(photos) = 3 from modeles_famille where id = :chasseur;
+select 'T96 maman ne devient pas autrice du modele', ajoute_par = :'papa' from modeles_famille where id = :chasseur;
+select set_config('request.jwt.claim.sub', :'inconnu', false); set role authenticated;
+update modeles_famille set photos = null, photo = null;
+reset role;
+select 'T97 inconnu ne touche pas aux photos', photos[2] is not null and photo is not null from modeles_famille where id = :chasseur;
+select set_config('request.jwt.claim.sub', :'papa', false); set role authenticated;
+insert into liste_items (liste_id, santon_id, statut) values (:'lea', :chasseur, 'own');
+reset role;
+set role anon;
+select 'T98 page publique : face et dos', (voir_liste(:'vcode2')->'modeles'->0->'photos'->>1) like '%/dos.jpg';
 reset role;

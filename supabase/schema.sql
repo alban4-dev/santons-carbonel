@@ -364,7 +364,9 @@ create table if not exists public.modeles_famille (
   marque text not null default 'Carbonel' check (marque in ('Carbonel', 'Escoffier', 'Autre')),
   section text not null default 'santons',
   note text check (char_length(note) <= 200),
-  photo text check (char_length(photo) <= 300),  -- chemin dans le stockage « photos »
+  photo text check (char_length(photo) <= 300),  -- chemin dans le stockage « photos » (vignette)
+  photos text[] check (photos is null or (cardinality(photos) <= 3      -- [face, dos, côté]
+                       and char_length(array_to_string(photos, '')) <= 900)),
   ajoute_par uuid default auth.uid() references auth.users (id) on delete set null,
   created_at timestamptz not null default now()
 );
@@ -385,13 +387,13 @@ create policy modeles_ajouter on public.modeles_famille for insert to authentica
   with check (est_membre(famille_id) and ajoute_par = auth.uid());
 drop policy if exists modeles_modifier on public.modeles_famille;
 create policy modeles_modifier on public.modeles_famille for update to authenticated
-  using (ajoute_par = auth.uid() or est_admin(famille_id))
-  with check (est_membre(famille_id));
+  using (est_membre(famille_id)) with check (est_membre(famille_id));  -- tout membre complète les photos
 drop policy if exists modeles_retirer on public.modeles_famille;
 create policy modeles_retirer on public.modeles_famille for delete to authenticated
   using (ajoute_par = auth.uid() or est_admin(famille_id));
 
-grant select, insert, update, delete on public.modeles_famille to authenticated;
+grant select, insert, delete on public.modeles_famille to authenticated;
+grant update (nom, note, photo, photos) on public.modeles_famille to authenticated;
 grant usage on sequence public.modeles_famille_id_seq to authenticated;
 revoke all on public.modeles_famille from anon;
 revoke all on sequence public.modeles_famille_id_seq from anon;
@@ -428,7 +430,8 @@ language sql stable security definer set search_path = public as $$
                                                          'updated_at', i.updated_at))
                        from liste_items i where i.liste_id = l.id), '[]'::json),
     'modeles', coalesce((select json_agg(json_build_object('id', f.id, 'nom', f.nom, 'marque', f.marque,
-                                                           'section', f.section, 'note', f.note, 'photo', f.photo))
+                                                           'section', f.section, 'note', f.note, 'photo', f.photo,
+                                                           'photos', f.photos))
                          from modeles_famille f
                          where f.famille_id = l.famille_id
                            and exists (select 1 from liste_items i where i.liste_id = l.id and i.santon_id = f.id)),
