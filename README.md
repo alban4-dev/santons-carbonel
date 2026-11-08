@@ -99,10 +99,16 @@ statique (par exemple Netlify Drop).
    **Partager** envoie le lien de la crèche à un proche qui doit seulement
    regarder (il n'a pas de compte à créer).
 
-**Onglet « Autres »** : les santons et bâtiments d'autres marques ou
-d'artisans (sans marque, achetés sur un marché…), créés par la famille avec la
-marque « Autre marque ou artisan », rangés en « Santons » et « Bâtiments et
-décors », à part des gammes Carbonel et Escoffier.
+**Onglet « Sans marque · Provence »** : les santons de Provence sans marque
+et leurs bâtiments (achetés sur un marché…), créés par la famille avec la
+marque « Sans marque », rangés en « Santons » et « Bâtiments et décors », à
+part des gammes Carbonel et Escoffier.
+
+**Les ajouts restent dans leur famille** : un santon créé dans une famille
+(santon inconnu, sans marque) n'est visible que de ses membres, et seulement
+dans ses crèches ; quelqu'un qui est dans deux familles ne voit, dans chaque
+crèche, que les ajouts de la famille de cette crèche (vérifié par la base et
+par `familles.js`).
 
 **Plusieurs familles** : « + Créer une autre famille » en bas de l'accueil
 (côté du conjoint, côté de ses parents…). Chaque famille a ses crèches, ses
@@ -144,7 +150,8 @@ PostgreSQL 16 local :
   en lecture seule, puis devient gérante ; Mamie ouvre le lien public sans
   compte et ne voit que la crèche de Léa ; après « Changer », l'ancien lien
   ne marche plus ;
-- `familles.js` : une personne dans deux familles, chacun ne voit que les siennes ;
+- `familles.js` : une personne dans deux familles, chacun ne voit que les siennes,
+  et les santons ajoutés restent dans leur famille ;
 - `ajout.js` : Papa ajoute un santon ancien avec sa photo, coché dans la
   crèche, puis ajoute le dos et change la face ; Maman ajoute le côté ; Maman le voit dans le catalogue, la page publique l'affiche ; Papa
   le retire et il disparaît de toutes les crèches.

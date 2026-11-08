@@ -282,7 +282,7 @@ body.kbd .totop { display: none; }
         <button class="tab" role="tab" type="button" data-tab="santons_escoffier" id="tab-santons_escoffier"><span class="marque">Escoffier</span><span class="type">Santons</span><span class="n"></span></button>
         <button class="tab" role="tab" type="button" data-tab="escoffier" id="tab-escoffier"><span class="marque">Escoffier</span><span class="type">Bâtiments</span><span class="n"></span></button>
         <button class="tab" role="tab" type="button" data-tab="decor" id="tab-decor"><span class="marque">Carbonel</span><span class="type">Décors</span><span class="n"></span></button>
-        <button class="tab" role="tab" type="button" data-tab="autres" id="tab-autres"><span class="marque">Artisans</span><span class="type">Autres</span><span class="n"></span></button>
+        <button class="tab" role="tab" type="button" data-tab="autres" id="tab-autres"><span class="marque">Sans marque</span><span class="type">Provence</span><span class="n"></span></button>
       </div>
     </div>
   </header>
@@ -331,15 +331,15 @@ body.kbd .totop { display: none; }
 <dialog id="dlg-add" aria-labelledby="add-title">
   <form class="dlg" id="add-form">
     <div class="dlg-head"><h2 id="add-title">Créer un santon inconnu</h2><button class="x" type="button" data-close aria-label="Fermer">✕</button></div>
-    <p class="help" id="add-help">Vous avez un santon devant les yeux mais vous ne le retrouvez ni dans la liste ni dans les catalogues (trop ancien, autre marque…) ? Créez-le avec sa photo et le nom que vous lui donnez : il rejoint le catalogue de toute la famille, sous « Ajoutés par la famille ».</p>
+    <p class="help" id="add-help">Vous avez un santon devant les yeux mais vous ne le retrouvez ni dans la liste ni dans les catalogues (trop ancien…) ? Créez-le avec sa photo et le nom que vous lui donnez : il rejoint le catalogue de votre famille (et d'elle seule), sous « Ajoutés par la famille ».</p>
     <div class="field"><label class="label" for="add-nom">Nom</label><input id="add-nom" maxlength="80" required placeholder="Le nom que vous lui donnez : Chasseur à la pipe…"></div>
     <div class="row">
       <div class="field" style="flex:1 1 150px"><label class="label" for="add-type">Type</label>
         <select id="add-type" class="field-sel"><option value="santon">Santon</option><option value="decor">Bâtiment ou décor</option></select></div>
       <div class="field" style="flex:1 1 150px"><label class="label" for="add-marque">Marque</label>
-        <select id="add-marque" class="field-sel"><option>Carbonel</option><option>Escoffier</option><option value="Autre">Autre marque ou artisan</option></select></div>
+        <select id="add-marque" class="field-sel"><option>Carbonel</option><option>Escoffier</option><option value="Autre">Sans marque (santon de Provence)</option></select></div>
     </div>
-    <div class="field"><label class="label" for="add-note">Note (année, artisan, marché, taille…)</label><input id="add-note" maxlength="200"></div>
+    <div class="field"><label class="label" for="add-note">Note (année, où il a été acheté, taille…)</label><input id="add-note" maxlength="200"></div>
     <div class="field"><span class="label">Photo de face</span>
       <div class="picks" id="add-picks">
         <label class="pick"><svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 6.5h3l1.5-2h5L14 6.5h3v9H3z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="10" cy="11" r="3" fill="none" stroke="currentColor" stroke-width="1.5"/></svg> Prendre une photo<input type="file" id="add-photo" accept="image/*" capture="environment"></label>
@@ -400,7 +400,7 @@ for (const it of ITEMS) {
 }
 const SECTIONS = ["santons", "santons_escoffier", "escoffier", "decor", "autres"];
 const ANNEE = (DATA.scrapedAt || "").slice(0, 4) || String(new Date().getFullYear());
-const SEC_LABEL = { santons: "Santons Carbonel", santons_escoffier: "Santons Escoffier", escoffier: "Bâtiments et accessoires Escoffier", decor: "Décors Carbonel", autres: "Autres marques et artisans" };
+const SEC_LABEL = { santons: "Santons Carbonel", santons_escoffier: "Santons Escoffier", escoffier: "Bâtiments et accessoires Escoffier", decor: "Décors Carbonel", autres: "Santons de Provence sans marque" };
 /* Modèles ajoutés par la famille (table modeles_famille) : ils rejoignent ITEMS */
 const PHOTO_OK = /^[0-9a-f-]{36}\/[0-9a-z-]{8,64}\.(jpg|jpeg|png|webp)$/i;
 const photoUrl = path => PHOTO_OK.test(path || "") ? `${(CFG.supabaseUrl || "").replace(/\/$/, "")}/storage/v1/object/public/photos/${path}` : "";
@@ -827,7 +827,7 @@ function renderGrid() {
     if (g !== grp) { grp = g; html += `<div class="sec"><h2>${esc(g)}</h2><span data-sec="${esc(g)}"></span></div>`; }
     html += cardHTML(it);
   }
-  if (!list.length && ui.tab === "autres" && ui.status === "all" && !ui.q.trim()) html += `<div class="empty">Ici, les santons et bâtiments d'autres marques ou d'artisans (sans marque, achetés sur un marché…), pour ne pas les mélanger aux gammes Carbonel et Escoffier.${!PUBLIC && isMember(l.famille_id) ? `<p style="margin:12px 0 0"><button class="btn add-btn" type="button" data-addautre>+ Ajouter un santon ou un bâtiment</button></p>` : ""}</div>`;
+  if (!list.length && ui.tab === "autres" && ui.status === "all" && !ui.q.trim()) html += `<div class="empty">Ici, les santons de Provence sans marque et leurs bâtiments (achetés sur un marché, santonnier inconnu…), pour ne pas les mélanger aux gammes Carbonel et Escoffier.${!PUBLIC && isMember(l.famille_id) ? `<p style="margin:12px 0 0"><button class="btn add-btn" type="button" data-addautre>+ Ajouter un santon ou un bâtiment</button></p>` : ""}</div>`;
   else if (!list.length) html += `<div class="empty">${ui.status === "own" ? "Rien de coché pour l'instant." : ui.status === "wish" ? "Pas encore d'envie dans cet onglet." : ui.status === "new" ? "Pas de nouveauté dans cet onglet cette année." : ui.status === "gift" ? "Toutes les envies de cet onglet sont déjà réservées." : "Rien ne correspond."}${ui.q.trim() && !PUBLIC && isMember(l.famille_id) ? `<p style="margin:12px 0 0"><button class="btn add-btn" type="button" data-addq>+ Introuvable ? Créer un santon inconnu</button></p>` : ""}</div>`;
   $("grid").innerHTML = html;
   renderSectionCounts();
@@ -852,7 +852,7 @@ function renderProgress() {
 }
 function renderStatus() {
   const l = curList(), pool = ITEMS.filter(inTab);
-  $("l-add").textContent = ui.tab === "autres" ? "+ Ajouter (artisan, sans marque…)" : ui.tab === "escoffier" || ui.tab === "decor" ? "+ Décor inconnu" : "+ Santon inconnu";
+  $("l-add").textContent = ui.tab === "autres" ? "+ Ajouter (sans marque)" : ui.tab === "escoffier" || ui.tab === "decor" ? "+ Décor inconnu" : "+ Santon inconnu";
   const opts = [["all", "Tous"], ["own", "J'ai"], ["missing", "Il manque"], ["wish", "Envies"]];
   if (pool.some(it => statut(l, it.id) === "wish")) opts.push(["gift", "À offrir"]);
   else if (ui.status === "gift") ui.status = "all";
@@ -989,7 +989,7 @@ function openItem(id) {
     <div class="item">${it.custom ? galerieHTML(it) : `<div class="pic">${it.img ? `<img src="${esc(it.img)}${it.esc ? "" : "?auto=format&w=480&h=640&fit=max"}" alt="${esc(it.name)}" data-fallback="1">` : `<div class="ph" style="${spriteStyle(it)};cursor:default"></div>`}</div>`}
       <div style="display:grid;gap:12px;align-content:start;min-width:0">
         <dl>
-          <dt>Marque</dt><dd>${it.custom ? (it.marqueNom === "Autre" ? "Autre marque ou artisan" : esc(it.marqueNom || "")) : it.esc ? "Santons Escoffier (Aubagne)" : "Ateliers Marcel Carbonel (Marseille)"}</dd>
+          <dt>Marque</dt><dd>${it.custom ? (it.marqueNom === "Autre" ? "Santon de Provence sans marque" : esc(it.marqueNom || "")) : it.esc ? "Santons Escoffier (Aubagne)" : "Ateliers Marcel Carbonel (Marseille)"}</dd>
           ${it.custom && it.note ? `<dt>Note</dt><dd>${esc(it.note)}</dd>` : ""}
           ${it.custom && (it.cree || (it.ajoutePar && st.profils.has(it.ajoutePar))) ? `<dt>Ajouté</dt><dd>${[it.ajoutePar && st.profils.has(it.ajoutePar) ? "par " + esc(nameOf(it.ajoutePar)) : "", it.cree ? esc(new Date(it.cree).toLocaleDateString("fr-FR")) : ""].filter(Boolean).join(", ")}</dd>` : ""}
           <dt>Catégorie</dt><dd>${esc(groupOf(it))}</dd>
@@ -1305,10 +1305,10 @@ function openAdd() {
   $("add-own-row").hidden = !canEdit(l.id);
   $("add-own-txt").textContent = `Je l'ai dans « ${l.nom} »`;
   const autre = ui.tab === "autres";
-  $("add-title").textContent = autre ? "Autre marque ou artisan" : $("add-type").value === "santon" ? "Créer un santon inconnu" : "Créer un décor inconnu";
+  $("add-title").textContent = autre ? "Santon de Provence sans marque" : $("add-type").value === "santon" ? "Créer un santon inconnu" : "Créer un décor inconnu";
   $("add-help").textContent = autre
-    ? "Un santon ou un bâtiment d'une autre marque, ou fait par un artisan (sans marque, acheté sur un marché…) : il va dans l'onglet « Autres » de toute la famille, pas dans les gammes Carbonel ou Escoffier. Choisissez « Santon » ou « Bâtiment ou décor »."
-    : "Vous avez un santon devant les yeux mais vous ne le retrouvez ni dans la liste ni dans les catalogues (trop ancien…) ? Créez-le avec sa photo et le nom que vous lui donnez : il rejoint le catalogue de toute la famille, sous « Ajoutés par la famille ». Pour un artisan ou une autre marque, choisissez la marque « Autre marque ou artisan ».";
+    ? "Un santon de Provence sans marque, ou son bâtiment (acheté sur un marché…) : il va dans l'onglet « Sans marque » de votre famille, pas dans les gammes Carbonel ou Escoffier. Choisissez « Santon » ou « Bâtiment ou décor »."
+    : "Vous avez un santon devant les yeux mais vous ne le retrouvez ni dans la liste ni dans les catalogues (trop ancien…) ? Créez-le avec sa photo et le nom que vous lui donnez : il rejoint le catalogue de votre famille (et d'elle seule), sous « Ajoutés par la famille ». Pour un santon sans marque, choisissez la marque « Sans marque ».";
   dlgAdd.showModal();
 }
 async function photoSanton(e) {

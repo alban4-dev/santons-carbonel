@@ -32,5 +32,23 @@ const sqlv = q => execSync(`psql -h /tmp -p 54329 -U postgres -d app -tA -c "${q
   const maman = await mk(390, 844);
   await maman.goto(URL + '#rejoindre=' + code('Famille de Dorothée')); await maman.waitForSelector('#scr-auth:not([hidden])'); await signup(maman, 'Dorothée', 'doro@f.fr');
   console.log('maman voit :', await familles(maman), '| crèches', (await maman.locator('.lcard[data-list] h3').allTextContents()).join(', '));
+  // Ajouts séparés par famille
+  const cherche = async (p, tab, q) => { await p.click('#tab-' + tab); await p.fill('#q', q); await p.waitForTimeout(400); const n = await p.locator('.card').count(); await p.fill('#q', ''); await p.waitForTimeout(200); return n; };
+  const ouvre = async (p, nom) => { await p.goto(URL); await p.waitForSelector('#view-home:not([hidden])'); await p.waitForTimeout(500); await p.click(`.lcard[data-list]:has-text("${nom}")`); await p.waitForTimeout(500); };
+  await ouvre(papa, 'Crèche de Lucie');
+  await papa.click('#l-add'); await papa.fill('#add-nom', 'Berger de Dorothée'); await papa.click('#add-go'); await papa.waitForTimeout(900);
+  await ouvre(tonton, 'Crèche du beau-frère');
+  await tonton.click('#tab-autres'); await tonton.waitForTimeout(200); await tonton.click('[data-addautre]');
+  await tonton.fill('#add-nom', 'Moulin Martin'); await tonton.selectOption('#add-type', 'decor'); await tonton.click('#add-go'); await tonton.waitForTimeout(900);
+  console.log('tonton, sa crèche : Berger de Dorothée', await cherche(tonton, 'santons', 'Berger de Dorothée'), '| Moulin Martin', await cherche(tonton, 'autres', 'Moulin Martin'));
+  await ouvre(maman, 'Crèche de Lucie');
+  console.log('dorothée, sa crèche : Berger de Dorothée', await cherche(maman, 'santons', 'Berger de Dorothée'), '| Moulin Martin', await cherche(maman, 'autres', 'Moulin Martin'));
+  await ouvre(papa, 'Crèche du beau-frère');
+  console.log('alban, crèche Martin : Berger de Dorothée', await cherche(papa, 'santons', 'Berger de Dorothée'), '| Moulin Martin', await cherche(papa, 'autres', 'Moulin Martin'));
+  await ouvre(papa, 'Crèche de Lucie');
+  console.log('alban, crèche Lucie : Berger de Dorothée', await cherche(papa, 'santons', 'Berger de Dorothée'), '| Moulin Martin', await cherche(papa, 'autres', 'Moulin Martin'));
+  const lit = mail => sqlv(`select set_config('request.jwt.claim.sub', (select id::text from auth.users where email = '${mail}'), false); set role authenticated; select string_agg(nom, ', ' order by nom) from modeles_famille`).split('\n').pop();
+  console.log('base, lisible par Tonton :', lit('tonton@f.fr'), '| par Dorothée :', lit('doro@f.fr'), '| par Alban :', lit('alban@f.fr'));
+  console.log('onglet :', (await papa.textContent('#tab-autres')).replace(/\s+/g, ' ').trim());
   console.log('erreurs:', errs); await b.close();
 })();
