@@ -186,7 +186,12 @@ dialog::backdrop { background: rgba(20, 14, 26, .55); }
 .tg:disabled { opacity: .5; cursor: default; }
 .drop { position: relative; display: grid; place-items: center; gap: 6px; text-align: center; border: 2px dashed var(--line); border-radius: 12px; padding: 28px 16px; cursor: pointer; color: var(--muted); }
 .drop:hover, .drop:focus-within { border-color: var(--accent); color: var(--ink); }
-.drop input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.drop input, .pick input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.picks { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.pick { position: relative; display: flex; align-items: center; justify-content: center; gap: 8px; text-align: center;
+  border: 1.5px solid var(--line); border-radius: 12px; padding: 14px 8px; font-weight: 700; cursor: pointer; background: var(--surface); }
+.pick.main { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.pick:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
 .shot { display: block; max-width: 100%; max-height: 46vh; margin-inline: auto; border-radius: 10px; }
 .found { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 6px; max-height: 46vh; overflow: auto; padding: 2px; }
 .found label { position: relative; display: block; border: 2px solid var(--line); border-radius: 9px; overflow: hidden; background: var(--surface); cursor: pointer; }
@@ -322,7 +327,11 @@ dialog::backdrop { background: rgba(20, 14, 26, .55); }
     </div>
     <div class="field"><label class="label" for="add-note">Note (année, taille, couleur…)</label><input id="add-note" maxlength="200"></div>
     <div class="field"><span class="label">Photo</span>
-      <label class="drop" style="padding:14px"><span id="add-photo-txt">Prendre ou choisir une photo</span><img class="preview" id="add-preview" alt="" hidden><input type="file" id="add-photo" accept="image/*"></label></div>
+      <div class="picks" id="add-picks">
+        <label class="pick"><svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 6.5h3l1.5-2h5L14 6.5h3v9H3z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="10" cy="11" r="3" fill="none" stroke="currentColor" stroke-width="1.5"/></svg> Prendre une photo<input type="file" id="add-photo" accept="image/*" capture="environment"></label>
+        <label class="pick"><svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><rect x="3" y="4" width="14" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M4 14l4-4 3 3 2-2 3 3" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="13" cy="8" r="1.3" fill="currentColor"/></svg> Pellicule<input type="file" id="add-photo2" accept="image/*"></label>
+      </div>
+      <img class="preview" id="add-preview" alt="" hidden></div>
     <label class="row" id="add-own-row"><input type="checkbox" id="add-own" checked> <span id="add-own-txt">Je l'ai dans cette crèche</span></label>
     <p class="err" id="add-err" hidden></p>
     <div class="row"><button class="btn primary" type="submit" id="add-go">Ajouter au catalogue</button></div>
@@ -351,13 +360,12 @@ dialog::backdrop { background: rgba(20, 14, 26, .55); }
 <dialog id="dlg-photo" class="wide" aria-labelledby="ph-title">
   <div class="dlg">
     <div class="dlg-head"><h2 id="ph-title">Photo de la crèche</h2><button class="x" type="button" data-close aria-label="Fermer">✕</button></div>
-    <div id="ph-pick">
-      <label class="drop">
-        <svg width="34" height="34" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 6.5h3l1.5-2h5L14 6.5h3v9H3z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><circle cx="10" cy="11" r="3" fill="none" stroke="currentColor" stroke-width="1.3"/></svg>
-        <b>Prendre ou choisir une photo</b>
-        <span class="help">Toute la crèche, de face et bien éclairée. Si elle est grande, plusieurs photos l'une après l'autre.</span>
-        <input type="file" id="ph-file" accept="image/*">
-      </label>
+    <div id="ph-pick" style="display:grid;gap:10px">
+      <div class="picks">
+        <label class="pick main"><svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 6.5h3l1.5-2h5L14 6.5h3v9H3z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="10" cy="11" r="3" fill="none" stroke="currentColor" stroke-width="1.5"/></svg> Prendre une photo<input type="file" id="ph-file" accept="image/*" capture="environment"></label>
+        <label class="pick"><svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><rect x="3" y="4" width="14" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M4 14l4-4 3 3 2-2 3 3" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="13" cy="8" r="1.3" fill="currentColor"/></svg> Choisir dans la pellicule<input type="file" id="ph-file2" accept="image/*"></label>
+      </div>
+      <p class="help">Toute la crèche, de face, bien éclairée et sans flash. Si elle est grande, plusieurs photos l'une après l'autre.</p>
     </div>
     <div id="ph-step2" hidden>
       <div style="display:grid;gap:12px">
@@ -966,14 +974,16 @@ async function shrink(file, max, q) {
     return await new Promise(res => c.toBlob(res, "image/jpeg", q));
   } finally { URL.revokeObjectURL(url); }
 }
-$("ph-file").addEventListener("change", async e => {
+async function photoChoisie(e) {
   const f = e.target.files && e.target.files[0]; e.target.value = ""; if (!f) return;
   let blob = null; try { blob = await shrink(f, 1600, .85); } catch (err) { blob = null; }
   if (!blob) return toast("Cette image ne s'ouvre pas. Essayez une photo JPEG.");
   if (photo) URL.revokeObjectURL(photo.url);
   photo = { blob, url: URL.createObjectURL(blob) };
   showPhotoStep2();
-});
+}
+$("ph-file").addEventListener("change", photoChoisie);
+$("ph-file2").addEventListener("change", photoChoisie);
 function showPhotoStep2() {
   $("ph-shot").src = photo.url; $("ph-ai").hidden = !canAI(); $("ph-ai").disabled = false;
   $("ph-msg").textContent = canAI()
@@ -1135,20 +1145,22 @@ let addPhoto = null;
 function openAdd() {
   const l = curList(); if (!l || !isMember(l.famille_id)) return;
   $("add-form").reset(); addPhoto = null;
-  $("add-preview").hidden = true; $("add-photo-txt").hidden = false; $("add-err").hidden = true;
+  $("add-preview").hidden = true; $("add-err").hidden = true;
   $("add-type").value = ui.tab === "santons" || ui.tab === "santons_escoffier" ? "santon" : "decor";
   $("add-marque").value = ui.tab === "escoffier" || ui.tab === "santons_escoffier" ? "Escoffier" : "Carbonel";
   $("add-own-row").hidden = !canEdit(l.id);
   $("add-own-txt").textContent = `Je l'ai dans « ${l.nom} »`;
   dlgAdd.showModal();
 }
-$("add-photo").addEventListener("change", async e => {
+async function photoSanton(e) {
   const f = e.target.files && e.target.files[0]; e.target.value = ""; if (!f) return;
-  let blob = null; try { blob = await shrink(f, 1000, .85); } catch (err) { blob = null; }
+  let blob = null; try { blob = await shrink(f, 1200, .88); } catch (err) { blob = null; }
   if (!blob) { $("add-err").textContent = "Cette image ne s'ouvre pas : essayez une photo JPEG."; $("add-err").hidden = false; return; }
   addPhoto = blob;
-  $("add-preview").src = URL.createObjectURL(blob); $("add-preview").hidden = false; $("add-photo-txt").hidden = true;
-});
+  $("add-preview").src = URL.createObjectURL(blob); $("add-preview").hidden = false;
+}
+$("add-photo").addEventListener("change", photoSanton);
+$("add-photo2").addEventListener("change", photoSanton);
 $("add-form").addEventListener("submit", async e => {
   e.preventDefault();
   const l = curList(), nom = $("add-nom").value.trim().slice(0, 80);
