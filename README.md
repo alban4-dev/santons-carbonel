@@ -99,6 +99,11 @@ statique (par exemple Netlify Drop).
    **Partager** envoie le lien de la crèche à un proche qui doit seulement
    regarder (il n'a pas de compte à créer).
 
+**Onglet « Autres »** : les santons et bâtiments d'autres marques ou
+d'artisans (sans marque, achetés sur un marché…), créés par la famille avec la
+marque « Autre marque ou artisan », rangés en « Santons » et « Bâtiments et
+décors », à part des gammes Carbonel et Escoffier.
+
 **Plusieurs familles** : « + Créer une autre famille » en bas de l'accueil
 (côté du conjoint, côté de ses parents…). Chaque famille a ses crèches, ses
 membres et son lien d'invitation ; une même personne peut être dans

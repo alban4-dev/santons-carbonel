@@ -57,13 +57,13 @@ a { color: var(--accent); }
 .avatar.lg { width: 34px; height: 34px; font-size: .95rem; }
 .avatar.ring { background: var(--surface); color: var(--c); box-shadow: inset 0 0 0 1.5px var(--c); }
 /* Les trois catalogues : gros boutons côte à côte, marque en petit, type en gros */
-.tabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; padding-block: 2px 10px; max-width: 880px; }
-@media (max-width: 480px) { .tabs { gap: 4px; } .tab { padding: 6px 2px 7px; } .tab .marque { font-size: .58rem; letter-spacing: .04em; } .tab .n { font-size: .68rem; } }
+.tabs { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; padding-block: 2px 10px; max-width: 1000px; }
+@media (max-width: 480px) { .tabs { gap: 4px; } .tab { padding: 6px 2px 7px; } .tab .marque { font-size: .52rem; letter-spacing: .02em; } .tab .n { font-size: .68rem; } }
 .tab { display: grid; gap: 1px; justify-items: center; text-align: center; min-width: 0;
   border: 1.5px solid var(--line); background: var(--surface-2); border-radius: 12px; padding: 7px 4px 8px; color: var(--ink); line-height: 1.15; }
 .tab:hover { border-color: var(--accent); }
 .tab .marque { font-size: .66rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
-.tab .type { font-family: var(--f-display); font-size: clamp(.74rem, 3.4vw, 1.02rem); white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+.tab .type { font-family: var(--f-display); font-size: clamp(.68rem, 3vw, 1.02rem); white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
 .tab .n { font-size: .75rem; color: var(--muted); font-variant-numeric: tabular-nums; }
 .tab[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); box-shadow: var(--shadow); }
 .tab[aria-selected="true"] .marque, .tab[aria-selected="true"] .n { color: var(--accent-ink); opacity: .85; }
@@ -287,6 +287,7 @@ body.kbd .totop { display: none; }
         <button class="tab" role="tab" type="button" data-tab="santons_escoffier" id="tab-santons_escoffier"><span class="marque">Escoffier</span><span class="type">Santons</span><span class="n"></span></button>
         <button class="tab" role="tab" type="button" data-tab="escoffier" id="tab-escoffier"><span class="marque">Escoffier</span><span class="type">Bâtiments</span><span class="n"></span></button>
         <button class="tab" role="tab" type="button" data-tab="decor" id="tab-decor"><span class="marque">Carbonel</span><span class="type">Décors</span><span class="n"></span></button>
+        <button class="tab" role="tab" type="button" data-tab="autres" id="tab-autres"><span class="marque">Artisans</span><span class="type">Autres</span><span class="n"></span></button>
       </div>
     </div>
   </header>
@@ -335,15 +336,15 @@ body.kbd .totop { display: none; }
 <dialog id="dlg-add" aria-labelledby="add-title">
   <form class="dlg" id="add-form">
     <div class="dlg-head"><h2 id="add-title">Créer un santon inconnu</h2><button class="x" type="button" data-close aria-label="Fermer">✕</button></div>
-    <p class="help">Vous avez un santon devant les yeux mais vous ne le retrouvez ni dans la liste ni dans les catalogues (trop ancien, autre marque…) ? Créez-le avec sa photo et le nom que vous lui donnez : il rejoint le catalogue de toute la famille, sous « Ajoutés par la famille ».</p>
+    <p class="help" id="add-help">Vous avez un santon devant les yeux mais vous ne le retrouvez ni dans la liste ni dans les catalogues (trop ancien, autre marque…) ? Créez-le avec sa photo et le nom que vous lui donnez : il rejoint le catalogue de toute la famille, sous « Ajoutés par la famille ».</p>
     <div class="field"><label class="label" for="add-nom">Nom</label><input id="add-nom" maxlength="80" required placeholder="Le nom que vous lui donnez : Chasseur à la pipe…"></div>
     <div class="row">
       <div class="field" style="flex:1 1 150px"><label class="label" for="add-type">Type</label>
         <select id="add-type" class="field-sel"><option value="santon">Santon</option><option value="decor">Bâtiment ou décor</option></select></div>
       <div class="field" style="flex:1 1 150px"><label class="label" for="add-marque">Marque</label>
-        <select id="add-marque" class="field-sel"><option>Carbonel</option><option>Escoffier</option><option>Autre</option></select></div>
+        <select id="add-marque" class="field-sel"><option>Carbonel</option><option>Escoffier</option><option value="Autre">Autre marque ou artisan</option></select></div>
     </div>
-    <div class="field"><label class="label" for="add-note">Note (année, taille, couleur…)</label><input id="add-note" maxlength="200"></div>
+    <div class="field"><label class="label" for="add-note">Note (année, artisan, marché, taille…)</label><input id="add-note" maxlength="200"></div>
     <div class="field"><span class="label">Photo de face</span>
       <div class="picks" id="add-picks">
         <label class="pick"><svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 6.5h3l1.5-2h5L14 6.5h3v9H3z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="10" cy="11" r="3" fill="none" stroke="currentColor" stroke-width="1.5"/></svg> Prendre une photo<input type="file" id="add-photo" accept="image/*" capture="environment"></label>
@@ -402,9 +403,9 @@ for (const it of ITEMS) {
   it.short = it.esc ? it.name.replace(/\s*-\s*(Décor|7 ?CM)$/i, "").trim() : short(it.name);
   it.old = it.col.includes("ancien");
 }
-const SECTIONS = ["santons", "santons_escoffier", "escoffier", "decor"];
+const SECTIONS = ["santons", "santons_escoffier", "escoffier", "decor", "autres"];
 const ANNEE = (DATA.scrapedAt || "").slice(0, 4) || String(new Date().getFullYear());
-const SEC_LABEL = { santons: "Santons Carbonel", santons_escoffier: "Santons Escoffier", escoffier: "Bâtiments et accessoires Escoffier", decor: "Décors Carbonel" };
+const SEC_LABEL = { santons: "Santons Carbonel", santons_escoffier: "Santons Escoffier", escoffier: "Bâtiments et accessoires Escoffier", decor: "Décors Carbonel", autres: "Autres marques et artisans" };
 /* Modèles ajoutés par la famille (table modeles_famille) : ils rejoignent ITEMS */
 const PHOTO_OK = /^[0-9a-f-]{36}\/[0-9a-z-]{8,64}\.(jpg|jpeg|png|webp)$/i;
 const photoUrl = path => PHOTO_OK.test(path || "") ? `${(CFG.supabaseUrl || "").replace(/\/$/, "")}/storage/v1/object/public/photos/${path}` : "";
@@ -412,7 +413,9 @@ function setCustom(rows, publicMode) {
   for (let k = ITEMS.length - 1; k >= 0; k--) if (ITEMS[k].custom) { BY_ID.delete(ITEMS[k].id); ITEMS.splice(k, 1); }
   for (const r of rows || []) {
     if (!Number.isInteger(r.id) || BY_ID.has(r.id)) continue;
-    const it = { id: r.id, name: r.nom, short: r.nom, section: SECTIONS.includes(r.section) ? r.section : "santons",
+    const sec = SECTIONS.includes(r.section) ? r.section : "santons";
+    const it = { id: r.id, name: r.nom, short: r.nom, section: r.marque === "Autre" ? "autres" : sec,
+      kind: sec === "santons" || sec === "santons_escoffier" ? "santon" : "decor",
       marqueNom: r.marque, note: r.note, ajoutePar: r.ajoute_par, cree: r.created_at,
       famille: publicMode ? null : r.famille_id, custom: true, cat: [], col: [], esc: r.marque === "Escoffier" };
     // photos = [face, dos, côté] (chemins dans le stockage) ; photo = la première présente
@@ -432,6 +435,7 @@ const $ = id => document.getElementById(id);
 const initial = n => ((n || "?").trim().charAt(0) || "?").toUpperCase();
 function hashColor(s) { let h = 0; for (const c of String(s)) h = (h * 31 + c.charCodeAt(0)) | 0; return PALETTE[Math.abs(h) % PALETTE.length]; }
 function groupOf(it) {
+  if (it.custom && it.section === "autres") return it.kind === "santon" ? "Santons" : "Bâtiments et décors";
   if (it.custom) return "Ajoutés par la famille";
   if (it.esc) return it.groupe || "Escoffier";
   if (it.old) return "Anciens modèles (hors boutique)";
@@ -685,7 +689,7 @@ function renderFoot() {
 }
 const avatarHTML = (uid, cls = "") => `<span class="avatar ${cls}" style="--c:${hashColor(uid)}">${esc(initial(nameOf(uid)))}</span>`;
 function counts(l) {
-  const c = { santons: 0, santons_escoffier: 0, escoffier: 0, decor: 0, w: 0 };
+  const c = { santons: 0, santons_escoffier: 0, escoffier: 0, decor: 0, autres: 0, w: 0 };
   for (const [id, r] of l.items) { const it = BY_ID.get(id); if (!it) continue; if (r.statut === "own") c[it.section]++; else c.w++; }
   return c;
 }
@@ -701,7 +705,7 @@ function listCard(l) {
     <span class="row" style="justify-content:space-between"><h3>${esc(l.nom)}</h3>${edit ? '<span class="badge edit">Vous gérez</span>' : '<span class="badge">Lecture seule</span>'}</span>
     <span class="who">${g.length ? "Administrée par " + esc(g.map(nameOf).join(", ")) : "Sans administrateur"}</span>
     <span class="meter"><i style="width:${c.santons / nSec("santons", l) * 100}%"></i></span>
-    <span class="nums"><span><b>${c.santons}</b> / ${nSec("santons", l)} santons</span><span><b>${c.santons_escoffier}</b> santons Escoffier</span><span><b>${c.escoffier}</b> bâtiments Escoffier</span><span><b>${c.decor}</b> décors Carbonel</span><span><b>${c.w}</b> envies</span></span>
+    <span class="nums"><span><b>${c.santons}</b> / ${nSec("santons", l)} santons</span><span><b>${c.santons_escoffier}</b> santons Escoffier</span><span><b>${c.escoffier}</b> bâtiments Escoffier</span><span><b>${c.decor}</b> décors Carbonel</span>${c.autres ? `<span><b>${c.autres}</b> autres marques</span>` : ""}<span><b>${c.w}</b> envies</span></span>
   </button>`;
 }
 function feedHTML(listIds) {
@@ -793,7 +797,7 @@ function cardHTML(it) {
     ${own ? "" : `<button class="ic w" type="button" data-act="wish" data-id="${it.id}" aria-pressed="${wish}" aria-label="Envie : ${esc(it.short)}"${ro}>${ICON.wish}</button>`}
     ${quantite(l, it.id) > 1 ? `<span class="qte" aria-label="${quantite(l, it.id)} exemplaires">×${quantite(l, it.id)}</span>` : ""}
     ${it.old ? '<span class="old">Ancien</span>' : ""}
-    ${it.custom ? '<span class="ajout">Famille</span>' : ""}
+    ${it.custom && it.section !== "autres" ? '<span class="ajout">Famille</span>' : ""}
     ${it.nouveau ? `<span class="nouv">Nouveau ${ANNEE}</span>` : ""}
     <div class="nm">${esc(it.short)}</div>
     ${s === "wish" && resaOf(l, it.id) ? `<div class="resa" title="Réservé par ${esc(resaOf(l, it.id).nom)}">${ICON_GIFT}<span>${esc(resaOf(l, it.id).nom)}</span></div>` : ""}
@@ -828,7 +832,8 @@ function renderGrid() {
     if (g !== grp) { grp = g; html += `<div class="sec"><h2>${esc(g)}</h2><span data-sec="${esc(g)}"></span></div>`; }
     html += cardHTML(it);
   }
-  if (!list.length) html += `<div class="empty">${ui.status === "own" ? "Rien de coché pour l'instant." : ui.status === "wish" ? "Pas encore d'envie dans cet onglet." : ui.status === "new" ? "Pas de nouveauté dans cet onglet cette année." : ui.status === "gift" ? "Toutes les envies de cet onglet sont déjà réservées." : "Rien ne correspond."}${ui.q.trim() && !PUBLIC && isMember(l.famille_id) ? `<p style="margin:12px 0 0"><button class="btn add-btn" type="button" data-addq>+ Introuvable ? Créer un santon inconnu</button></p>` : ""}</div>`;
+  if (!list.length && ui.tab === "autres" && ui.status === "all" && !ui.q.trim()) html += `<div class="empty">Ici, les santons et bâtiments d'autres marques ou d'artisans (sans marque, achetés sur un marché…), pour ne pas les mélanger aux gammes Carbonel et Escoffier.${!PUBLIC && isMember(l.famille_id) ? `<p style="margin:12px 0 0"><button class="btn add-btn" type="button" data-addautre>+ Ajouter un santon ou un bâtiment</button></p>` : ""}</div>`;
+  else if (!list.length) html += `<div class="empty">${ui.status === "own" ? "Rien de coché pour l'instant." : ui.status === "wish" ? "Pas encore d'envie dans cet onglet." : ui.status === "new" ? "Pas de nouveauté dans cet onglet cette année." : ui.status === "gift" ? "Toutes les envies de cet onglet sont déjà réservées." : "Rien ne correspond."}${ui.q.trim() && !PUBLIC && isMember(l.famille_id) ? `<p style="margin:12px 0 0"><button class="btn add-btn" type="button" data-addq>+ Introuvable ? Créer un santon inconnu</button></p>` : ""}</div>`;
   $("grid").innerHTML = html;
   renderSectionCounts();
 }
@@ -852,7 +857,7 @@ function renderProgress() {
 }
 function renderStatus() {
   const l = curList(), pool = ITEMS.filter(inTab);
-  $("l-add").textContent = ui.tab === "escoffier" || ui.tab === "decor" ? "+ Décor inconnu" : "+ Santon inconnu";
+  $("l-add").textContent = ui.tab === "autres" ? "+ Ajouter (artisan, sans marque…)" : ui.tab === "escoffier" || ui.tab === "decor" ? "+ Décor inconnu" : "+ Santon inconnu";
   const opts = [["all", "Tous"], ["own", "J'ai"], ["missing", "Il manque"], ["wish", "Envies"]];
   if (pool.some(it => statut(l, it.id) === "wish")) opts.push(["gift", "À offrir"]);
   else if (ui.status === "gift") ui.status = "all";
@@ -989,7 +994,7 @@ function openItem(id) {
     <div class="item">${it.custom ? galerieHTML(it) : `<div class="pic">${it.img ? `<img src="${esc(it.img)}${it.esc ? "" : "?auto=format&w=480&h=640&fit=max"}" alt="${esc(it.name)}" data-fallback="1">` : `<div class="ph" style="${spriteStyle(it)};cursor:default"></div>`}</div>`}
       <div style="display:grid;gap:12px;align-content:start;min-width:0">
         <dl>
-          <dt>Marque</dt><dd>${it.custom ? esc(it.marqueNom || "") : it.esc ? "Santons Escoffier (Aubagne)" : "Ateliers Marcel Carbonel (Marseille)"}</dd>
+          <dt>Marque</dt><dd>${it.custom ? (it.marqueNom === "Autre" ? "Autre marque ou artisan" : esc(it.marqueNom || "")) : it.esc ? "Santons Escoffier (Aubagne)" : "Ateliers Marcel Carbonel (Marseille)"}</dd>
           ${it.custom && it.note ? `<dt>Note</dt><dd>${esc(it.note)}</dd>` : ""}
           ${it.custom && (it.cree || (it.ajoutePar && st.profils.has(it.ajoutePar))) ? `<dt>Ajouté</dt><dd>${[it.ajoutePar && st.profils.has(it.ajoutePar) ? "par " + esc(nameOf(it.ajoutePar)) : "", it.cree ? esc(new Date(it.cree).toLocaleDateString("fr-FR")) : ""].filter(Boolean).join(", ")}</dd>` : ""}
           <dt>Catégorie</dt><dd>${esc(groupOf(it))}</dd>
@@ -1167,6 +1172,7 @@ document.addEventListener("click", async e => {
     if (t.dataset.sure !== "1") { t.dataset.sure = "1"; t.textContent = "Confirmer l'annulation"; return; }
     annulerResa(+d.annuler); return;
   }
+  if (d.addautre !== undefined) { openAdd(); return; }
   if (d.addq !== undefined) { openAdd(); $("add-nom").value = ui.q.trim().slice(0, 80); return; }
   if (d.open) { openItem(d.open); return; }
   if (d.tab) { ui.tab = d.tab; renderProgress(); renderStatus(); renderGrid(); return; }
@@ -1299,11 +1305,15 @@ function openAdd() {
   const l = curList(); if (!l || !isMember(l.famille_id)) return;
   $("add-form").reset(); addPhoto = null;
   $("add-preview").hidden = true; $("add-err").hidden = true;
-  $("add-type").value = ui.tab === "santons" || ui.tab === "santons_escoffier" ? "santon" : "decor";
-  $("add-marque").value = ui.tab === "escoffier" || ui.tab === "santons_escoffier" ? "Escoffier" : "Carbonel";
+  $("add-type").value = ui.tab === "santons" || ui.tab === "santons_escoffier" || ui.tab === "autres" ? "santon" : "decor";
+  $("add-marque").value = ui.tab === "escoffier" || ui.tab === "santons_escoffier" ? "Escoffier" : ui.tab === "autres" ? "Autre" : "Carbonel";
   $("add-own-row").hidden = !canEdit(l.id);
   $("add-own-txt").textContent = `Je l'ai dans « ${l.nom} »`;
-  $("add-title").textContent = $("add-type").value === "santon" ? "Créer un santon inconnu" : "Créer un décor inconnu";
+  const autre = ui.tab === "autres";
+  $("add-title").textContent = autre ? "Autre marque ou artisan" : $("add-type").value === "santon" ? "Créer un santon inconnu" : "Créer un décor inconnu";
+  $("add-help").textContent = autre
+    ? "Un santon ou un bâtiment d'une autre marque, ou fait par un artisan (sans marque, acheté sur un marché…) : il va dans l'onglet « Autres » de toute la famille, pas dans les gammes Carbonel ou Escoffier. Choisissez « Santon » ou « Bâtiment ou décor »."
+    : "Vous avez un santon devant les yeux mais vous ne le retrouvez ni dans la liste ni dans les catalogues (trop ancien…) ? Créez-le avec sa photo et le nom que vous lui donnez : il rejoint le catalogue de toute la famille, sous « Ajoutés par la famille ». Pour un artisan ou une autre marque, choisissez la marque « Autre marque ou artisan ».";
   dlgAdd.showModal();
 }
 async function photoSanton(e) {
@@ -1338,7 +1348,7 @@ $("add-form").addEventListener("submit", async e => {
     await sb.from("liste_items").upsert({ liste_id: l.id, santon_id: data.id, statut: "own" }, { onConflict: "liste_id,santon_id" });
   $("add-go").disabled = false; dlgAdd.close();
   await loadAll();
-  ui.tab = section; ui.status = "all"; ui.q = ""; $("q").value = "";
+  ui.tab = marque === "Autre" ? "autres" : section; ui.status = "all"; ui.q = ""; $("q").value = "";
   render();
   const card = document.querySelector(`[data-card="${data.id}"]`);
   if (card) card.scrollIntoView({ block: "center" });
