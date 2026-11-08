@@ -196,6 +196,9 @@ dialog::backdrop { background: rgba(20, 14, 26, .55); }
   border: 1.5px solid var(--line); border-radius: 12px; padding: 14px 8px; font-weight: 700; cursor: pointer; background: var(--surface); }
 .pick.main { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
 .pick:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+.totop { position: fixed; right: 14px; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); z-index: 40; width: 50px; height: 50px; border-radius: 50%;
+  border: 0; display: grid; place-items: center; background: var(--accent); color: var(--accent-ink); box-shadow: var(--shadow); }
+body.searching .totop { display: none; }
 .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); z-index: 50; background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 999px; font-weight: 700; max-width: calc(100vw - 32px); box-shadow: var(--shadow); }
 .foot { padding-block: 8px 36px; font-size: .78rem; color: var(--muted); border-top: 1px solid var(--line); }
 </style>
@@ -341,6 +344,7 @@ dialog::backdrop { background: rgba(20, 14, 26, .55); }
 
 <dialog id="dlg-settings" aria-labelledby="set-title"><div class="dlg" id="settings-body"></div></dialog>
 
+<button class="totop" id="totop" type="button" aria-label="Remonter en haut" title="Remonter en haut" hidden><svg width="22" height="22" viewBox="0 0 20 20" aria-hidden="true"><path d="M10 16V4M4.5 9.5L10 4l5.5 5.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
 <div class="toast" id="toast" role="status" hidden></div>
 
 <script>
@@ -1053,6 +1057,14 @@ $("q").addEventListener("focus", () => {
 });
 $("q").addEventListener("blur", () => { document.body.classList.remove("searching"); measureTop(); });
 $("q").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); $("q").blur(); } });  // « Rechercher » ferme le clavier
+/* Remonter en haut en un clic */
+const totop = $("totop");
+function majTotop() { totop.hidden = window.scrollY < 700; }
+window.addEventListener("scroll", majTotop, { passive: true });
+totop.addEventListener("click", () => {
+  const doux = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  window.scrollTo({ top: 0, behavior: doux ? "smooth" : "auto" });
+});
 if (window.visualViewport) window.visualViewport.addEventListener("resize", () => { if (document.activeElement === $("q")) searchToTop(); });
 for (const d of document.querySelectorAll("dialog")) d.addEventListener("click", e => { if (e.target === d) d.close(); });
 
