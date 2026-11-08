@@ -364,8 +364,9 @@ body.kbd .totop { display: none; }
 <dialog id="dlg-family" aria-labelledby="fam-title">
   <form class="dlg" id="family-form">
     <div class="dlg-head"><h2 id="fam-title">Créer la famille</h2><button class="x" type="button" data-close aria-label="Fermer">✕</button></div>
+    <p class="help" id="fam-help">Une famille, c'est un groupe de personnes qui voient les crèches les unes des autres. Vous pouvez être dans plusieurs familles (côté de votre conjoint, côté de vos parents…) : chacune a ses crèches, ses membres et son lien d'invitation, et les membres de l'une ne voient pas l'autre.</p>
     <div class="field"><label class="label" for="fam-nom">Nom de la famille</label><input id="fam-nom" maxlength="60" required placeholder="Famille Dupont"></div>
-    <div class="row"><button class="btn primary" type="submit">Créer</button></div>
+    <div class="row"><button class="btn primary" type="submit" id="fam-go">Créer</button></div>
   </form>
 </dialog>
 
@@ -718,17 +719,19 @@ function renderHome() {
     const lists = [...st.listes.values()].filter(l => l.famille_id === f.id);
     const mems = st.membres.filter(m => m.famille_id === f.id);
     html += `<section style="display:grid;gap:14px">
-      <div class="fam-head"><h2>${esc(f.nom)}</h2><span class="row"><button class="btn sm primary" type="button" data-invite="${f.id}">Inviter dans la famille</button></span></div>
+      <div class="fam-head"><h2>${esc(f.nom)}</h2><span class="row">${isAdmin(f.id) ? `<button class="btn sm" type="button" data-renfam="${f.id}">Renommer</button>` : ""}<button class="btn sm primary" type="button" data-invite="${f.id}">Inviter dans « ${esc(f.nom)} »</button></span></div>
       <div class="lists">${lists.map(listCard).join("")}<button class="lcard new" type="button" data-newlist="${f.id}">+ Nouvelle crèche</button></div>
       <div class="cols">
         <div class="panel"><h3>Membres <span class="muted" style="font-family:var(--f-body);font-size:.9rem">${mems.length}</span></h3>
           <div class="people">${mems.map(m => `<div class="person">${avatarHTML(m.user_id)}<span class="pn">${esc(nameOf(m.user_id))}${m.user_id === me.id ? " (vous)" : ""}</span>${m.role === "admin" ? '<span class="badge">admin</span>' : ""}${isAdmin(f.id) && m.user_id !== me.id ? `<button class="btn sm danger" type="button" data-kick="${f.id}|${m.user_id}">Retirer</button>` : ""}</div>`).join("")}</div>
-          <p class="help">Le lien « Inviter dans la famille » fait de la personne un membre : elle voit toutes les crèches et peut créer les siennes. Pour quelqu'un qui doit seulement regarder une crèche, envoyez-lui la crèche avec le bouton « Partager » : pas besoin de compte.</p>
+          <p class="help">Le lien « Inviter » fait de la personne un membre de cette famille : elle voit toutes ses crèches (pas celles de vos autres familles) et peut créer les siennes. Pour quelqu'un qui doit seulement regarder une crèche, envoyez-lui la crèche avec le bouton « Partager » : pas besoin de compte.</p>
         </div>
         <div class="panel"><h3>Activité</h3>${feedHTML(lists.map(l => l.id))}</div>
       </div>
     </section>`;
   }
+  if (fams.length) html += `<section><button class="btn add-btn" type="button" id="create-family">+ Créer une autre famille</button>
+    <p class="help" style="margin-top:6px">Pour un autre côté de la famille (vos parents, votre beau-frère…) : ses membres ne verront que ses crèches. Vous, vous voyez les deux.</p></section>`;
   if (visited.length) {
     html += `<section style="display:grid;gap:14px"><div class="fam-head"><h2>Crèches partagées avec vous</h2></div>
       <div class="lists">${visited.map(listCard).join("")}</div></section>`;
@@ -1166,7 +1169,8 @@ document.addEventListener("click", async e => {
   if (d.newlist) { $("new-form").dataset.famille = d.newlist; $("new-nom").value = "Crèche de "; $("dlg-new").showModal(); return; }
   if (d.invite) {
     const link = joinLink(d.invite);
-    copyText(`Rejoins la famille sur notre catalogue de santons Carbonel : ${link}`, "Lien d'invitation copié : envoyez-le par message.");
+    const f = st.familles.get(d.invite);
+    copyText(`Rejoins « ${f ? f.nom : "la famille"} » sur notre catalogue de santons : ${link}`, `Lien d'invitation de « ${f ? f.nom : "la famille"} » copié : envoyez-le par message.`);
     return;
   }
   if (d.kick) {
@@ -1176,7 +1180,8 @@ document.addEventListener("click", async e => {
     if (error) return toast(frErr(error));
     await loadAll(); render(); return;
   }
-  if (t.id === "create-family") { $("dlg-family").showModal(); return; }
+  if (t.id === "create-family") { ouvrirFamille(null); return; }
+  if (d.renfam) { ouvrirFamille(d.renfam); return; }
   if (d.unmodel) {
     if (t.dataset.sure !== "1") { t.dataset.sure = "1"; t.textContent = "Confirmer : retirer de toutes les crèches de la famille"; return; }
     const it = BY_ID.get(+d.unmodel);
@@ -1219,12 +1224,27 @@ $("new-form").addEventListener("submit", async e => {
   if (error) return toast(frErr(error));
   $("dlg-new").close(); await loadAll(); go("list", data); toast(`« ${nom} » créée : vous en êtes administrateur.`);
 });
+function ouvrirFamille(id) {  // id : renommer cette famille ; null : en créer une
+  const f = id && st.familles.get(id), premiere = !id && ![...st.familles.values()].some(x => isMember(x.id));
+  $("family-form").dataset.famille = id || "";
+  $("fam-title").textContent = f ? "Renommer la famille" : premiere ? "Créer la famille" : "Créer une autre famille";
+  $("fam-help").hidden = !!f;
+  $("fam-nom").value = f ? f.nom : ""; $("fam-nom").placeholder = premiere ? "Famille Dupont" : "Par ex. Famille Martin (côté Alban)";
+  $("fam-go").textContent = f ? "Renommer" : "Créer";
+  $("dlg-family").showModal();
+}
 $("family-form").addEventListener("submit", async e => {
   e.preventDefault();
-  const nom = $("fam-nom").value.trim(); if (!nom) return;
+  const nom = $("fam-nom").value.trim().slice(0, 60); if (!nom) return;
+  const id = e.target.dataset.famille;
+  if (id) {
+    const { error } = await sb.from("familles").update({ nom }).eq("id", id);
+    if (error) return toast(frErr(error));
+    $("dlg-family").close(); await loadAll(); render(); toast("Famille renommée."); return;
+  }
   const { error } = await sb.rpc("creer_famille", { p_nom: nom });
   if (error) return toast(frErr(error));
-  $("dlg-family").close(); await loadAll(); render(); toast("Famille créée. Invitez les autres avec le bouton « Inviter dans la famille ».");
+  $("dlg-family").close(); await loadAll(); render(); toast(`« ${nom} » créée. Invitez ses membres avec « Inviter dans « ${nom} » ».`);
 });
 let qTimer = null;
 $("q").addEventListener("input", e => { clearTimeout(qTimer); qTimer = setTimeout(() => { ui.q = e.target.value; renderGrid(); }, 120); });

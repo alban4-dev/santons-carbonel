@@ -99,6 +99,12 @@ statique (par exemple Netlify Drop).
    **Partager** envoie le lien de la crèche à un proche qui doit seulement
    regarder (il n'a pas de compte à créer).
 
+**Plusieurs familles** : « + Créer une autre famille » en bas de l'accueil
+(côté du conjoint, côté de ses parents…). Chaque famille a ses crèches, ses
+membres et son lien d'invitation ; une même personne peut être dans
+plusieurs familles et les voit toutes, les autres ne voient que la leur.
+L'admin d'une famille peut la renommer.
+
 ## Qui peut faire quoi
 
 | | Voir les crèches | Cocher | Réglages d'une crèche | Inviter |
@@ -133,6 +139,7 @@ PostgreSQL 16 local :
   en lecture seule, puis devient gérante ; Mamie ouvre le lien public sans
   compte et ne voit que la crèche de Léa ; après « Changer », l'ancien lien
   ne marche plus ;
+- `familles.js` : une personne dans deux familles, chacun ne voit que les siennes ;
 - `ajout.js` : Papa ajoute un santon ancien avec sa photo, coché dans la
   crèche, puis ajoute le dos et change la face ; Maman ajoute le côté ; Maman le voit dans le catalogue, la page publique l'affiche ; Papa
   le retire et il disparaît de toutes les crèches.

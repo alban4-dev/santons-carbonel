@@ -4,6 +4,7 @@
 #   2. parcours.js : Papa crée la famille et la crèche de Léa, Maman la rejoint par le lien,
 #                    Mamie ouvre la page publique sans compte (Playwright, captures dans $SCRATCH).
 #   3. ajout.js    : un santon ancien ajouté avec photo, coché, vu par Maman et en public, retiré.
+#   4. familles.js : une personne dans deux familles ; chacun ne voit que les siennes.
 # Prérequis : PostgreSQL démarré sur le port 54329 (socket /tmp), psycopg2, Playwright,
 #             et une photo de crèche en $SCRATCH/creche.jpg.
 set -e
@@ -25,4 +26,6 @@ sleep 1.5
 node supabase/tests/parcours.js || true
 echo "== Santon ancien ajouté par la famille"
 node supabase/tests/ajout.js || true
+echo "== Plusieurs familles"
+node supabase/tests/familles.js || true
 kill $SRV
