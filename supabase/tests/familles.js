@@ -60,5 +60,29 @@ const sqlv = q => execSync(`psql -h /tmp -p 54329 -U postgres -d app -tA -c "${q
   console.log('alban, crèche Bavière : Berger artisan', await cherche(alban, 'autres', 'Berger artisan'), '| Moulin Bavière', await cherche(alban, 'autres', 'Moulin Bavière'));
   const lit = mail => sqlv(`select set_config('request.jwt.claim.sub', (select id::text from auth.users where email = '${mail}'), false); set role authenticated; select string_agg(nom, ', ' order by nom) from modeles_famille`).split('\n').pop();
   console.log('base, lisible par Tonton :', lit('tonton@f.fr'), '| par Dorothée :', lit('doro@f.fr'), '| par Alban :', lit('alban@f.fr'));
+  // Crèche partagée : celle de Lucie (famille Hugues) apparaît aussi chez les Bavière
+  await ouvre(alban, 'Hugues', 'Crèche de Lucie');
+  await alban.selectOption('#cat-sel', 'santons'); await alban.locator('.card .ic.o').first().click(); await alban.waitForTimeout(500);
+  await alban.click('#l-settings'); await alban.waitForTimeout(400);
+  console.log('réglages, familles :', (await alban.locator('[data-partage]').evaluateAll(xs => xs.map(x => x.parentElement.textContent.trim() + (x.checked ? ' ✓' : '') + (x.disabled ? ' (fixe)' : '')))).join(' | '));
+  const bav = sqlv("select id from familles where nom = 'Famille Bavière'");
+  await alban.check(`[data-partage="${bav}"]`); await alban.waitForTimeout(900);
+  console.log('partage en base :', sqlv("select count(*) from liste_familles"));
+  await alban.screenshot({ path: S + 'fam-partage.png' });
+  await alban.click('#dlg-settings [data-close]');
+  await tonton.goto(URL); await tonton.waitForSelector('#view-home:not([hidden])'); await tonton.waitForTimeout(600);
+  console.log('tonton, accueil :', (await tonton.locator('.lcard[data-list] h3').allTextContents()).join(', '), '|', await tonton.textContent('.badge.part'));
+  await tonton.screenshot({ path: S + 'fam-tonton.png', fullPage: true });
+  await tonton.click('.lcard[data-list]:has-text("Crèche de Lucie")'); await tonton.waitForTimeout(500);
+  console.log('tonton, crèche de Lucie :', await tonton.textContent('#l-badge'), '|', await tonton.textContent('#l-who'), '| coché', await tonton.locator('.card.own').count(), '| ✓ actifs', await tonton.locator('.card .ic.o:not([disabled])').count(),
+    '| Berger artisan', await cherche(tonton, 'autres', 'Berger artisan'));
+  await ouvre(alban, 'Bavière', 'Crèche de Lucie');
+  await alban.selectOption('#cat-sel', 'santons'); await alban.locator('.card:not(.own) .ic.o').first().click(); await alban.waitForTimeout(600);
+  await doro.goto(URL); await doro.waitForSelector('#view-home:not([hidden])'); await doro.waitForTimeout(500);
+  console.log('dorothée voit les 2 coches faites des deux côtés :', (await doro.textContent('.lcard[data-list] .nums')).replace(/\s+/g, ' ').slice(0, 30), '| en base', sqlv("select count(*) from liste_items where statut = 'own' and liste_id = (select id from listes where nom = 'Crèche de Lucie')"));
+  await ouvre(alban, 'Hugues', 'Crèche de Lucie');
+  await alban.click('#l-settings'); await alban.waitForTimeout(400); await alban.uncheck(`[data-partage="${bav}"]`); await alban.waitForTimeout(900);
+  await tonton.goto(URL); await tonton.waitForSelector('#view-home:not([hidden])'); await tonton.waitForTimeout(600);
+  console.log('partage retiré, tonton :', (await tonton.locator('.lcard[data-list] h3').allTextContents()).join(', '));
   console.log('erreurs:', errs); await b.close();
 })();

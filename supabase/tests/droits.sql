@@ -274,3 +274,51 @@ select set_config('request.jwt.claim.sub', :'papa', false); set role authenticat
 insert into modeles_famille (famille_id, nom, section) values (:'fam', 'Berger N3 inconnu', 'santons_n3');
 reset role;
 select 'T123 santon inconnu en N°3', count(*) = 1 from modeles_famille where section = 'santons_n3';
+
+-- CRÈCHE PARTAGÉE ENTRE FAMILLES (même crèche, pas une copie)
+select set_config('request.jwt.claim.sub', :'papa', false); set role authenticated;
+select creer_famille('Famille Baviere') is not null;
+reset role;
+select id as fam2 from familles where nom = 'Famille Baviere' \gset
+select code as fcode2 from famille_invitations where famille_id = :'fam2' \gset
+select set_config('request.jwt.claim.sub', :'inconnu', false); set role authenticated;
+select rejoindre_famille(:'fcode2') is not null;
+select 'T130 avant partage : Leon (famille Baviere) ne voit pas Lea', count(*) = 0 from listes where id = :'lea';
+reset role;
+select set_config('request.jwt.claim.sub', :'papa', false); set role authenticated;
+insert into liste_familles (liste_id, famille_id) values (:'lea', :'fam2');
+insert into liste_familles (liste_id, famille_id) values (:'lea', :'fam');
+reset role;
+select 'T131 papa affiche Lea aussi chez les Baviere (pas en double chez elle)', count(*) = 1 from liste_familles where liste_id = :'lea';
+select set_config('request.jwt.claim.sub', :'inconnu', false); set role authenticated;
+select 'T132 Leon voit Lea, ses coches et ses santons ajoutes', (select count(*) from listes where id = :'lea') = 1
+  and (select count(*) from liste_items where liste_id = :'lea') > 0 and (select count(*) from modeles_famille) > 0;
+insert into liste_items (liste_id, santon_id, statut) values (:'lea', 900, 'own');
+select 'T133 Leon (pas administrateur) ne coche pas', count(*) = 0 from liste_items where santon_id = 900;
+update listes set nom = 'piratee' where id = :'lea';
+reset role;
+select 'T134 ni ne la renomme', nom = 'Crèche de Léa' from listes where id = :'lea';
+select set_config('request.jwt.claim.sub', :'papa', false); set role authenticated;
+insert into liste_gerants values (:'lea', :'inconnu');
+reset role;
+select 'T135 papa fait de Leon (famille Baviere) un administrateur', count(*) = 1 from liste_gerants where liste_id = :'lea' and user_id = :'inconnu';
+select set_config('request.jwt.claim.sub', :'inconnu', false); set role authenticated;
+insert into liste_items (liste_id, santon_id, statut) values (:'lea', 900, 'own');
+update listes set famille_id = :'fam2' where id = :'lea';
+reset role;
+select 'T136 Leon coche depuis sa famille ; la famille d''origine ne change pas',
+  (select count(*) from liste_items where santon_id = 900) = 1 and (select famille_id from listes where id = :'lea') = :'fam';
+select set_config('request.jwt.claim.sub', :'maman', false); set role authenticated;
+insert into liste_familles (liste_id, famille_id) values (:'tom', :'fam2');
+reset role;
+select 'T137 maman (pas membre des Baviere) ne partage pas chez eux', count(*) = 0 from liste_familles where liste_id = :'tom';
+select set_config('request.jwt.claim.sub', '', false); set role anon;
+select 'T138 page publique : papa une seule fois parmi les administrateurs',
+  (select count(*) from json_array_elements(voir_liste(:'vcode2')->'gerants') x where x->>'id' = :'papa') = 1;
+reset role;
+select set_config('request.jwt.claim.sub', :'papa', false); set role authenticated;
+delete from liste_familles where liste_id = :'lea' and famille_id = :'fam2';
+reset role;
+select set_config('request.jwt.claim.sub', :'inconnu', false); set role authenticated;
+select 'T139 partage retire : Leon ne voit plus Lea (meme administrateur)', count(*) = 0 from listes where id = :'lea';
+reset role;

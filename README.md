@@ -79,7 +79,8 @@ le SQL Editor (`schema.sql` les contient déjà pour une nouvelle installation) 
   photos par santon ajouté (contient aussi `2026-11-09_photo_creche.sql`) ;
 - `2026-11-11_quantites.sql` : nombre d'exemplaires d'un santon (2 moutons…) ;
 - `2026-11-12_reservations.sql` : réservations « Offrir » sur les envies ;
-- `2026-11-13_catalogues.sql` : catalogues de chaque crèche, santons inconnus en N°3.
+- `2026-11-13_catalogues.sql` : catalogues de chaque crèche, santons inconnus en N°3 ;
+- `2026-11-14_creches_partagees.sql` : une crèche visible dans plusieurs familles.
 
 ### 2. Le site : GitHub Pages
 
@@ -117,6 +118,14 @@ dans ses crèches ; quelqu'un qui est dans deux familles ne voit, dans chaque
 crèche, que les ajouts de la famille de cette crèche (vérifié par la base et
 par `familles.js`).
 
+**Une crèche dans plusieurs familles** : dans les réglages d'une crèche,
+« Familles où apparaît cette crèche » (parmi celles dont on est membre). C'est
+la même crèche, pas une copie : ce qu'on coche d'un côté se voit de l'autre.
+Les membres de chaque famille la voient en lecture seule, ses administrateurs
+peuvent être choisis dans toutes ses familles, et elle garde sa famille
+d'origine (celle de ses santons ajoutés). Retirer une famille lui en coupe
+l'accès.
+
 **Plusieurs familles** : « + Créer une autre famille » en bas de l'accueil
 (côté du conjoint, côté de ses parents…) ; quand on est dans plusieurs
 familles, un menu « Famille » en haut de l'accueil choisit celle qu'on voit
@@ -151,7 +160,7 @@ ses droits.
 `supabase/tests/lancer.sh` rejoue tout sans compte Supabase, sur un
 PostgreSQL 16 local :
 
-- `droits.sql` : 73 vérifications des règles d'accès (inconnu, membre, gérant,
+- `droits.sql` : 83 vérifications des règles d'accès (inconnu, membre, gérant,
   visiteur, ancien membre, anonyme, page publique, santons ajoutés, photos
   photo de la crèche, photos face, dos, côté, quantités et réservations) ;
 - `parcours.js` : dans un vrai navigateur, Papa crée la famille et la crèche
@@ -160,7 +169,8 @@ PostgreSQL 16 local :
   compte et ne voit que la crèche de Léa ; après « Changer », l'ancien lien
   ne marche plus ;
 - `familles.js` : une personne dans deux familles, chacun ne voit que les siennes,
-  et les santons ajoutés restent dans leur famille ;
+  les santons ajoutés restent dans leur famille, et une crèche partagée dans
+  les deux se coche des deux côtés ;
 - `ajout.js` : Papa ajoute un santon ancien avec sa photo, coché dans la
   crèche, puis ajoute le dos et change la face ; Maman ajoute le côté ; Maman le voit dans le catalogue, la page publique l'affiche ; Papa
   le retire et il disparaît de toutes les crèches.

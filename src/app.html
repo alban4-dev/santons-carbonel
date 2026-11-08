@@ -102,6 +102,7 @@ a { color: var(--accent); }
 .lcard h3 { font-size: 1.2rem; overflow-wrap: anywhere; }
 .lcard .who { font-size: .82rem; color: var(--muted); }
 .lcard .meter { height: 7px; }
+.badge.part { justify-self: start; background: #e6eef8; color: #1f4f8b; white-space: normal; }
 .lcard .nums { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: .85rem; color: var(--muted); }
 .lcard .nums b { color: var(--ink); font-variant-numeric: tabular-nums; }
 .lcard.new { border-style: dashed; place-content: center; text-align: center; color: var(--accent); font-weight: 700; min-height: 120px; }
@@ -461,7 +462,7 @@ function ago(iso) {
 /* ================= État ================= */
 const CFG = window.SANTONS_CONFIG || {};
 let sb = null, me = null;           // client Supabase, utilisateur connecté
-const st = { familles: new Map(), membres: [], profils: new Map(), listes: new Map(), gerants: [], visiteurs: [], invListe: new Map(), invFamille: new Map(), resa: new Map() };
+const st = { familles: new Map(), membres: [], profils: new Map(), listes: new Map(), gerants: [], visiteurs: [], invListe: new Map(), invFamille: new Map(), resa: new Map(), partages: [] };
 /* Réservations « Offrir » : un jeton secret par navigateur permet d'annuler la sienne, même sans compte */
 const store = { get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* ignore */ } } };
 function jeton() {
@@ -478,13 +479,19 @@ const isMember = f => st.membres.some(m => m.famille_id === f && m.user_id === m
 const isAdmin = f => st.membres.some(m => m.famille_id === f && m.user_id === me.id && m.role === "admin");
 const gerantsOf = l => st.gerants.filter(g => g.liste_id === l).map(g => g.user_id);
 const visitorsOf = l => st.visiteurs.filter(v => v.liste_id === l).map(v => v.user_id);
-function canEdit(l) { const li = st.listes.get(l); return !!li && isMember(li.famille_id) && gerantsOf(l).includes(me.id); }
+/* Une crèche a sa famille d'origine et peut apparaître dans d'autres (même crèche, pas une copie) */
+const famillesDe = l => [l.famille_id, ...st.partages.filter(p => p.liste_id === l.id && p.famille_id !== l.famille_id).map(p => p.famille_id)];
+const membreDe = l => famillesDe(l).some(isMember);
+const peutAjouterModele = l => isMember(l.famille_id) || canEdit(l.id);  // santons ajoutés : catalogue de la famille d'origine
+const nomFamille = f => (st.familles.get(f) || {}).nom || "une autre famille";
+function canEdit(l) { const li = st.listes.get(l); return !!li && membreDe(li) && gerantsOf(l).includes(me.id); }
 function canManage(l) { const li = st.listes.get(l); return !!li && (canEdit(l) || isAdmin(li.famille_id)); }
 const curList = () => st.listes.get(ui.listId);
 
 /* ================= Messages d'erreur ================= */
 function frErr(e) {
   const m = String((e && (e.message || e.error_description || e.msg)) || e || "");
+  if (/liste_familles|familles_de_liste/i.test(m)) return "La base de données n'est pas encore à jour : il faut exécuter la mise à jour SQL dans Supabase (fichier supabase/migrations/2026-11-14_creches_partagees.sql).";
   if (/catalogues|section_check/i.test(m)) return "La base de données n'est pas encore à jour : il faut exécuter la mise à jour SQL dans Supabase (fichier supabase/migrations/2026-11-13_catalogues.sql).";
   if (/reserv/i.test(m) && /function|schema cache|does not exist/i.test(m)) return "La base de données n'est pas encore à jour : il faut exécuter la mise à jour SQL dans Supabase (fichier supabase/migrations/2026-11-12_reservations.sql).";
   if (/déjà réservé/i.test(m)) return "Quelqu'un vient de le réserver : rechargez la page.";
@@ -599,13 +606,14 @@ async function fetchAll(table, cols) {
 }
 async function loadAll() {
   const q = (t, c) => sb.from(t).select(c).then(r => { if (r.error) throw r.error; return r.data; });
-  const [fam, mem, prof, lst, ger, vis, invL, invF, resas, modeles, items] = await Promise.all([
+  const [fam, mem, prof, lst, ger, vis, invL, invF, resas, partages, modeles, items] = await Promise.all([
     q("familles", "id,nom"), q("membres", "famille_id,user_id,role"), q("profils", "id,nom"),
     q("listes", "id,famille_id,nom,cree_par,created_at,photo,catalogues")
       .catch(() => q("listes", "id,famille_id,nom,cree_par,created_at,photo")).catch(() => q("listes", "id,famille_id,nom,cree_par,created_at")),
     q("liste_gerants", "liste_id,user_id"),
     q("liste_visiteurs", "liste_id,user_id"), q("liste_invitations", "liste_id,code"), q("famille_invitations", "famille_id,code"),
     q("liste_reservations", "liste_id,santon_id,nom,reserve_par,created_at").catch(() => []),
+    q("liste_familles", "liste_id,famille_id").catch(() => []),
     q("modeles_famille", "id,famille_id,nom,marque,section,note,photo,photos,ajoute_par,created_at")
       .catch(() => q("modeles_famille", "id,famille_id,nom,marque,section,note,photo,ajoute_par,created_at")).catch(() => []),
     fetchAll("liste_items", "liste_id,santon_id,statut,quantite,modifie_par,updated_at")
@@ -613,6 +621,7 @@ async function loadAll() {
   ]);
   setCustom(modeles, false);
   st.resa = new Map(resas.map(r => [r.liste_id + ":" + r.santon_id, r]));
+  st.partages = partages;
   st.familles = new Map(fam.map(f => [f.id, f]));
   st.membres = mem; st.gerants = ger; st.visiteurs = vis;
   st.profils = new Map(prof.map(p => [p.id, p]));
@@ -642,6 +651,7 @@ function subscribe() {
       .on("postgres_changes", { event: "*", schema: "public", table: "membres" }, reloadSoon)
       .on("postgres_changes", { event: "*", schema: "public", table: "modeles_famille" }, reloadSoon)
       .on("postgres_changes", { event: "*", schema: "public", table: "liste_reservations" }, reloadSoon)
+      .on("postgres_changes", { event: "*", schema: "public", table: "liste_familles" }, reloadSoon)
       .subscribe();
   } catch (e) { /* temps réel indisponible : on recharge au retour sur la page */ }
   document.addEventListener("visibilitychange", () => { if (!document.hidden && me) reloadSoon(); });
@@ -708,13 +718,14 @@ function joinLink(f) { const c = st.invFamille.get(f); return c ? location.origi
 function visitLink(l) { const c = st.invListe.get(l); return c ? location.origin + location.pathname + "#voir=" + c : ""; }
 
 /* ================= Accueil ================= */
-function listCard(l) {
+function listCard(l, f) {
   const c = counts(l), g = gerantsOf(l.id), edit = canEdit(l.id), cats = catsOf(l);
   const ph = photoUrl(l.photo);
   return `<button class="lcard" type="button" data-list="${l.id}">
     ${ph ? `<span class="lthumb" style="background-image:url('${esc(ph)}')" role="img" aria-label="Photo de ${esc(l.nom)}"></span>` : ""}
     <span class="row" style="justify-content:space-between"><h3>${esc(l.nom)}</h3>${edit ? '<span class="badge edit">Vous gérez</span>' : '<span class="badge">Lecture seule</span>'}</span>
     <span class="who">${g.length ? "Administrée par " + esc(g.map(nameOf).join(", ")) : "Sans administrateur"}</span>
+    ${f && l.famille_id !== f ? `<span class="badge part">Partagée depuis « ${esc(nomFamille(l.famille_id))} »</span>` : famillesDe(l).length > 1 ? `<span class="badge part">Aussi dans ${famillesDe(l).filter(x => x !== l.famille_id).map(x => "« " + esc(nomFamille(x)) + " »").join(", ")}</span>` : ""}
     <span class="meter"><i style="width:${c[cats[0]] / (nSec(cats[0], l) || 1) * 100}%"></i></span>
     <span class="nums">${cats.map((t, k) => `<span><b>${c[t]}</b>${k ? "" : " / " + nSec(t, l)} ${CAT_COURT[t]}</span>`).join("")}<span><b>${c.w}</b> envies</span></span>
   </button>`;
@@ -738,22 +749,23 @@ function familleChoisie(fams) {
 }
 function renderHome() {
   const fams = [...st.familles.values()].filter(f => isMember(f.id)).sort((a, b) => a.nom.localeCompare(b.nom, "fr"));
-  const visited = [...st.listes.values()].filter(l => !isMember(l.famille_id));
+  const visited = [...st.listes.values()].filter(l => !membreDe(l));
+  const listesDe = fid => [...st.listes.values()].filter(l => famillesDe(l).includes(fid));
   let html = "";
   const choisie = familleChoisie(fams);
   if (fams.length > 1) html += `<div class="famsel"><label for="fam-sel">Famille</label>
-    <select id="fam-sel">${fams.map(f => `<option value="${f.id}"${f === choisie ? " selected" : ""}>${esc(f.nom)} (${[...st.listes.values()].filter(l => l.famille_id === f.id).length} crèche${[...st.listes.values()].filter(l => l.famille_id === f.id).length > 1 ? "s" : ""})</option>`).join("")}
+    <select id="fam-sel">${fams.map(f => `<option value="${f.id}"${f === choisie ? " selected" : ""}>${esc(f.nom)} (${listesDe(f.id).length} crèche${[...st.listes.values()].filter(l => l.famille_id === f.id).length > 1 ? "s" : ""})</option>`).join("")}
       <option value="__new">+ Créer une autre famille…</option></select></div>`;
   for (const f of fams.filter(f => f === choisie)) {
-    const lists = [...st.listes.values()].filter(l => l.famille_id === f.id);
+    const lists = listesDe(f.id);
     const mems = st.membres.filter(m => m.famille_id === f.id);
     html += `<section style="display:grid;gap:14px">
       <div class="fam-head"><h2>${esc(f.nom)}</h2><span class="row">${isAdmin(f.id) ? `<button class="btn sm" type="button" data-renfam="${f.id}">Renommer</button>` : ""}<button class="btn sm primary" type="button" data-invite="${f.id}">Inviter dans « ${esc(f.nom)} »</button></span></div>
-      <div class="lists">${lists.map(listCard).join("")}<button class="lcard new" type="button" data-newlist="${f.id}">+ Nouvelle crèche</button></div>
+      <div class="lists">${lists.map(l => listCard(l, f.id)).join("")}<button class="lcard new" type="button" data-newlist="${f.id}">+ Nouvelle crèche</button></div>
       <div class="cols">
         <div class="panel"><h3>Membres <span class="muted" style="font-family:var(--f-body);font-size:.9rem">${mems.length}</span></h3>
           <div class="people">${mems.map(m => `<div class="person">${avatarHTML(m.user_id)}<span class="pn">${esc(nameOf(m.user_id))}${m.user_id === me.id ? " (vous)" : ""}</span>${m.role === "admin" ? '<span class="badge">admin</span>' : ""}${isAdmin(f.id) && m.user_id !== me.id ? `<button class="btn sm danger" type="button" data-kick="${f.id}|${m.user_id}">Retirer</button>` : ""}</div>`).join("")}</div>
-          <p class="help">Le lien « Inviter » fait de la personne un membre de cette famille : elle voit toutes ses crèches (pas celles de vos autres familles) et peut créer les siennes. Pour quelqu'un qui doit seulement regarder une crèche, envoyez-lui la crèche avec le bouton « Partager » : pas besoin de compte.</p>
+          <p class="help">Le lien « Inviter » fait de la personne un membre de cette famille : elle voit toutes ses crèches (pas celles de vos autres familles, sauf celles qu'on y partage) et peut créer les siennes. Pour quelqu'un qui doit seulement regarder une crèche, envoyez-lui la crèche avec le bouton « Partager » : pas besoin de compte.</p>
         </div>
         <div class="panel"><h3>Activité</h3>${feedHTML(lists.map(l => l.id))}</div>
       </div>
@@ -763,7 +775,7 @@ function renderHome() {
     <p class="help" style="margin-top:6px">Pour un autre côté de la famille (vos parents, votre beau-frère…) : ses membres ne verront que ses crèches. Vous, vous passerez de l'une à l'autre avec le menu « Famille » en haut.</p></section>`;
   if (visited.length) {
     html += `<section style="display:grid;gap:14px"><div class="fam-head"><h2>Crèches partagées avec vous</h2></div>
-      <div class="lists">${visited.map(listCard).join("")}</div></section>`;
+      <div class="lists">${visited.map(l => listCard(l)).join("")}</div></section>`;
   }
   if (!fams.length && !visited.length) {
     html += `<section class="panel" style="max-width:560px">
@@ -800,7 +812,7 @@ function statusOf(it, s, l) {
   if (s === "gift") return statut(l, it.id) === "wish" && !resaOf(l, it.id);
   return statut(l, it.id) === "wish";
 }
-function siblings(l) { return [...st.listes.values()].filter(x => x.id !== l.id && x.famille_id === l.famille_id); }
+function siblings(l) { const fs = famillesDe(l); return [...st.listes.values()].filter(x => x.id !== l.id && famillesDe(x).some(f => fs.includes(f))); }
 function famHTML(it, l) {
   const dots = [];
   for (const o of siblings(l)) {
@@ -828,7 +840,9 @@ function renderList() {
   const l = curList(), g = gerantsOf(l.id), edit = canEdit(l.id);
   if (!catsOf(l).includes(ui.tab)) { ui.tab = catsOf(l)[0]; if (ui.status === "new") ui.status = "all"; }
   $("l-name").textContent = l.nom;
-  $("l-who").textContent = g.length ? "Administrée par " + g.map(nameOf).join(", ") : "Sans administrateur";
+  const ailleurs = PUBLIC ? [] : famillesDe(l).filter(x => x !== l.famille_id);
+  $("l-who").textContent = (g.length ? "Administrée par " + g.map(nameOf).join(", ") : "Sans administrateur")
+    + (ailleurs.length ? ` · dans ${famillesDe(l).map(x => "« " + nomFamille(x) + " »").join(" et ")}` : "");
   $("l-badge").textContent = edit ? "Vous gérez" : "Lecture seule";
   $("l-badge").className = "badge" + (edit ? " edit" : "");
   $("l-settings").hidden = !canManage(l.id);
@@ -836,7 +850,7 @@ function renderList() {
   const envies = [...l.items.values()].some(r => r.statut === "wish");
   $("l-hint").hidden = edit || !envies;
   $("l-hint").innerHTML = `Ce sont ses <b>envies</b>. Pour en offrir une : touchez le santon, puis <b>Offrir ce santon</b> et notez votre prénom ; les autres verront qu'il est réservé. <b>À offrir</b> montre celles que personne n'a encore réservées, <b>Tous</b> toute la crèche.`;
-  $("l-add").hidden = PUBLIC || !isMember(l.famille_id);
+  $("l-add").hidden = PUBLIC || !peutAjouterModele(l);
   renderCover(); renderProgress(); renderStatus(); renderGrid();
 }
 function renderGrid() {
@@ -856,8 +870,8 @@ function renderGrid() {
     if (g !== grp) { grp = g; html += `<div class="sec"><h2>${esc(g)}</h2><span data-sec="${esc(g)}"></span></div>`; }
     html += cardHTML(it);
   }
-  if (!list.length && ui.tab === "autres" && ui.status === "all" && !ui.q.trim()) html += `<div class="empty">Ici, les santons et bâtiments d'artisans sans marque (achetés sur un marché, santonnier inconnu…), pour ne pas les mélanger aux gammes Carbonel et Escoffier.${!PUBLIC && isMember(l.famille_id) ? `<p style="margin:12px 0 0"><button class="btn add-btn" type="button" data-addautre>+ Ajouter un santon ou un bâtiment</button></p>` : ""}</div>`;
-  else if (!list.length) html += `<div class="empty">${ui.status === "own" ? "Rien de coché pour l'instant." : ui.status === "wish" ? "Pas encore d'envie dans cet onglet." : ui.status === "new" ? "Pas de nouveauté dans cet onglet cette année." : ui.status === "gift" ? "Toutes les envies de cet onglet sont déjà réservées." : "Rien ne correspond."}${ui.q.trim() && !PUBLIC && isMember(l.famille_id) ? `<p style="margin:12px 0 0"><button class="btn add-btn" type="button" data-addq>+ Introuvable ? Créer un santon inconnu</button></p>` : ""}</div>`;
+  if (!list.length && ui.tab === "autres" && ui.status === "all" && !ui.q.trim()) html += `<div class="empty">Ici, les santons et bâtiments d'artisans sans marque (achetés sur un marché, santonnier inconnu…), pour ne pas les mélanger aux gammes Carbonel et Escoffier.${!PUBLIC && peutAjouterModele(l) ? `<p style="margin:12px 0 0"><button class="btn add-btn" type="button" data-addautre>+ Ajouter un santon ou un bâtiment</button></p>` : ""}</div>`;
+  else if (!list.length) html += `<div class="empty">${ui.status === "own" ? "Rien de coché pour l'instant." : ui.status === "wish" ? "Pas encore d'envie dans cet onglet." : ui.status === "new" ? "Pas de nouveauté dans cet onglet cette année." : ui.status === "gift" ? "Toutes les envies de cet onglet sont déjà réservées." : "Rien ne correspond."}${ui.q.trim() && !PUBLIC && peutAjouterModele(l) ? `<p style="margin:12px 0 0"><button class="btn add-btn" type="button" data-addq>+ Introuvable ? Créer un santon inconnu</button></p>` : ""}</div>`;
   $("grid").innerHTML = html;
   renderSectionCounts();
 }
@@ -1053,14 +1067,22 @@ let confirmDelete = false;
 function openSettings() {
   const l = curList(); if (!l || !canManage(l.id)) return;
   const g = gerantsOf(l.id), v = visitorsOf(l.id);
-  const mems = st.membres.filter(m => m.famille_id === l.famille_id);
+  const fs = famillesDe(l), vus = new Set();
+  const mems = st.membres.filter(m => fs.includes(m.famille_id) && !vus.has(m.user_id) && vus.add(m.user_id));
+  const miennes = [...st.familles.values()].filter(f => isMember(f.id)).sort((a, b) => a.nom.localeCompare(b.nom, "fr"));
+  const autres = fs.filter(x => !isMember(x));
   $("settings-body").innerHTML = `
     <div class="dlg-head"><h2 id="set-title">Réglages : ${esc(l.nom)}</h2><button class="x" type="button" data-close aria-label="Fermer">✕</button></div>
     <form class="row" id="rename-form"><div class="field" style="flex:1 1 200px"><label class="label" for="set-nom">Nom</label><input id="set-nom" maxlength="60" required value="${esc(l.nom)}"></div><button class="btn" type="submit" style="align-self:end">Renommer</button></form>
     <hr class="sep">
     <span class="label">Administrateurs de la crèche</span>
     <div class="checks">${mems.map(m => `<label><input type="checkbox" data-gerant="${m.user_id}"${g.includes(m.user_id) ? " checked" : ""}> ${avatarHTML(m.user_id, "sm")} ${esc(nameOf(m.user_id))}</label>`).join("")}</div>
-    <p class="help">Les administrateurs cochent les santons, mettent la photo de la crèche, la partagent et changent ces réglages. Les autres membres de la famille la voient en lecture seule.</p>
+    <p class="help">Les administrateurs cochent les santons, mettent la photo de la crèche, la partagent et changent ces réglages. Les autres membres de ses familles la voient en lecture seule.</p>
+    <hr class="sep">
+    <span class="label">Familles où apparaît cette crèche</span>
+    <div class="checks">${miennes.map(f => `<label><input type="checkbox" data-partage="${f.id}"${fs.includes(f.id) ? " checked" : ""}${f.id === l.famille_id ? " disabled" : ""}> ${esc(f.nom)}${f.id === l.famille_id ? ' <span class="muted">(famille d\'origine)</span>' : ""}</label>`).join("")}
+      ${autres.length ? `<p class="help" style="margin:0">Aussi dans ${autres.length} famille${autres.length > 1 ? "s" : ""} dont vous n'êtes pas membre${autres.map(x => st.familles.has(x) ? " : « " + esc(nomFamille(x)) + " »" : "").join("")}.</p>` : ""}</div>
+    <p class="help">C'est la même crèche dans chaque famille cochée, pas une copie : ce qui est coché d'un côté se voit de l'autre. Ses membres la voient en lecture seule ; les administrateurs peuvent être choisis dans toutes ses familles.</p>
     <hr class="sep">
     <span class="label">Catalogues de cette crèche</span>
     <div class="checks">${SECTIONS.map(t => `<label><input type="checkbox" data-cat="${t}"${catsOf(l).includes(t) ? " checked" : ""}> ${esc(CAT_MENU[t])}</label>`).join("")}</div>
@@ -1080,6 +1102,17 @@ async function copyText(text, ok, input) {
   catch (e) { if (input) { input.focus(); input.select(); } toast("Sélectionné : copiez avec Ctrl+C ou un appui long."); }
 }
 dlgSettings.addEventListener("change", async e => {
+  const pf = e.target.closest("[data-partage]");
+  if (pf) {
+    const l = curList(), f = pf.dataset.partage;
+    pf.disabled = true;
+    const res = pf.checked ? await sb.from("liste_familles").insert({ liste_id: l.id, famille_id: f })
+      : await sb.from("liste_familles").delete().eq("liste_id", l.id).eq("famille_id", f);
+    if (res.error) { pf.checked = !pf.checked; pf.disabled = false; toast(frErr(res.error)); return; }
+    await loadAll(); render(); if (st.listes.has(l.id)) openSettings(); else dlgSettings.close();
+    toast(pf.checked ? `« ${l.nom} » apparaît aussi dans « ${nomFamille(f)} ».` : `« ${l.nom} » n'apparaît plus dans « ${nomFamille(f)} ».`);
+    return;
+  }
   const cat = e.target.closest("[data-cat]");
   if (cat) {
     const l = curList(), avant = l.catalogues;
@@ -1361,7 +1394,7 @@ for (const d of document.querySelectorAll("dialog")) d.addEventListener("click",
 const dlgAdd = $("dlg-add");
 let addPhoto = null;
 function openAdd() {
-  const l = curList(); if (!l || !isMember(l.famille_id)) return;
+  const l = curList(); if (!l || !peutAjouterModele(l)) return;
   $("add-form").reset(); addPhoto = null;
   $("add-preview").hidden = true; $("add-err").hidden = true;
   $("add-type").value = ui.tab === "santons" || ui.tab === "santons_escoffier" || ui.tab === "autres" ? "santon" : "decor";

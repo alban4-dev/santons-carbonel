@@ -24,7 +24,7 @@ from psycopg2 import sql
 SITE = Path(__file__).resolve().parents[2] / "site"
 DSN, PORT = sys.argv[1], int(sys.argv[2])
 TABLES = {"profils", "familles", "famille_invitations", "membres", "listes", "liste_gerants",
-          "liste_visiteurs", "liste_invitations", "liste_items", "modeles_famille", "liste_reservations"}
+          "liste_visiteurs", "liste_invitations", "liste_items", "modeles_famille", "liste_reservations", "liste_familles"}
 STOCK = Path(os.environ.get("SCRATCH", "/tmp")) / "stockage"
 RPCS = {"creer_famille", "rejoindre_famille", "creer_liste", "devenir_visiteur", "voir_liste",
         "nouveau_code_famille", "nouveau_code_visite", "reserver", "annuler_reservation"}
