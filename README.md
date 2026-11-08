@@ -99,12 +99,10 @@ statique (par exemple Netlify Drop).
    **Partager** envoie le lien de la crèche à un proche qui doit seulement
    regarder (il n'a pas de compte à créer).
 
-**Onglet « Sans marque · Autres »** : les santons sans marque et leurs
-bâtiments (achetés sur un marché…), créés par la famille avec la marque
-« Sans marque », rangés en « Santons » et « Bâtiments et décors », à part des
-gammes Carbonel et Escoffier. Pour la blague, dans une famille dont le nom
-contient « Hugues », l'onglet s'appelle « Pauvres » (« Santons de pauvres
-sans marque »).
+**Onglet « Artisans »** (« Artisans sans marques ») : les santons et
+bâtiments d'artisans sans marque (achetés sur un marché…), créés par la
+famille avec la marque « Artisan, sans marque », rangés en « Santons » et
+« Bâtiments et décors », à part des gammes Carbonel et Escoffier.
 
 **Les ajouts restent dans leur famille** : un santon créé dans une famille
 (santon inconnu, sans marque) n'est visible que de ses membres, et seulement

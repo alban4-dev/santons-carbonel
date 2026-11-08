@@ -1,8 +1,7 @@
 const { chromium } = require('playwright');
 // Plusieurs familles : Alban crée la famille Hugues (côté de sa femme) puis la famille Bavière
 // (côté de ses parents) et passe de l'une à l'autre par le menu « Famille » ; Tonton (Bavière) et
-// Dorothée (Hugues) ne voient que la leur ; les santons ajoutés restent dans leur famille ;
-// l'onglet « sans marque » s'appelle « Pauvres » chez les Hugues, « Autres » ailleurs.
+// Dorothée (Hugues) ne voient que la leur ; les santons ajoutés restent dans leur famille.
 const { execSync } = require('child_process');
 const S = (process.env.SCRATCH || '/tmp') + '/';
 const URL = 'http://localhost:8766/index.html';
@@ -45,22 +44,20 @@ const sqlv = q => execSync(`psql -h /tmp -p 54329 -U postgres -d app -tA -c "${q
 
   // Ajouts séparés par famille, et nom de l'onglet « sans marque »
   await ouvre(alban, 'Hugues', 'Crèche de Lucie');
-  console.log('onglet chez les Hugues :', await alban.textContent('#tab-autres-nom'));
+  console.log('onglet :', (await alban.textContent('#tab-autres .type')), '| rubrique', await alban.evaluate(() => document.querySelector('#tab-autres').textContent.replace(/\s+/g, ' ').trim()));
   await alban.click('#tab-autres'); await alban.click('[data-addautre]');
-  console.log('dialogue Hugues :', await alban.textContent('#add-title'), '|', await alban.textContent('#add-autre'));
-  await alban.fill('#add-nom', 'Berger de pauvre'); await alban.click('#add-go'); await alban.waitForTimeout(900);
+  console.log('dialogue :', await alban.textContent('#add-title'), '|', await alban.$eval('#add-marque', e => e.selectedOptions[0].textContent));
+  await alban.fill('#add-nom', 'Berger artisan'); await alban.click('#add-go'); await alban.waitForTimeout(900);
   console.log('rubrique :', (await alban.locator('.sec h2').allTextContents()).join(', '));
   await alban.screenshot({ path: S + 'fam-pauvres.png' });
   await ouvre(tonton, 'Bavière', 'Crèche du beau-frère');
-  console.log('onglet chez les Bavière :', await tonton.textContent('#tab-autres-nom'));
   await tonton.click('#tab-autres'); await tonton.click('[data-addautre]');
-  console.log('dialogue Bavière :', await tonton.textContent('#add-title'), '|', await tonton.textContent('#add-autre'));
   await tonton.fill('#add-nom', 'Moulin Bavière'); await tonton.selectOption('#add-type', 'decor'); await tonton.click('#add-go'); await tonton.waitForTimeout(900);
-  console.log('tonton, sa crèche : Berger de pauvre', await cherche(tonton, 'autres', 'Berger de pauvre'), '| Moulin Bavière', await cherche(tonton, 'autres', 'Moulin Bavière'));
+  console.log('tonton, sa crèche : Berger artisan', await cherche(tonton, 'autres', 'Berger artisan'), '| Moulin Bavière', await cherche(tonton, 'autres', 'Moulin Bavière'));
   await ouvre(doro, 'Hugues', 'Crèche de Lucie');
-  console.log('dorothée, sa crèche : Berger de pauvre', await cherche(doro, 'autres', 'Berger de pauvre'), '| Moulin Bavière', await cherche(doro, 'autres', 'Moulin Bavière'));
+  console.log('dorothée, sa crèche : Berger artisan', await cherche(doro, 'autres', 'Berger artisan'), '| Moulin Bavière', await cherche(doro, 'autres', 'Moulin Bavière'));
   await ouvre(alban, 'Bavière', 'Crèche du beau-frère');
-  console.log('alban, crèche Bavière : Berger de pauvre', await cherche(alban, 'autres', 'Berger de pauvre'), '| Moulin Bavière', await cherche(alban, 'autres', 'Moulin Bavière'), '| onglet', await alban.textContent('#tab-autres-nom'));
+  console.log('alban, crèche Bavière : Berger artisan', await cherche(alban, 'autres', 'Berger artisan'), '| Moulin Bavière', await cherche(alban, 'autres', 'Moulin Bavière'));
   const lit = mail => sqlv(`select set_config('request.jwt.claim.sub', (select id::text from auth.users where email = '${mail}'), false); set role authenticated; select string_agg(nom, ', ' order by nom) from modeles_famille`).split('\n').pop();
   console.log('base, lisible par Tonton :', lit('tonton@f.fr'), '| par Dorothée :', lit('doro@f.fr'), '| par Alban :', lit('alban@f.fr'));
   console.log('erreurs:', errs); await b.close();
