@@ -78,6 +78,8 @@ async function signup(p, nom, mail) {
   await mamie.goto(visit); await mamie.waitForSelector('#scr-app:not([hidden])', { timeout: 10000 }); await mamie.waitForTimeout(500);
   log('mamie sans compte : écran connexion ?', await mamie.isVisible('#scr-auth'), '| crèche :', await mamie.textContent('#l-name'),
       '|', await mamie.textContent('#l-who'), '|', await mamie.textContent('#l-badge'));
+  log('mamie : filtre à l\'ouverture', await mamie.getAttribute('[data-status="wish"]', 'aria-pressed'), '| cartes', await mamie.locator('.card').count());
+  await mamie.click('[data-status="all"]'); await mamie.waitForTimeout(200);
   log('mamie : ✓ actifs', await mamie.locator('.card .ic.o:not([disabled])').count(), '| cochés visibles', await mamie.locator('.card.own').count(),
       '| réglages', await mamie.isVisible('#l-settings'), '| partager', await mamie.isVisible('#l-share'), '| photo crèche', await mamie.evaluate(() => { const i = document.querySelector('#cover-img'); return !!i && i.naturalWidth > 0; }), '| boutons photo', await mamie.locator('#cover-cam').count(), '| espace famille', await mamie.isVisible('#famille-link'));
   log('mamie : badge quantité', await mamie.locator('.card .qte').count() ? await mamie.locator('.card .qte').first().textContent() : '-');
