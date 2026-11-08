@@ -361,13 +361,17 @@ create table if not exists public.modeles_famille (
   famille_id uuid not null references public.familles (id) on delete cascade,
   nom text not null check (char_length(nom) between 1 and 80),
   marque text not null default 'Carbonel' check (marque in ('Carbonel', 'Escoffier', 'Autre')),
-  section text not null default 'santons' check (section in ('santons', 'escoffier', 'decor')),
+  section text not null default 'santons',
   note text check (char_length(note) <= 200),
   photo text check (char_length(photo) <= 300),  -- chemin dans le stockage « photos »
   ajoute_par uuid default auth.uid() references auth.users (id) on delete set null,
   created_at timestamptz not null default now()
 );
 create index if not exists modeles_famille_famille on public.modeles_famille (famille_id);
+-- onglet de l'appli : santons Carbonel, santons Escoffier, bâtiments Escoffier, décors Carbonel
+alter table public.modeles_famille drop constraint if exists modeles_famille_section_check;
+alter table public.modeles_famille add constraint modeles_famille_section_check
+  check (section in ('santons', 'santons_escoffier', 'escoffier', 'decor'));
 
 alter table public.modeles_famille enable row level security;
 drop policy if exists modeles_lire on public.modeles_famille;

@@ -461,6 +461,7 @@ const curList = () => st.listes.get(ui.listId);
 /* ================= Messages d'erreur ================= */
 function frErr(e) {
   const m = String((e && (e.message || e.error_description || e.msg)) || e || "");
+  if (/Bucket not found|schema cache|modeles_famille|voir_liste/i.test(m)) return "La base de données n'est pas encore à jour : il faut exécuter la mise à jour SQL dans Supabase (fichier supabase/migrations/2026-11-08b_santons_ajoutes.sql).";
   if (/Invalid login credentials/i.test(m)) return "E-mail ou mot de passe incorrect.";
   if (/already registered|already exists/i.test(m)) return "Un compte existe déjà avec cet e-mail : choisissez « J'ai un compte ».";
   if (/Password should be at least|weak/i.test(m)) return "Mot de passe trop court : 6 caractères minimum.";
@@ -1159,7 +1160,7 @@ $("add-form").addEventListener("submit", async e => {
     const id = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2)).replace(/[^0-9a-z-]/gi, "");
     photo = `${l.famille_id}/${id}.jpg`;
     const up = await sb.storage.from("photos").upload(photo, addPhoto, { contentType: "image/jpeg", upsert: false });
-    if (up.error) return fail("La photo n'a pas pu être envoyée : " + frErr(up.error));
+    if (up.error) return fail(/Bucket not found/i.test(up.error.message || "") ? frErr(up.error) : "La photo n'a pas pu être envoyée : " + frErr(up.error));
   }
   const { data, error } = await sb.from("modeles_famille")
     .insert({ famille_id: l.famille_id, nom, marque, section, note: $("add-note").value.trim().slice(0, 200) || null, photo })
