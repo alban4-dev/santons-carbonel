@@ -213,8 +213,10 @@ dialog::backdrop { background: rgba(20, 14, 26, .55); }
 .qty button { width: 40px; height: 40px; border-radius: 50%; border: 1.5px solid var(--line); background: var(--surface); font-size: 1.3rem; font-weight: 700; line-height: 1; }
 .qty button:disabled { opacity: .4; cursor: default; }
 .qty b { min-width: 2ch; text-align: center; font-size: 1.15rem; font-variant-numeric: tabular-nums; }
-.resa { display: flex; align-items: center; gap: 4px; margin: -2px 6px 6px; padding: 2px 6px; border-radius: 6px; background: #fdf0d8; color: #7a4b12; font-size: .7rem; font-weight: 700; min-width: 0; }
-.resa span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.resa { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: start; gap: 1px 4px; margin: -2px 6px 6px; padding: 3px 6px; border-radius: 6px; background: #fdf0d8; color: #7a4b12; font-size: .68rem; font-weight: 700; line-height: 1.25; min-width: 0; }
+.resa svg { margin-top: 1px; }
+.resa span { overflow-wrap: anywhere; }
+.resa small { grid-column: 2; font-weight: 600; opacity: .85; }
 .offre { display: grid; gap: 8px; padding: 12px; border-radius: 12px; background: #fdf0d8; color: #4a2f0b; }
 .offre p { margin: 0; font-size: .9rem; }
 .offre .row { gap: 6px; }
@@ -826,6 +828,11 @@ function famHTML(it, l) {
   }
   return dots.length ? `<div class="fam">${dots.slice(0, 6).join("")}</div>` : "";
 }
+/* sur la vignette d'une envie réservée : « Réservé par Manoun · le 12/11 » */
+function resaHTML(r) {
+  const d = r.created_at ? new Date(r.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "numeric" }) : "";
+  return `<div class="resa" title="Réservé par ${esc(r.nom)}${d ? " le " + esc(d) : ""}">${ICON_GIFT}<span>Réservé par ${esc(r.nom)}</span>${d ? `<small>le ${esc(d)}</small>` : ""}</div>`;
+}
 function cardHTML(it) {
   const l = curList(), s = statut(l, it.id), own = s === "own", wish = s === "wish", ro = canEdit(l.id) ? "" : " disabled";
   return `<article class="card${own ? " own" : ""}" data-card="${it.id}">
@@ -837,7 +844,7 @@ function cardHTML(it) {
     ${it.custom && it.section !== "autres" ? '<span class="ajout">Famille</span>' : ""}
     ${it.nouveau ? `<span class="nouv">Nouveau ${ANNEE}</span>` : ""}
     <div class="nm">${esc(it.short)}</div>
-    ${s === "wish" && resaOf(l, it.id) ? `<div class="resa" title="Réservé par ${esc(resaOf(l, it.id).nom)}">${ICON_GIFT}<span>${esc(resaOf(l, it.id).nom)}</span></div>` : ""}
+    ${s === "wish" && resaOf(l, it.id) ? resaHTML(resaOf(l, it.id)) : ""}
     ${famHTML(it, l)}
   </article>`;
 }
@@ -854,7 +861,7 @@ function renderList() {
   $("l-share").hidden = PUBLIC || !canManage(l.id);
   const envies = [...l.items.values()].some(r => r.statut === "wish");
   $("l-hint").hidden = edit || !envies;
-  $("l-hint").innerHTML = `Ce sont ses <b>envies</b>. Pour en offrir une : touchez le santon, puis <b>Offrir ce santon</b> et notez votre prénom ; les autres verront qu'il est réservé. <b>À offrir</b> montre celles que personne n'a encore réservées, <b>Tous</b> toute la crèche.`;
+  $("l-hint").innerHTML = `Ce sont ses <b>envies</b>. Pour en offrir une : touchez le santon, puis <b>Offrir ce santon</b> et notez votre prénom ; les autres verront qu'il est réservé. Une envie déjà réservée l'indique : « Réservé par … le … ». <b>Tous</b> montre toute la crèche.`;
   $("l-add").hidden = PUBLIC || !peutAjouterModele(l);
   renderCover(); renderProgress(); renderStatus(); renderGrid();
 }
@@ -907,8 +914,7 @@ function renderStatus() {
   const l = curList(), pool = ITEMS.filter(inTab);
   $("l-add").textContent = ui.tab === "autres" ? "+ Ajouter (sans marque)" : ui.tab === "escoffier" || ui.tab === "decor" ? "+ Décor inconnu" : "+ Santon inconnu";
   const opts = [["all", "Tous"], ["own", "J'ai"], ["missing", "Il manque"], ["wish", "Envies"]];
-  if (pool.some(it => statut(l, it.id) === "wish")) opts.push(["gift", "À offrir"]);
-  else if (ui.status === "gift") ui.status = "all";
+  if (ui.status === "gift") ui.status = "wish";
   if (pool.some(it => it.nouveau)) opts.push(["new", "Nouveautés " + ANNEE]);
   else if (ui.status === "new") ui.status = "all";
   $("status").innerHTML = opts.map(([v, t]) =>

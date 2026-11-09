@@ -95,7 +95,7 @@ async function signup(p, nom, mail) {
   log('mamie : badge quantité', await mamie.locator('.card .qte').count() ? await mamie.locator('.card .qte').first().textContent() : '-');
   await mamie.screenshot({ path: S + 'e-mamie.png' });
   // Mamie offre un santon de la liste d'envies (sans compte)
-  await mamie.click('[data-status="gift"]'); await mamie.waitForTimeout(200);
+  await mamie.click('[data-status="wish"]'); await mamie.waitForTimeout(200);
   await mamie.locator('.card .ph').first().click(); await mamie.waitForTimeout(300);
   await mamie.click('[data-offrir]'); await mamie.waitForTimeout(200);
   await mamie.fill('#offre-nom', 'Mamie'); await mamie.click('#offre-form button[type=submit]'); await mamie.waitForTimeout(700);
@@ -103,7 +103,7 @@ async function signup(p, nom, mail) {
       '| fiche', (await mamie.textContent('.offre')).replace(/\s+/g, ' ').trim().slice(0, 60), '| annuler', await mamie.locator('[data-annuler]').count());
   await mamie.screenshot({ path: S + 'e-offre.png' });
   await mamie.keyboard.press('Escape'); await mamie.click('[data-status="wish"]'); await mamie.waitForTimeout(200);
-  log('mamie : vignette', await mamie.textContent('.card .resa'), '| À offrir', await mamie.textContent('[data-status="gift"] .n'));
+  log('mamie : vignette', await mamie.textContent('.card .resa'), '| filtres', (await mamie.locator('[data-status]').allTextContents()).join(' / '));
   await papa.reload(); await papa.waitForSelector('#view-list:not([hidden])'); await papa.waitForTimeout(600);
   log('papa voit:', await papa.locator('.card .resa').count() ? await papa.textContent('.card .resa') : '-');
   // Papa (administrateur) annule, puis note que Manoun l'offre
