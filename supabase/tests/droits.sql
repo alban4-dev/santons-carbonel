@@ -225,7 +225,7 @@ select reserver(null, '0123456789abcdef0123456789abcdef', 701, 'Pirate', 'jeton-
 select reserver(:'lea', null, 701, 'Pirate', 'jeton-du-pirate-0001');
 select annuler_reservation(null, :'vcode2', 700, 'jeton-de-marraine-01');
 reset role;
-select 'T111 deja reserve, pas une envie, mauvais lien, sans lien, mauvais jeton : refuses',
+select 'T111 deja reserve, deja dans la creche, mauvais lien, sans lien, mauvais jeton : refuses',
   (select count(*) from liste_reservations) = 1 and (select nom from liste_reservations where santon_id = 700) = 'Mamie';
 set role anon;
 select 'T112 page publique : la reservation (sans jeton)', (voir_liste(:'vcode2')->'reservations'->0->>'nom') = 'Mamie'
@@ -322,3 +322,23 @@ reset role;
 select set_config('request.jwt.claim.sub', :'inconnu', false); set role authenticated;
 select 'T139 partage retire : Leon ne voit plus Lea (meme administrateur)', count(*) = 0 from listes where id = :'lea';
 reset role;
+
+-- OFFRIR UN SANTON HORS DES ENVIES
+select set_config('request.jwt.claim.sub', '', false); set role anon;
+select reserver(null, :'vcode2', 777, 'Marraine', 'jeton-de-marraine-02');
+select reserver(null, :'vcode2', 544, 'Marraine', 'jeton-de-marraine-02');
+reset role;
+select 'T140 sans compte : la marraine offre un santon hors envies, pas un deja dans la creche',
+  (select count(*) from liste_reservations where santon_id = 777) = 1 and (select count(*) from liste_reservations where santon_id = 544) = 0;
+select set_config('request.jwt.claim.sub', :'papa', false); set role authenticated;
+insert into liste_items (liste_id, santon_id, statut) values (:'lea', 778, 'wish');
+reset role;
+select set_config('request.jwt.claim.sub', '', false); set role anon;
+select reserver(null, :'vcode2', 778, 'Mamie', 'jeton-de-mamie-0002');
+reset role;
+select set_config('request.jwt.claim.sub', :'papa', false); set role authenticated;
+delete from liste_items where liste_id = :'lea' and santon_id = 778;
+insert into liste_items (liste_id, santon_id, statut) values (:'lea', 777, 'own');
+reset role;
+select 'T141 envie retiree : la reservation reste ; cadeau recu (coche J''ai) : liberee',
+  (select count(*) from liste_reservations where santon_id = 778) = 1 and (select count(*) from liste_reservations where santon_id = 777) = 0;

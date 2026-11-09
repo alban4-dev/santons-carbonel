@@ -103,6 +103,12 @@ async function signup(p, nom, mail) {
       '| fiche', (await mamie.textContent('.offre')).replace(/\s+/g, ' ').trim().slice(0, 60), '| annuler', await mamie.locator('[data-annuler]').count());
   await mamie.screenshot({ path: S + 'e-offre.png' });
   await mamie.keyboard.press('Escape'); await mamie.click('[data-status="wish"]'); await mamie.waitForTimeout(200);
+  // Mamie offre aussi un santon hors des envies (filtre Tous)
+  await mamie.click('[data-status="all"]'); await mamie.waitForTimeout(200);
+  await mamie.locator('.card:not(.own):not(:has(.resa)) .ph').nth(3).click(); await mamie.waitForTimeout(300);
+  await mamie.click('[data-offrir]'); await mamie.fill('#offre-nom', 'Mamie'); await mamie.click('#offre-form button[type=submit]'); await mamie.waitForTimeout(700);
+  await mamie.keyboard.press('Escape'); await mamie.click('[data-status="wish"]'); await mamie.waitForTimeout(200);
+  log('mamie hors envies:', sqlv("select count(*) from liste_reservations"), 'réservations | filtre Envies', await mamie.locator('.card').count(), 'cartes,', await mamie.locator('.card .resa').count(), 'réservées');
   log('mamie : vignette', await mamie.textContent('.card .resa'), '| filtres', (await mamie.locator('[data-status]').allTextContents()).join(' / '));
   await papa.reload(); await papa.waitForSelector('#view-list:not([hidden])'); await papa.waitForTimeout(600);
   log('papa voit:', await papa.locator('.card .resa').count() ? await papa.textContent('.card .resa') : '-');

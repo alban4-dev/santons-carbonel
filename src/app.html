@@ -498,6 +498,7 @@ function frErr(e) {
   if (/reserv/i.test(m) && /function|schema cache|does not exist/i.test(m)) return "La base de données n'est pas encore à jour : il faut exécuter la mise à jour SQL dans Supabase (fichier supabase/migrations/2026-11-12_reservations.sql).";
   if (/déjà réservé/i.test(m)) return "Quelqu'un vient de le réserver : rechargez la page.";
   if (/pas dans les envies/i.test(m)) return "Ce santon n'est plus dans les envies.";
+  if (/déjà dans la crèche/i.test(m)) return "Ce santon est déjà dans la crèche : rechargez la page.";
   if (/réservation d'une autre personne/i.test(m)) return "Seule la personne qui l'a réservé (ou un administrateur de la crèche) peut annuler.";
   if (/crèche introuvable/i.test(m)) return "Ce lien de crèche n'est plus valable : demandez le nouveau lien.";
   if (/quantite/i.test(m)) return "La base de données n'est pas encore à jour : il faut exécuter la mise à jour SQL dans Supabase (fichier supabase/migrations/2026-11-11_quantites.sql).";
@@ -812,7 +813,8 @@ function statusOf(it, s, l) {
   if (s === "missing") return statut(l, it.id) !== "own";
   if (s === "new") return !!it.nouveau;
   if (s === "gift") return statut(l, it.id) === "wish" && !resaOf(l, it.id);
-  return statut(l, it.id) === "wish";
+  // « Envies » : les envies, et les cadeaux réservés hors envies (pour que personne n'achète le même)
+  return statut(l, it.id) === "wish" || (statut(l, it.id) !== "own" && !!resaOf(l, it.id));
 }
 function siblings(l) { const fs = famillesDe(l); return [...st.listes.values()].filter(x => x.id !== l.id && famillesDe(x).some(f => fs.includes(f))); }
 function famHTML(it, l) {
@@ -839,7 +841,7 @@ function cardHTML(it) {
     ${it.custom && it.section !== "autres" ? '<span class="ajout">Famille</span>' : ""}
     ${it.nouveau ? `<span class="nouv">Nouveau ${ANNEE}</span>` : ""}
     <div class="nm">${esc(it.short)}</div>
-    ${s === "wish" && resaOf(l, it.id) ? resaHTML(resaOf(l, it.id)) : ""}
+    ${s !== "own" && resaOf(l, it.id) ? resaHTML(resaOf(l, it.id)) : ""}
     ${famHTML(it, l)}
   </article>`;
 }
@@ -855,8 +857,10 @@ function renderList() {
   $("l-settings").hidden = !canManage(l.id);
   $("l-share").hidden = PUBLIC || !canManage(l.id);
   const envies = [...l.items.values()].some(r => r.statut === "wish");
-  $("l-hint").hidden = edit || !envies;
-  $("l-hint").innerHTML = `Ce sont ses <b>envies</b>. Pour en offrir une : touchez le santon, puis <b>Offrir ce santon</b> et notez votre prénom ; les autres verront qu'il est réservé. Une envie déjà réservée l'indique : « Réservé par … le … ». <b>Tous</b> montre toute la crèche.`;
+  $("l-hint").hidden = edit;
+  $("l-hint").innerHTML = envies
+    ? `Ce sont ses <b>envies</b>. Pour en offrir une : touchez le santon, puis <b>Offrir ce santon</b> et notez votre prénom ; les autres verront qu'il est réservé (« Réservé par … le … »). Vous pouvez aussi offrir un santon hors de ses envies : <b>Tous</b>, puis le santon.`
+    : `Pour offrir un santon : touchez-le, puis <b>Offrir ce santon</b> et notez votre prénom ; les autres verront qu'il est réservé.`;
   $("l-add").hidden = PUBLIC || !peutAjouterModele(l);
   renderCover(); renderProgress(); renderStatus(); renderGrid();
 }
@@ -919,7 +923,7 @@ function renderStatus() {
 /* ================= Cocher ================= */
 async function setStatut(l, id, value) {
   const before = l.items.get(id);
-  if (value !== "wish") st.resa.delete(l.id + ":" + id);  // la base fait de même
+  if (value === "own") st.resa.delete(l.id + ":" + id);  // cadeau reçu : la base libère aussi la réservation
   if (value) l.items.set(id, { liste_id: l.id, santon_id: id, statut: value, modifie_par: me.id, updated_at: new Date().toISOString() });
   else l.items.delete(id);
   const res = value
@@ -1056,7 +1060,7 @@ function openItem(id) {
           <button class="tg o" type="button" data-act="own" data-id="${it.id}" aria-pressed="${s === "own"}"${ro}>✓ J'ai</button>
           <button class="tg w" type="button" data-act="wish" data-id="${it.id}" aria-pressed="${s === "wish"}"${ro || (s === "own" ? " disabled" : "")}>♡ Envie</button>
         </div>
-        ${s === "wish" ? offreHTML(l, it) : ""}
+        ${s !== "own" ? offreHTML(l, it) : ""}
         ${s === "own" && (!ro || quantite(l, it.id) > 1) ? `<div class="qty"><span class="label">Combien en avez-vous ?</span>
           ${ro ? "" : `<button type="button" data-qty="-1" data-id="${it.id}" aria-label="Un de moins"${quantite(l, it.id) <= 1 ? " disabled" : ""}>−</button>`}
           <b aria-live="polite">${quantite(l, it.id)}</b>

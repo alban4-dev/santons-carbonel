@@ -80,7 +80,8 @@ le SQL Editor (`schema.sql` les contient déjà pour une nouvelle installation) 
 - `2026-11-11_quantites.sql` : nombre d'exemplaires d'un santon (2 moutons…) ;
 - `2026-11-12_reservations.sql` : réservations « Offrir » sur les envies ;
 - `2026-11-13_catalogues.sql` : catalogues de chaque crèche, santons inconnus en N°3 ;
-- `2026-11-14_creches_partagees.sql` : une crèche visible dans plusieurs familles.
+- `2026-11-14_creches_partagees.sql` : une crèche visible dans plusieurs familles ;
+- `2026-11-15_offrir_tout.sql` : « Offrir » aussi un santon hors des envies.
 
 ### 2. Le site : GitHub Pages
 
@@ -143,10 +144,12 @@ L'admin d'une famille peut la renommer.
 | Personne avec le lien public d'une crèche (sans compte) | cette crèche seulement | non | non | non |
 
 **Offrir** : toute personne qui voit une crèche (membre de la famille ou lien
-de partage, sans compte) peut réserver un santon de ses envies en notant son
+de partage, sans compte) peut réserver un santon de ses envies (ou tout autre
+santon que la crèche n'a pas encore) en notant son
 prénom ; un administrateur peut aussi la noter pour quelqu'un. La réservation s'annule par la personne qui l'a faite (même téléphone
 ou même compte) ou par un administrateur de la crèche, et disparaît quand le
-santon est coché « J'ai ».
+santon est coché « J'ai » (cadeau reçu). Le filtre « Envies » montre aussi les
+cadeaux réservés hors envies.
 
 Ces règles sont vérifiées par la base de données elle-même (Row Level Security
 dans `schema.sql`), pas seulement par l'affichage. Sans compte, la seule chose
@@ -160,7 +163,7 @@ ses droits.
 `supabase/tests/lancer.sh` rejoue tout sans compte Supabase, sur un
 PostgreSQL 16 local :
 
-- `droits.sql` : 83 vérifications des règles d'accès (inconnu, membre, gérant,
+- `droits.sql` : 85 vérifications des règles d'accès (inconnu, membre, gérant,
   visiteur, ancien membre, anonyme, page publique, santons ajoutés, photos
   photo de la crèche, photos face, dos, côté, quantités et réservations) ;
 - `parcours.js` : dans un vrai navigateur, Papa crée la famille et la crèche
