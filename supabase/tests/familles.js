@@ -13,7 +13,7 @@ const sqlv = q => execSync(`psql -h /tmp -p 54329 -U postgres -d app -tA -c "${q
   const vue = async p => ({ famille: (await p.locator('.fam-head h2').allTextContents()).join(' + '), menu: await p.locator('#fam-sel').count() ? (await p.locator('#fam-sel option').allTextContents()).join(' / ') : '-', creches: (await p.locator('.lcard[data-list] h3').allTextContents()).join(', ') });
   const choisir = async (p, nom) => { if (await p.locator('#fam-sel').count()) { const v = await p.$$eval('#fam-sel option', (os, n) => (os.find(o => o.textContent.includes(n)) || {}).value, nom); await p.selectOption('#fam-sel', v); await p.waitForTimeout(300); } };
   const ouvre = async (p, famille, creche) => { await p.goto(URL); await p.waitForSelector('#view-home:not([hidden])'); await p.waitForTimeout(500); await choisir(p, famille); await p.click(`.lcard[data-list]:has-text("${creche}")`); await p.waitForTimeout(500); };
-  const cherche = async (p, tab, q) => { await p.selectOption('#cat-sel', tab); await p.fill('#q', q); await p.waitForTimeout(400); const n = await p.locator('.card').count(); await p.fill('#q', ''); await p.waitForTimeout(200); return n; };
+  const cherche = async (p, tab, q) => { await p.click(`#cats [data-tab="${tab}"]`); await p.fill('#q', q); await p.waitForTimeout(400); const n = await p.locator('.card').count(); await p.fill('#q', ''); await p.waitForTimeout(200); return n; };
 
   const alban = await mk(390, 844);
   await alban.goto(URL); await alban.waitForSelector('#scr-auth:not([hidden])'); await signup(alban, 'Alban', 'alban@f.fr');
@@ -44,14 +44,14 @@ const sqlv = q => execSync(`psql -h /tmp -p 54329 -U postgres -d app -tA -c "${q
 
   // Ajouts séparés par famille, et nom de l'onglet « sans marque »
   await ouvre(alban, 'Hugues', 'Crèche de Lucie');
-  console.log('menu :', (await alban.locator('#cat-sel option').allTextContents()).join(' / '));
-  await alban.selectOption('#cat-sel', 'autres'); await alban.click('[data-addautre]');
+  console.log('menu :', (await alban.locator('#cats .chip').allTextContents()).join(' / '));
+  await alban.click('#cats [data-tab="autres"]'); await alban.click('[data-addautre]');
   console.log('dialogue :', await alban.textContent('#add-title'), '|', await alban.$eval('#add-marque', e => e.selectedOptions[0].textContent));
   await alban.fill('#add-nom', 'Berger artisan'); await alban.click('#add-go'); await alban.waitForTimeout(900);
   console.log('rubrique :', (await alban.locator('.sec h2').allTextContents()).join(', '));
   await alban.screenshot({ path: S + 'fam-pauvres.png' });
   await ouvre(tonton, 'Bavière', 'Crèche du beau-frère');
-  await tonton.selectOption('#cat-sel', 'autres'); await tonton.click('[data-addautre]');
+  await tonton.click('#cats [data-tab="autres"]'); await tonton.click('[data-addautre]');
   await tonton.fill('#add-nom', 'Moulin Bavière'); await tonton.selectOption('#add-type', 'decor'); await tonton.click('#add-go'); await tonton.waitForTimeout(900);
   console.log('tonton, sa crèche : Berger artisan', await cherche(tonton, 'autres', 'Berger artisan'), '| Moulin Bavière', await cherche(tonton, 'autres', 'Moulin Bavière'));
   await ouvre(doro, 'Hugues', 'Crèche de Lucie');
@@ -62,7 +62,7 @@ const sqlv = q => execSync(`psql -h /tmp -p 54329 -U postgres -d app -tA -c "${q
   console.log('base, lisible par Tonton :', lit('tonton@f.fr'), '| par Dorothée :', lit('doro@f.fr'), '| par Alban :', lit('alban@f.fr'));
   // Crèche partagée : celle de Lucie (famille Hugues) apparaît aussi chez les Bavière
   await ouvre(alban, 'Hugues', 'Crèche de Lucie');
-  await alban.selectOption('#cat-sel', 'santons'); await alban.locator('.card .ic.o').first().click(); await alban.waitForTimeout(500);
+  await alban.click('#cats [data-tab="santons"]'); await alban.locator('.card .ic.o').first().click(); await alban.waitForTimeout(500);
   await alban.click('#l-settings'); await alban.waitForTimeout(400);
   console.log('réglages, familles :', (await alban.locator('[data-partage]').evaluateAll(xs => xs.map(x => x.parentElement.textContent.trim() + (x.checked ? ' ✓' : '') + (x.disabled ? ' (fixe)' : '')))).join(' | '));
   const bav = sqlv("select id from familles where nom = 'Famille Bavière'");
@@ -77,7 +77,7 @@ const sqlv = q => execSync(`psql -h /tmp -p 54329 -U postgres -d app -tA -c "${q
   console.log('tonton, crèche de Lucie :', await tonton.textContent('#l-badge'), '|', await tonton.textContent('#l-who'), '| coché', await tonton.locator('.card.own').count(), '| ✓ actifs', await tonton.locator('.card .ic.o:not([disabled])').count(),
     '| Berger artisan', await cherche(tonton, 'autres', 'Berger artisan'));
   await ouvre(alban, 'Bavière', 'Crèche de Lucie');
-  await alban.selectOption('#cat-sel', 'santons'); await alban.locator('.card:not(.own) .ic.o').first().click(); await alban.waitForTimeout(600);
+  await alban.click('#cats [data-tab="santons"]'); await alban.locator('.card:not(.own) .ic.o').first().click(); await alban.waitForTimeout(600);
   await doro.goto(URL); await doro.waitForSelector('#view-home:not([hidden])'); await doro.waitForTimeout(500);
   console.log('dorothée voit les 2 coches faites des deux côtés :', (await doro.textContent('.lcard[data-list] .nums')).replace(/\s+/g, ' ').slice(0, 30), '| en base', sqlv("select count(*) from liste_items where statut = 'own' and liste_id = (select id from listes where nom = 'Crèche de Lucie')"));
   await ouvre(alban, 'Hugues', 'Crèche de Lucie');

@@ -16,7 +16,7 @@ comme un petit réseau social familial :
   « Changer » le lien coupe l'ancien.
 
 Dans chaque crèche : ✓ je l'ai (avec le nombre d'exemplaires dans la fiche :
-2 moutons identiques…), ♡ envie, un **menu « Catalogue »** (chaque crèche choisit ses catalogues dans
+2 moutons identiques…), ♡ envie, des **filtres de catalogue** à côté de J'ai, Envies… (chaque crèche choisit ses catalogues dans
 ses réglages : N°2, N°3, Escoffier, artisans…), une grande **photo
 de la crèche installée** (mise par ses gérants, en tête de la crèche, sur
 l'accueil et sur la page publique), un bouton **Partager** qui envoie le lien de la crèche (lecture seule, sans
@@ -31,7 +31,7 @@ la famille », et se coche comme les autres. Les nouveautés de
 l'année (rubrique « Nouveautés » des deux boutiques) portent un badge
 « Nouveau 2026 » et ont leur filtre.
 
-| Catalogue (menu) | Contenu | Nombre |
+| Catalogue (filtre) | Contenu | Nombre |
 |---|---|---|
 | Carbonel N°2 · Santons | Toute la gamme du catalogue papier N°2 Tradition 2024 (283 modèles, dont 20 absents de la boutique en ligne), la Colombe du dépliant N°2 de 2010, plus les autres santons N°2 au pied vert de la boutique | 303 |
 | Escoffier 7 cm · Santons | Collection 7 cm (l'échelle des N°2 Carbonel), classés Nativité (17), Personnages (287) et Animaux (67, dont le flamant rose) d'après leur nom ; « Nouveau 2026 » pour les créations de la saison 2026-2027 | 371 |

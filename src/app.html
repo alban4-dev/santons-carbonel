@@ -51,18 +51,10 @@ a { color: var(--accent); }
 .avatar.sm { width: 16px; height: 16px; font-size: .55rem; }
 .avatar.lg { width: 34px; height: 34px; font-size: .95rem; }
 .avatar.ring { background: var(--surface); color: var(--c); box-shadow: inset 0 0 0 1.5px var(--c); }
-/* Les trois catalogues : gros boutons côte à côte, marque en petit, type en gros */
-/* Menu « Catalogue » d'une crèche (Carbonel N°2, N°3, Escoffier…) */
-.catbar { display: flex; align-items: center; gap: 10px; padding-block: 2px 10px; max-width: 880px; }
-.catbar label { font-weight: 700; font-size: .8rem; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
-.catsel { position: relative; flex: 1; min-width: 0; }
-.catsel select { width: 100%; appearance: none; -webkit-appearance: none; font: 400 1.02rem var(--f-display); color: var(--accent-ink);
-  background: var(--accent); border: 0; border-radius: 12px; padding: 10px 42px 10px 14px; box-shadow: var(--shadow); text-overflow: ellipsis; }
-.catsel select:disabled { opacity: 1; }
-.catsel::after { content: ""; position: absolute; right: 16px; top: 50%; width: 9px; height: 9px; margin-top: -7px; border: solid var(--accent-ink);
-  border-width: 0 2.5px 2.5px 0; transform: rotate(45deg); pointer-events: none; }
-.catsel select:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
-@media (max-width: 480px) { .catbar label { display: none; } }
+/* Catalogues d'une crèche (Carbonel N°2, N°3, Escoffier…) : pastilles avant les filtres J'ai, Envies… */
+.chip.cat { border-color: var(--accent); color: var(--accent); font-weight: 700; }
+.chip.cat[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.filtres { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; flex-basis: 100%; }
 
 /* Boutons, champs */
 .btn { border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 9px 14px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; justify-content: center; text-decoration: none; color: var(--ink); }
@@ -138,7 +130,6 @@ a { color: var(--accent); }
 .lthumb { display: block; margin: -14px -14px 2px; aspect-ratio: 16 / 7; background: var(--surface-2) center / cover no-repeat; }
 /* recherche au clavier (téléphone) : la barre remonte sous l'en-tête, les onglets s'effacent */
 body.typing .grid { min-height: 100dvh; }
-@media (max-width: 760px) { body.kbd .catbar { display: none; } }
 .also { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: .88rem; color: var(--muted); padding-top: 6px; }
 .grid { align-content: start; display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 8px; padding-bottom: 40px; }
 @media (max-width: 440px) { .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; } }
@@ -284,10 +275,6 @@ body.kbd .totop { display: none; }
         <button class="me" id="me-btn" type="button" aria-haspopup="dialog"><span class="avatar" id="me-av">?</span><span class="nm" id="me-name">…</span></button>
         <a class="btn sm" id="famille-link" href="./" hidden>Espace famille</a>
       </div>
-      <div class="catbar" id="tabs" hidden>
-        <label for="cat-sel">Catalogue</label>
-        <div class="catsel"><select id="cat-sel" aria-label="Catalogue affiché"></select></div>
-      </div>
     </div>
   </header>
 
@@ -312,6 +299,7 @@ body.kbd .totop { display: none; }
         <span class="meter" aria-hidden="true"><i id="prog-bar"></i></span>
       </div>
       <div class="row">
+        <div class="filtres" id="cats" role="group" aria-label="Catalogue" hidden></div>
         <div class="row" id="status" role="group" aria-label="Afficher"></div>
         <label class="search"><svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M11 11l3.5 3.5" stroke="currentColor" stroke-width="1.6"/></svg><input id="q" type="search" placeholder="Chercher" aria-label="Chercher un santon" autocomplete="off" enterkeyhint="search"></label>
       </div>
@@ -407,6 +395,7 @@ for (const it of ITEMS) {
 const SECTIONS = ["santons", "decor", "santons_n3", "santons_escoffier", "escoffier", "autres"];
 const CAT_MENU = { santons: "Carbonel N°2 · Santons", decor: "Carbonel N°2 · Bâtiments et décors", santons_n3: "N°3 · 9 cm (Carbonel, Escoffier)",
   santons_escoffier: "Escoffier 7 cm · Santons", escoffier: "Escoffier 7 cm · Bâtiments", autres: "Artisans sans marques" };
+const CAT_CHIP = { santons: "Carbonel N°2", decor: "Décors N°2", santons_n3: "N°3 · 9 cm", santons_escoffier: "Escoffier 7 cm", escoffier: "Bâtiments Escoffier", autres: "Artisans" };
 const CAT_COURT = { santons: "santons N°2", decor: "décors N°2", santons_n3: "N°3", santons_escoffier: "santons Escoffier", escoffier: "bâtiments Escoffier", autres: "artisans" };
 const CAT_DEFAUT = ["santons", "decor", "santons_escoffier", "escoffier", "autres"];  // tout sauf Carbonel N°3
 /* catalogues montrés par une crèche (réglage « Catalogues de cette crèche ») */
@@ -700,7 +689,7 @@ function render() {
   $("me-name").textContent = nameOf(me.id);
   const inList = ui.view === "list" && curList();
   $("view-home").hidden = !!inList; $("view-list").hidden = !inList;
-  $("back").hidden = !inList || PUBLIC; $("tabs").hidden = !inList;
+  $("back").hidden = !inList || PUBLIC;
   $("title").textContent = inList ? curList().nom : "Santons Carbonel";
   document.title = inList ? curList().nom + " · Santons Carbonel" : "Santons Carbonel en famille";
   if (inList) renderList(); else renderHome();
@@ -902,12 +891,12 @@ function renderProgress() {
   const pieces = pool.reduce((t, i) => t + quantite(l, i.id), 0);
   $("prog-txt").innerHTML = `<b>${n}</b> / ${pool.length}${pieces > n ? ` · ${pieces} pièces` : ""}${w ? ` · <b>${w}</b> envie${w > 1 ? "s" : ""}` : ""}`;
   $("prog-bar").style.width = (pool.length ? n / pool.length * 100 : 0) + "%";
-  const cats = catsOf(l), sel = $("cat-sel");
-  sel.innerHTML = cats.map(t => {
+  const cats = catsOf(l), box = $("cats");
+  box.hidden = cats.length < 2;
+  box.innerHTML = cats.map(t => {
     const n = ITEMS.filter(i => dans(i, t) && visibleFor(i, l) && statut(l, i.id) === "own").length;
-    return `<option value="${t}"${t === ui.tab ? " selected" : ""}>${esc(CAT_MENU[t])} — ${n} / ${nSec(t, l)}</option>`;
+    return `<button class="chip cat" type="button" data-tab="${t}" aria-pressed="${t === ui.tab}" title="${esc(CAT_MENU[t])}">${esc(CAT_CHIP[t])}<span class="n">${n}/${nSec(t, l)}</span></button>`;
   }).join("");
-  sel.disabled = cats.length < 2;
 }
 function renderStatus() {
   const l = curList(), pool = ITEMS.filter(inTab);
@@ -1100,7 +1089,7 @@ function openSettings() {
     <hr class="sep">
     <span class="label">Catalogues de cette crèche</span>
     <div class="checks">${SECTIONS.map(t => `<label><input type="checkbox" data-cat="${t}"${catsOf(l).includes(t) ? " checked" : ""}> ${esc(CAT_MENU[t])}</label>`).join("")}</div>
-    <p class="help">Seuls les catalogues cochés apparaissent dans le menu de la crèche, pour toute la famille et sur le lien partagé. Ce qui est déjà coché « J'ai » est gardé.</p>
+    <p class="help">Seuls les catalogues cochés apparaissent dans les filtres de la crèche, pour toute la famille et sur le lien partagé. Ce qui est déjà coché « J'ai » est gardé.</p>
     <hr class="sep">
     <span class="label">Lien de partage</span>
     <div class="field"><label class="label" for="visit-link">Lecture seule, sans compte (bouton « Partager » de la crèche)</label>
@@ -1261,7 +1250,12 @@ document.addEventListener("click", async e => {
   if (d.addautre !== undefined) { openAdd(); return; }
   if (d.addq !== undefined) { openAdd(); $("add-nom").value = ui.q.trim().slice(0, 80); return; }
   if (d.open) { openItem(d.open); return; }
-  if (d.tab) { ui.tab = d.tab; renderProgress(); renderStatus(); renderGrid(); return; }
+  if (d.tab) {
+    ui.tab = d.tab; renderProgress(); renderStatus(); renderGrid();
+    const top = $("cats").getBoundingClientRect().top + window.scrollY - $("top").offsetHeight - 8;
+    if (window.scrollY > top) window.scrollTo({ top: Math.max(0, top) });  // on revoit le haut du catalogue choisi
+    return;
+  }
   if (d.status) { ui.status = d.status; renderStatus(); renderGrid(); return; }
   if (d.newlist) {
     $("new-form").dataset.famille = d.newlist; $("new-nom").value = "Crèche de ";
@@ -1339,11 +1333,6 @@ function ouvrirFamille(id) {  // id : renommer cette famille ; null : en créer 
   $("fam-go").textContent = f ? "Renommer" : "Créer";
   $("dlg-family").showModal();
 }
-$("cat-sel").addEventListener("change", e => {
-  ui.tab = e.target.value; renderProgress(); renderStatus(); renderGrid();
-  const top = $("grid").getBoundingClientRect().top + window.scrollY - $("top").offsetHeight - 120;
-  if (window.scrollY > top) window.scrollTo({ top: Math.max(0, top) });
-});
 $("view-home").addEventListener("change", e => {
   if (e.target.id !== "fam-sel") return;
   if (e.target.value === "__new") { const f = familleChoisie([...st.familles.values()].filter(x => isMember(x.id))); e.target.value = f ? f.id : ""; ouvrirFamille(null); return; }
